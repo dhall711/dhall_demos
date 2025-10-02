@@ -1,0 +1,704 @@
+name: CORTEX_AI_USAGE_ANALYST_SM
+description: Comprehensive Cortex AI Usage & Performance Model using QUERY_HISTORY for universal compatibility. This semantic model provides a unified business layer over Snowflake's Cortex AI usage data, designed for AI/ML platform owners, data scientists, and cost managers. Enables natural language queries with Cortex Analyst to analyze AI model performance, token consumption, cost efficiency, and usage patterns across all Cortex AI services. Compatible with all Snowflake account types.
+tables:
+  - name: CORTEX_LLM_USAGE
+    base_table:
+      database: PLATFORM_ANALYTICS
+      schema: PUBLIC
+      table: CORTEX_LLM_USAGE_VIEW
+    dimensions:
+      - name: WAREHOUSE_NAME
+        data_type: VARCHAR(16777216)
+        expr: WAREHOUSE_NAME
+        description: The warehouse where the LLM function was executed
+      - name: QUERY_TAG
+        data_type: VARCHAR(16777216)
+        expr: QUERY_TAG
+        description: Tag associated with the query for workload tracking and cost attribution
+      - name: USER_NAME
+        data_type: VARCHAR(16777216)
+        expr: USER_NAME
+        description: The user who executed the LLM function
+      - name: ROLE_NAME
+        data_type: VARCHAR(16777216)
+        expr: ROLE_NAME
+        description: The role used to execute the query
+      - name: DATABASE_NAME
+        data_type: VARCHAR(16777216)
+        expr: DATABASE_NAME
+        description: The database context where the LLM function was called
+      - name: SCHEMA_NAME
+        data_type: VARCHAR(16777216)
+        expr: SCHEMA_NAME
+        description: The schema context where the LLM function was called
+      - name: QUERY_ID
+        data_type: VARCHAR(16777216)
+        expr: QUERY_ID
+        unique: true
+        description: Unique identifier for the query execution
+    time_dimensions:
+      - name: START_TIME
+        data_type: TIMESTAMP_LTZ
+        expr: START_TIME
+        description: Timestamp when the query was initiated
+      - name: END_TIME
+        data_type: TIMESTAMP_LTZ
+        expr: END_TIME
+        description: Timestamp when the query completed
+    facts:
+      - name: TOTAL_REQUESTS
+        data_type: NUMBER
+        expr: COUNT(*)
+        description: Total number of LLM function calls
+      - name: TOTAL_CREDITS_USED
+        data_type: NUMBER
+        expr: SUM(CREDITS_USED_CLOUD_SERVICES)
+        description: Total Snowflake credits consumed by LLM operations
+      - name: AVG_CREDITS_PER_REQUEST
+        data_type: NUMBER
+        expr: AVG(CREDITS_USED_CLOUD_SERVICES)
+        description: Average credits consumed per LLM request
+      - name: TOTAL_EXECUTION_TIME_MS
+        data_type: NUMBER
+        expr: SUM(TOTAL_ELAPSED_TIME)
+        description: Total execution time for all LLM calls in milliseconds
+      - name: AVG_EXECUTION_TIME_MS
+        data_type: NUMBER
+        expr: AVG(TOTAL_ELAPSED_TIME)
+        description: Average execution time per LLM call in milliseconds
+      - name: P95_EXECUTION_TIME_MS
+        data_type: NUMBER
+        expr: APPROX_PERCENTILE(TOTAL_ELAPSED_TIME, 0.95)
+        description: 95th percentile execution time in milliseconds
+    synonyms: ['LLM usage', 'language model usage', 'AI model calls', 'COMPLETE function usage', 'CLASSIFY_TEXT usage']
+    description: Usage metrics for Cortex LLM functions including COMPLETE, CLASSIFY_TEXT and other language model operations
+    primary_key:
+      columns:
+        - QUERY_ID
+
+  - name: CORTEX_EMBEDDING_USAGE
+    base_table:
+      database: PLATFORM_ANALYTICS
+      schema: PUBLIC
+      table: CORTEX_EMBEDDING_USAGE_VIEW
+    dimensions:
+      - name: WAREHOUSE_NAME
+        data_type: VARCHAR(16777216)
+        expr: WAREHOUSE_NAME
+        description: The warehouse where the embedding function was executed
+      - name: QUERY_TAG
+        data_type: VARCHAR(16777216)
+        expr: QUERY_TAG
+        description: Tag associated with the query for workload tracking
+      - name: USER_NAME
+        data_type: VARCHAR(16777216)
+        expr: USER_NAME
+        description: The user who executed the embedding function
+      - name: ROLE_NAME
+        data_type: VARCHAR(16777216)
+        expr: ROLE_NAME
+        description: The role used to execute the query
+      - name: DATABASE_NAME
+        data_type: VARCHAR(16777216)
+        expr: DATABASE_NAME
+        description: The database context for embedding operations
+      - name: SCHEMA_NAME
+        data_type: VARCHAR(16777216)
+        expr: SCHEMA_NAME
+        description: The schema context for embedding operations
+      - name: QUERY_ID
+        data_type: VARCHAR(16777216)
+        expr: QUERY_ID
+        unique: true
+        description: Unique identifier for the query execution
+    time_dimensions:
+      - name: START_TIME
+        data_type: TIMESTAMP_LTZ
+        expr: START_TIME
+        description: Timestamp when the embedding request was made
+      - name: END_TIME
+        data_type: TIMESTAMP_LTZ
+        expr: END_TIME
+        description: Timestamp when the query completed
+    facts:
+      - name: TOTAL_REQUESTS
+        data_type: NUMBER
+        expr: COUNT(*)
+        description: Total number of embedding generation requests
+      - name: TOTAL_CREDITS_USED
+        data_type: NUMBER
+        expr: SUM(CREDITS_USED_CLOUD_SERVICES)
+        description: Total Snowflake credits consumed by embedding operations
+      - name: AVG_CREDITS_PER_REQUEST
+        data_type: NUMBER
+        expr: AVG(CREDITS_USED_CLOUD_SERVICES)
+        description: Average credits consumed per embedding request
+      - name: TOTAL_EXECUTION_TIME_MS
+        data_type: NUMBER
+        expr: SUM(TOTAL_ELAPSED_TIME)
+        description: Total execution time for all embedding operations in milliseconds
+      - name: AVG_EXECUTION_TIME_MS
+        data_type: NUMBER
+        expr: AVG(TOTAL_ELAPSED_TIME)
+        description: Average execution time per embedding request in milliseconds
+    synonyms: ['embedding usage', 'vector embedding usage', 'EMBED_TEXT usage']
+    description: Usage metrics for Cortex vector embedding operations (EMBED_TEXT function)
+    primary_key:
+      columns:
+        - QUERY_ID
+
+  - name: CORTEX_SEARCH_USAGE
+    base_table:
+      database: PLATFORM_ANALYTICS
+      schema: PUBLIC
+      table: CORTEX_SEARCH_USAGE_VIEW
+    dimensions:
+      - name: WAREHOUSE_NAME
+        data_type: VARCHAR(16777216)
+        expr: WAREHOUSE_NAME
+        description: The warehouse where the search was executed
+      - name: QUERY_TAG
+        data_type: VARCHAR(16777216)
+        expr: QUERY_TAG
+        description: Tag associated with the query
+      - name: USER_NAME
+        data_type: VARCHAR(16777216)
+        expr: USER_NAME
+        description: The user who executed the search
+      - name: ROLE_NAME
+        data_type: VARCHAR(16777216)
+        expr: ROLE_NAME
+        description: The role used to execute the query
+      - name: DATABASE_NAME
+        data_type: VARCHAR(16777216)
+        expr: DATABASE_NAME
+        description: The database containing the search service
+      - name: SCHEMA_NAME
+        data_type: VARCHAR(16777216)
+        expr: SCHEMA_NAME
+        description: The schema containing the search service
+      - name: QUERY_ID
+        data_type: VARCHAR(16777216)
+        expr: QUERY_ID
+        unique: true
+        description: Unique identifier for the query execution
+    time_dimensions:
+      - name: START_TIME
+        data_type: TIMESTAMP_LTZ
+        expr: START_TIME
+        description: Timestamp when the search request was made
+      - name: END_TIME
+        data_type: TIMESTAMP_LTZ
+        expr: END_TIME
+        description: Timestamp when the search completed
+    facts:
+      - name: TOTAL_SEARCHES
+        data_type: NUMBER
+        expr: COUNT(*)
+        description: Total number of search operations
+      - name: TOTAL_CREDITS_USED
+        data_type: NUMBER
+        expr: SUM(CREDITS_USED_CLOUD_SERVICES)
+        description: Total Snowflake credits consumed by search operations
+      - name: AVG_CREDITS_PER_SEARCH
+        data_type: NUMBER
+        expr: AVG(CREDITS_USED_CLOUD_SERVICES)
+        description: Average credits consumed per search
+      - name: TOTAL_EXECUTION_TIME_MS
+        data_type: NUMBER
+        expr: SUM(TOTAL_ELAPSED_TIME)
+        description: Total execution time for all searches in milliseconds
+      - name: AVG_EXECUTION_TIME_MS
+        data_type: NUMBER
+        expr: AVG(TOTAL_ELAPSED_TIME)
+        description: Average execution time per search in milliseconds
+    synonyms: ['search usage', 'Cortex Search metrics', 'semantic search usage', 'search service usage']
+    description: Usage metrics for Cortex Search Service operations
+    primary_key:
+      columns:
+        - QUERY_ID
+
+  - name: CORTEX_OTHER_FUNCTIONS
+    base_table:
+      database: PLATFORM_ANALYTICS
+      schema: PUBLIC
+      table: CORTEX_OTHER_FUNCTIONS_VIEW
+    dimensions:
+      - name: WAREHOUSE_NAME
+        data_type: VARCHAR(16777216)
+        expr: WAREHOUSE_NAME
+        description: The warehouse where the function was executed
+      - name: QUERY_TAG
+        data_type: VARCHAR(16777216)
+        expr: QUERY_TAG
+        description: Tag for workload tracking
+      - name: USER_NAME
+        data_type: VARCHAR(16777216)
+        expr: USER_NAME
+        description: The user who called the function
+      - name: QUERY_ID
+        data_type: VARCHAR(16777216)
+        expr: QUERY_ID
+        unique: true
+        description: Unique identifier for the query execution
+    time_dimensions:
+      - name: START_TIME
+        data_type: TIMESTAMP_LTZ
+        expr: START_TIME
+        description: Timestamp when the function was called
+    facts:
+      - name: TOTAL_CALLS
+        data_type: NUMBER
+        expr: COUNT(*)
+        description: Total number of function calls
+      - name: TOTAL_CREDITS_USED
+        data_type: NUMBER
+        expr: SUM(CREDITS_USED_CLOUD_SERVICES)
+        description: Total credits consumed by these functions
+      - name: AVG_EXECUTION_TIME_MS
+        data_type: NUMBER
+        expr: AVG(TOTAL_ELAPSED_TIME)
+        description: Average execution time in milliseconds
+    synonyms: ['other Cortex functions', 'utility functions', 'SENTIMENT', 'TRANSLATE', 'SUMMARIZE', 'FILTER', 'TRANSCRIBE']
+    description: Usage metrics for other Cortex AI functions including SENTIMENT, TRANSLATE, SUMMARIZE, FILTER and TRANSCRIBE
+    primary_key:
+      columns:
+        - QUERY_ID
+
+  - name: CORTEX_TOKEN_USAGE
+    base_table:
+      database: PLATFORM_ANALYTICS
+      schema: PUBLIC
+      table: CORTEX_TOKEN_USAGE_VIEW
+    dimensions:
+      - name: FUNCTION_NAME
+        data_type: VARCHAR
+        expr: FUNCTION_NAME
+        description: Name of the Cortex function (COMPLETE, TRANSLATE, EMBED_TEXT, etc.)
+      - name: MODEL_NAME
+        data_type: VARCHAR
+        expr: MODEL_NAME
+        description: Model name used (llama3-70b, mistral-large, etc.) - empty for functions without model parameter
+      - name: WAREHOUSE_ID
+        data_type: NUMBER
+        expr: WAREHOUSE_ID
+        description: System-generated identifier for the warehouse
+    time_dimensions:
+      - name: START_TIME
+        data_type: TIMESTAMP_LTZ
+        expr: START_TIME
+        description: Start of the hour-long aggregation period
+      - name: END_TIME
+        data_type: TIMESTAMP_LTZ
+        expr: END_TIME
+        description: End of the hour-long aggregation period
+    facts:
+      - name: TOTAL_TOKENS
+        data_type: NUMBER
+        expr: SUM(TOKENS)
+        description: Total number of tokens billed (input + output combined)
+      - name: TOTAL_TOKEN_CREDITS
+        data_type: NUMBER
+        expr: SUM(TOKEN_CREDITS)
+        description: Total credits billed specifically for token processing
+      - name: AVG_TOKENS_PER_HOUR
+        data_type: NUMBER
+        expr: AVG(TOKENS)
+        description: Average tokens processed per hour period
+      - name: AVG_TOKEN_CREDITS_PER_HOUR
+        data_type: NUMBER
+        expr: AVG(TOKEN_CREDITS)
+        description: Average token credits per hour period
+      - name: TOKENS_PER_CREDIT
+        data_type: NUMBER
+        expr: SUM(TOKENS) / NULLIF(SUM(TOKEN_CREDITS), 0)
+        description: Token efficiency - tokens processed per credit consumed
+    synonyms: ['token usage', 'token consumption', 'token tracking', 'LLM tokens', 'model efficiency']
+    description: Aggregated token-level usage metrics by hour, function, and model from CORTEX_FUNCTIONS_USAGE_HISTORY. Provides token counts and efficiency metrics that are not available in query-level views. Data is aggregated hourly per function and model combination.
+
+  - name: CORTEX_ALL_USAGE
+    base_table:
+      database: PLATFORM_ANALYTICS
+      schema: PUBLIC
+      table: CORTEX_ALL_USAGE_VIEW
+    dimensions:
+      - name: SERVICE_TYPE
+        data_type: VARCHAR
+        expr: SERVICE_TYPE
+        description: Type of Cortex AI service (LLM, Embedding, Search, Other)
+      - name: MODEL_NAME
+        data_type: VARCHAR
+        expr: MODEL_NAME
+        description: Model name used (llama3-70b, mistral-large, custom-or-other, etc.)
+      - name: MODEL_TIER
+        data_type: VARCHAR
+        expr: MODEL_TIER
+        description: Model tier classification (Premium, Standard, Economy, Custom)
+      - name: MODEL_FAMILY
+        data_type: VARCHAR
+        expr: MODEL_FAMILY
+        description: Model family (Mistral, LLaMA, Reka, Arctic, E5, etc.)
+      - name: IS_CUSTOM_MODEL
+        data_type: BOOLEAN
+        expr: IS_CUSTOM_MODEL
+        description: TRUE if using a custom fine-tuned model, FALSE for Snowflake-managed models
+      - name: WAREHOUSE_NAME
+        data_type: VARCHAR(16777216)
+        expr: WAREHOUSE_NAME
+        description: The warehouse where the AI function was executed
+      - name: QUERY_TAG
+        data_type: VARCHAR(16777216)
+        expr: QUERY_TAG
+        description: Tag for workload tracking and cost attribution
+      - name: USER_NAME
+        data_type: VARCHAR(16777216)
+        expr: USER_NAME
+        description: The user who executed the AI function
+      - name: ROLE_NAME
+        data_type: VARCHAR(16777216)
+        expr: ROLE_NAME
+        description: The role used to execute the query
+      - name: QUERY_ID
+        data_type: VARCHAR(16777216)
+        expr: QUERY_ID
+        unique: true
+        description: Unique identifier for the query execution
+    time_dimensions:
+      - name: START_TIME
+        data_type: TIMESTAMP_LTZ
+        expr: START_TIME
+        description: Timestamp when the AI function was called
+    facts:
+      - name: TOTAL_REQUESTS
+        data_type: NUMBER
+        expr: COUNT(*)
+        description: Total number of AI function requests
+      - name: TOTAL_CREDITS_USED
+        data_type: NUMBER
+        expr: SUM(CREDITS_USED_CLOUD_SERVICES)
+        description: Total credits consumed across all AI services
+      - name: AVG_EXECUTION_TIME_MS
+        data_type: NUMBER
+        expr: AVG(TOTAL_ELAPSED_TIME)
+        description: Average execution time in milliseconds
+      - name: P95_LATENCY_MS
+        data_type: NUMBER
+        expr: APPROX_PERCENTILE(TOTAL_ELAPSED_TIME, 0.95)
+        description: 95th percentile latency in milliseconds
+      - name: REQUESTS_PER_CREDIT
+        data_type: NUMBER
+        expr: COUNT(*) / NULLIF(SUM(CREDITS_USED_CLOUD_SERVICES), 0)
+        description: Cost efficiency - requests processed per credit consumed
+    synonyms: ['all AI services', 'total Cortex usage', 'unified AI metrics', 'cross-service analytics', 'complete AI spend']
+    description: Unified view combining all Cortex AI services with service type, model classification, and custom model tracking. Enables cross-service comparisons, total spend analysis, and model tier comparisons. Use this table for questions about total AI usage, comparing services, or analyzing custom vs managed models.
+    primary_key:
+      columns:
+        - QUERY_ID
+
+verified_queries:
+  - name: total_cortex_spend_last_30_days
+    question: What is the total Cortex AI spend across all services in the last 30 days?
+    sql: |
+      WITH all_cortex_usage AS (
+        SELECT SUM(credits_used_cloud_services) AS service_credits, 'LLM Functions' AS service_type
+        FROM PLATFORM_ANALYTICS.PUBLIC.CORTEX_LLM_USAGE_VIEW
+        WHERE start_time >= DATEADD(DAY, -30, CURRENT_TIMESTAMP())
+        UNION ALL
+        SELECT SUM(credits_used_cloud_services), 'Embeddings'
+        FROM PLATFORM_ANALYTICS.PUBLIC.CORTEX_EMBEDDING_USAGE_VIEW
+        WHERE start_time >= DATEADD(DAY, -30, CURRENT_TIMESTAMP())
+        UNION ALL
+        SELECT SUM(credits_used_cloud_services), 'Search'
+        FROM PLATFORM_ANALYTICS.PUBLIC.CORTEX_SEARCH_USAGE_VIEW
+        WHERE start_time >= DATEADD(DAY, -30, CURRENT_TIMESTAMP())
+        UNION ALL
+        SELECT SUM(credits_used_cloud_services), 'Other Functions'
+        FROM PLATFORM_ANALYTICS.PUBLIC.CORTEX_OTHER_FUNCTIONS_VIEW
+        WHERE start_time >= DATEADD(DAY, -30, CURRENT_TIMESTAMP())
+      )
+      SELECT 
+        service_type,
+        ROUND(service_credits, 4) AS total_credits,
+        ROUND(service_credits * 3.0, 2) AS estimated_cost_usd
+      FROM all_cortex_usage
+      WHERE service_credits > 0
+      ORDER BY service_credits DESC
+
+  - name: llm_usage_by_warehouse
+    question: Show me LLM usage by warehouse in the last 7 days
+    sql: |
+      SELECT 
+        warehouse_name,
+        COUNT(*) AS total_requests,
+        SUM(credits_used_cloud_services) AS total_credits,
+        AVG(total_elapsed_time) AS avg_latency_ms,
+        APPROX_PERCENTILE(total_elapsed_time, 0.95) AS p95_latency_ms
+      FROM PLATFORM_ANALYTICS.PUBLIC.CORTEX_LLM_USAGE_VIEW
+      WHERE start_time >= DATEADD(DAY, -7, CURRENT_TIMESTAMP())
+      GROUP BY warehouse_name
+      ORDER BY total_credits DESC
+
+  - name: most_expensive_llm_models
+    question: Which LLM models are consuming the most credits?
+    sql: |
+      SELECT 
+        CASE 
+          WHEN query_text ILIKE '%llama3-70b%' OR query_text ILIKE '%''llama3-70b''%' THEN 'llama3-70b'
+          WHEN query_text ILIKE '%llama3-8b%' OR query_text ILIKE '%''llama3-8b''%' THEN 'llama3-8b'
+          WHEN query_text ILIKE '%mistral-large%' OR query_text ILIKE '%''mistral-large''%' THEN 'mistral-large'
+          WHEN query_text ILIKE '%mistral-7b%' OR query_text ILIKE '%''mistral-7b''%' THEN 'mistral-7b'
+          WHEN query_text ILIKE '%claude-3-5-sonnet%' OR query_text ILIKE '%''claude-3-5-sonnet''%' THEN 'claude-3-5-sonnet'
+          WHEN query_text ILIKE '%llama3.1-70b%' OR query_text ILIKE '%''llama3.1-70b''%' THEN 'llama3.1-70b'
+          WHEN query_text ILIKE '%llama3.1-405b%' OR query_text ILIKE '%''llama3.1-405b''%' THEN 'llama3.1-405b'
+          ELSE 'OTHER'
+        END AS model_name,
+        SUM(credits_used_cloud_services) AS total_credits,
+        COUNT(*) AS total_requests,
+        ROUND(AVG(credits_used_cloud_services), 6) AS avg_credits_per_request,
+        ROUND(AVG(total_elapsed_time), 2) AS avg_latency_ms
+      FROM PLATFORM_ANALYTICS.PUBLIC.CORTEX_LLM_USAGE_VIEW
+      WHERE start_time >= DATEADD(DAY, -30, CURRENT_TIMESTAMP())
+      GROUP BY 1
+      HAVING model_name <> 'OTHER'
+      ORDER BY total_credits DESC
+
+  - name: user_cortex_spend
+    question: Which users are consuming the most Cortex AI credits?
+    sql: |
+      WITH all_usage AS (
+        SELECT user_name, SUM(credits_used_cloud_services) AS credits, 'LLM' AS service
+        FROM PLATFORM_ANALYTICS.PUBLIC.CORTEX_LLM_USAGE_VIEW
+        WHERE start_time >= DATEADD(DAY, -30, CURRENT_TIMESTAMP())
+        GROUP BY user_name
+        UNION ALL
+        SELECT user_name, SUM(credits_used_cloud_services), 'Embedding'
+        FROM PLATFORM_ANALYTICS.PUBLIC.CORTEX_EMBEDDING_USAGE_VIEW
+        WHERE start_time >= DATEADD(DAY, -30, CURRENT_TIMESTAMP())
+        GROUP BY user_name
+        UNION ALL
+        SELECT user_name, SUM(credits_used_cloud_services), 'Search'
+        FROM PLATFORM_ANALYTICS.PUBLIC.CORTEX_SEARCH_USAGE_VIEW
+        WHERE start_time >= DATEADD(DAY, -30, CURRENT_TIMESTAMP())
+        GROUP BY user_name
+      )
+      SELECT 
+        user_name,
+        SUM(credits) AS total_credits,
+        COUNT(DISTINCT service) AS services_used,
+        LISTAGG(DISTINCT service, ', ') AS service_list
+      FROM all_usage
+      GROUP BY user_name
+      ORDER BY total_credits DESC
+      LIMIT 20
+
+  - name: daily_cortex_trends
+    question: Show me daily Cortex AI usage trends for the last 30 days
+    sql: |
+      WITH daily_usage AS (
+        SELECT 
+          DATE_TRUNC('DAY', start_time) AS usage_date,
+          'LLM' AS service,
+          COUNT(*) AS requests,
+          SUM(credits_used_cloud_services) AS credits
+        FROM PLATFORM_ANALYTICS.PUBLIC.CORTEX_LLM_USAGE_VIEW
+        WHERE start_time >= DATEADD(DAY, -30, CURRENT_TIMESTAMP())
+        GROUP BY 1
+        UNION ALL
+        SELECT 
+          DATE_TRUNC('DAY', start_time),
+          'Embedding',
+          COUNT(*),
+          SUM(credits_used_cloud_services)
+        FROM PLATFORM_ANALYTICS.PUBLIC.CORTEX_EMBEDDING_USAGE_VIEW
+        WHERE start_time >= DATEADD(DAY, -30, CURRENT_TIMESTAMP())
+        GROUP BY 1
+        UNION ALL
+        SELECT 
+          DATE_TRUNC('DAY', start_time),
+          'Search',
+          COUNT(*),
+          SUM(credits_used_cloud_services)
+        FROM PLATFORM_ANALYTICS.PUBLIC.CORTEX_SEARCH_USAGE_VIEW
+        WHERE start_time >= DATEADD(DAY, -30, CURRENT_TIMESTAMP())
+        GROUP BY 1
+      )
+      SELECT 
+        usage_date,
+        service,
+        SUM(requests) AS total_requests,
+        SUM(credits) AS total_credits
+      FROM daily_usage
+      GROUP BY usage_date, service
+      ORDER BY usage_date DESC, total_credits DESC
+
+  - name: token_usage_by_model
+    question: Show me token consumption by model in the last 7 days
+    sql: |
+      SELECT 
+        FUNCTION_NAME,
+        MODEL_NAME,
+        SUM(TOKENS) AS total_tokens,
+        SUM(TOKEN_CREDITS) AS total_credits,
+        ROUND(AVG(TOKENS), 0) AS avg_tokens_per_hour,
+        ROUND(SUM(TOKENS) / NULLIF(SUM(TOKEN_CREDITS), 0), 0) AS tokens_per_credit,
+        COUNT(*) AS time_periods
+      FROM PLATFORM_ANALYTICS.PUBLIC.CORTEX_TOKEN_USAGE_VIEW
+      WHERE START_TIME >= DATEADD(DAY, -7, CURRENT_TIMESTAMP())
+        AND MODEL_NAME IS NOT NULL
+      GROUP BY FUNCTION_NAME, MODEL_NAME
+      ORDER BY total_tokens DESC
+
+  - name: total_ai_spend_all_services
+    question: What is my total Cortex AI spend across all services?
+    sql: |
+      SELECT 
+        SERVICE_TYPE,
+        COUNT(*) AS total_requests,
+        SUM(CREDITS_USED_CLOUD_SERVICES) AS total_credits,
+        AVG(TOTAL_ELAPSED_TIME) AS avg_latency_ms,
+        ROUND(SUM(CREDITS_USED_CLOUD_SERVICES) * 3.0, 2) AS estimated_cost_usd
+      FROM PLATFORM_ANALYTICS.PUBLIC.CORTEX_ALL_USAGE_VIEW
+      WHERE START_TIME >= DATEADD(DAY, -30, CURRENT_TIMESTAMP())
+      GROUP BY SERVICE_TYPE
+      ORDER BY total_credits DESC
+
+  - name: compare_model_tiers
+    question: Compare cost and performance across different model tiers
+    sql: |
+      SELECT 
+        MODEL_TIER,
+        COUNT(*) AS total_requests,
+        SUM(CREDITS_USED_CLOUD_SERVICES) AS total_credits,
+        ROUND(AVG(TOTAL_ELAPSED_TIME), 2) AS avg_latency_ms,
+        ROUND(APPROX_PERCENTILE(TOTAL_ELAPSED_TIME, 0.95), 2) AS p95_latency_ms,
+        ROUND(COUNT(*) / NULLIF(SUM(CREDITS_USED_CLOUD_SERVICES), 0), 2) AS requests_per_credit
+      FROM PLATFORM_ANALYTICS.PUBLIC.CORTEX_ALL_USAGE_VIEW
+      WHERE START_TIME >= DATEADD(DAY, -7, CURRENT_TIMESTAMP())
+        AND MODEL_TIER IS NOT NULL
+      GROUP BY MODEL_TIER
+      ORDER BY total_credits DESC
+
+  - name: custom_model_usage
+    question: Show me usage of custom fine-tuned models vs managed models
+    sql: |
+      SELECT 
+        CASE 
+          WHEN IS_CUSTOM_MODEL THEN 'Custom Fine-Tuned'
+          ELSE 'Snowflake-Managed'
+        END AS model_ownership,
+        SERVICE_TYPE,
+        COUNT(*) AS total_requests,
+        SUM(CREDITS_USED_CLOUD_SERVICES) AS total_credits,
+        COUNT(DISTINCT USER_NAME) AS unique_users,
+        ROUND(AVG(TOTAL_ELAPSED_TIME), 2) AS avg_latency_ms
+      FROM PLATFORM_ANALYTICS.PUBLIC.CORTEX_ALL_USAGE_VIEW
+      WHERE START_TIME >= DATEADD(DAY, -30, CURRENT_TIMESTAMP())
+      GROUP BY IS_CUSTOM_MODEL, SERVICE_TYPE
+      ORDER BY total_credits DESC
+
+  - name: model_family_comparison
+    question: Compare usage and cost across different model families
+    sql: |
+      SELECT 
+        MODEL_FAMILY,
+        COUNT(*) AS total_requests,
+        SUM(CREDITS_USED_CLOUD_SERVICES) AS total_credits,
+        ROUND(AVG(TOTAL_ELAPSED_TIME), 2) AS avg_latency_ms,
+        COUNT(DISTINCT USER_NAME) AS unique_users,
+        COUNT(DISTINCT WAREHOUSE_NAME) AS unique_warehouses,
+        ROUND(COUNT(*) / NULLIF(SUM(CREDITS_USED_CLOUD_SERVICES), 0), 2) AS requests_per_credit
+      FROM PLATFORM_ANALYTICS.PUBLIC.CORTEX_ALL_USAGE_VIEW
+      WHERE START_TIME >= DATEADD(DAY, -30, CURRENT_TIMESTAMP())
+        AND MODEL_FAMILY != 'Other'
+      GROUP BY MODEL_FAMILY
+      ORDER BY total_requests DESC
+
+  - name: service_trends_daily
+    question: Show me daily trends across all AI services
+    sql: |
+      SELECT 
+        DATE_TRUNC('DAY', START_TIME) AS usage_date,
+        SERVICE_TYPE,
+        COUNT(*) AS daily_requests,
+        SUM(CREDITS_USED_CLOUD_SERVICES) AS daily_credits,
+        ROUND(AVG(TOTAL_ELAPSED_TIME), 2) AS avg_latency_ms
+      FROM PLATFORM_ANALYTICS.PUBLIC.CORTEX_ALL_USAGE_VIEW
+      WHERE START_TIME >= DATEADD(DAY, -30, CURRENT_TIMESTAMP())
+      GROUP BY DATE_TRUNC('DAY', START_TIME), SERVICE_TYPE
+      ORDER BY usage_date DESC, daily_credits DESC
+
+custom_instructions: |
+  Setup Requirements:
+  - IMPORTANT: Before using this semantic model, run create_cortex_views.sql to create all 6 required views in PLATFORM_ANALYTICS.PUBLIC
+  - This script creates 4 query-level views, 1 token-level view, and 1 unified cross-service view
+  - Query-level views provide per-query detail with user attribution
+  - Token-level view provides hourly aggregated token counts by function and model
+  - Unified view enables cross-service analysis and model tier comparisons
+  
+  Query Guidelines - IMPORTANT:
+  - This model uses 6 tables: 4 service-specific + 1 token + 1 unified (all independent, no joins)
+  - Tables 1-4: Query-level detail by service (CORTEX_LLM_USAGE, CORTEX_EMBEDDING_USAGE, CORTEX_SEARCH_USAGE, CORTEX_OTHER_FUNCTIONS)
+  - Table 5: Token-level aggregates (CORTEX_TOKEN_USAGE)
+  - Table 6: Unified cross-service view (CORTEX_ALL_USAGE) - USE THIS FOR CROSS-SERVICE QUERIES!
+  
+  When to Use Each Table:
+  - SINGLE SERVICE questions → Use service-specific tables (1-4)
+  - CROSS-SERVICE or TOTAL AI questions → Use CORTEX_ALL_USAGE (table 6)
+  - TOKEN-SPECIFIC questions → Use CORTEX_TOKEN_USAGE (table 5)
+  - MODEL COMPARISON questions → Use CORTEX_ALL_USAGE (has MODEL_TIER, MODEL_FAMILY, IS_CUSTOM_MODEL)
+  
+  Service Coverage:
+  - CORTEX_LLM_USAGE: Per-query LLM usage (COMPLETE, CLASSIFY_TEXT, EXTRACT_ANSWER, PARSE_DOCUMENT)
+  - CORTEX_EMBEDDING_USAGE: Per-query embedding usage (EMBED_TEXT)
+  - CORTEX_SEARCH_USAGE: Per-query search usage (CORTEX.SEARCH and Cortex Search Service)
+  - CORTEX_OTHER_FUNCTIONS: Per-query other functions (SENTIMENT, TRANSLATE, SUMMARIZE, FILTER, TRANSCRIBE)
+  - CORTEX_TOKEN_USAGE: Hourly token aggregates with TOTAL_TOKENS, TOKEN_CREDITS, TOKENS_PER_CREDIT
+  - CORTEX_ALL_USAGE: Unified view with SERVICE_TYPE, MODEL_TIER, MODEL_FAMILY, IS_CUSTOM_MODEL for cross-service analysis
+  
+  Query Patterns:
+  - Single service: "Show me LLM usage by warehouse" → Query CORTEX_LLM_USAGE directly
+  - Multi-service: "What's total AI spend?" → Use verified query pattern with UNION ALL
+  - Time filtering: Use start_time column with DATE_TRUNC for period aggregations
+  - Model identification: Use CASE statements with ILIKE patterns on query_text (see verified queries)
+  - Cost analysis: Use credits_used_cloud_services; multiply by your credit rate for USD
+  - User attribution: Use query_tag for workload tracking and cost allocation
+  
+  Working Examples:
+  
+  Single-Service Queries (use tables 1-4):
+  - ✅ "Show me LLM usage by warehouse in the last 7 days"
+  - ✅ "Show me LLM usage by user in the last 30 days"
+  - ✅ "What's the average cost per LLM request?"
+  
+  Token-Level Queries (use CORTEX_TOKEN_USAGE):
+  - ✅ "Show me token consumption by model"
+  - ✅ "How many tokens did we use for llama3-70b?"
+  - ✅ "What's the token efficiency by function?"
+  
+  Cross-Service Queries (use CORTEX_ALL_USAGE - NEW!):
+  - ✅ "What's my total Cortex AI spend?" → Now works directly!
+  - ✅ "Compare LLM vs Embedding costs" → Now works directly!
+  - ✅ "Show me usage across all AI services" → Now works directly!
+  
+  Model Comparison Queries (use CORTEX_ALL_USAGE - NEW!):
+  - ✅ "Compare Premium vs Standard model tiers"
+  - ✅ "Show me custom model usage vs managed models"
+  - ✅ "Which model family is most cost-efficient?"
+  - ✅ "Compare Mistral vs LLaMA performance"
+  
+  Current Status:
+  - ✅ FULLY FUNCTIONAL (100%): All query types now supported!
+  - ✅ Cross-service queries work via CORTEX_ALL_USAGE table
+  - ✅ Custom model tracking with IS_CUSTOM_MODEL dimension
+  - ✅ Model tier comparisons (Premium, Standard, Economy, Custom)
+  - ✅ Model family analytics (Mistral, LLaMA, Reka, Arctic, etc.)
+  
+  Data Characteristics:
+  - Query-level tables (1-4): Per-query detail, immediate availability, full user/tag attribution
+  - Token-level table (5): Hourly aggregates, 1-2 hour delay, no user attribution but actual token counts
+  - Unified table (6): All services combined, immediate availability, includes model classification
+  
+  Known Data Limitations:
+  - Embedding, Search, and Other Functions may have limited data depending on usage
+  - Token data aggregated hourly (not per-query granularity)
+  - Custom model detection based on known Snowflake-managed models (update MODEL_NAME logic as needed)
