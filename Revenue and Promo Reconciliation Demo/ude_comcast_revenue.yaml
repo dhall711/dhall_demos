@@ -1,0 +1,1317 @@
+name: comcast_revenue_intelligence
+description: Business-Centric Revenue Intelligence Platform - AI-powered anticipatory billing issue detection, customer risk clustering, promotion stacking prevention, and revenue protection analytics optimized for executive decision-making and operational excellence
+tables:
+  - name: products
+    base_table:
+      database: COMCAST_REVENUE
+      schema: ANALYTICS
+      table: PRODUCTS
+    dimensions:
+      - name: product_id
+        data_type: TEXT
+        expr: PRODUCT_ID
+        description: Unique product identifier
+        unique: true
+      - name: product_name
+        data_type: TEXT
+        expr: PRODUCT_NAME
+        description: Comcast product name
+      - name: product_category
+        data_type: TEXT
+        expr: PRODUCT_CATEGORY
+        description: Product category (Internet, Television, Mobile, Security, Business, Streaming)
+      - name: service_type
+        data_type: TEXT
+        expr: SERVICE_TYPE
+        description: Residential, Business, or Mobile
+    facts:
+      - name: avg_base_price
+        data_type: NUMBER
+        expr: AVG(BASE_PRICE)
+        description: Average base price for the product
+    description: ''
+    synonyms: []
+    primary_key:
+      columns:
+        - PRODUCT_ID
+  - name: promotion_types
+    base_table:
+      database: COMCAST_REVENUE
+      schema: ANALYTICS
+      table: PROMOTION_TYPES
+    dimensions:
+      - name: promo_code
+        data_type: TEXT
+        expr: PROMO_CODE
+        description: Unique promotion code
+        unique: true
+      - name: promo_name
+        data_type: TEXT
+        expr: PROMO_NAME
+        description: Human-readable promotion name
+      - name: discount_type
+        data_type: TEXT
+        expr: DISCOUNT_TYPE
+        description: PERCENTAGE, FIXED_AMOUNT, or FREE_MONTHS
+      - name: duration_months
+        data_type: NUMBER
+        expr: DURATION_MONTHS
+        description: Promotion duration in months
+    facts:
+      - name: avg_discount_value
+        data_type: NUMBER
+        expr: AVG(DISCOUNT_VALUE)
+        description: Average configured discount value
+    description: ''
+    synonyms: []
+    primary_key:
+      columns:
+        - PROMO_CODE
+  - name: customers
+    base_table:
+      database: COMCAST_REVENUE
+      schema: ANALYTICS
+      table: CUSTOMERS
+    dimensions:
+      - name: customer_id
+        data_type: TEXT
+        expr: CUSTOMER_ID
+        description: Unique customer identifier
+        unique: true
+      - name: service_city
+        data_type: TEXT
+        expr: SERVICE_CITY
+        description: Customer city for service
+      - name: service_state
+        data_type: TEXT
+        expr: SERVICE_STATE
+        description: Customer state for service
+      - name: service_region
+        data_type: TEXT
+        expr: SERVICE_REGION
+        description: Region bucket (Northeast, Midwest, Southeast, South, West)
+      - name: customer_lat
+        data_type: NUMBER
+        expr: CUSTOMER_LAT
+        description: Customer latitude
+      - name: customer_lon
+        data_type: NUMBER
+        expr: CUSTOMER_LON
+        description: Customer longitude
+    facts:
+      - name: customer_count
+        data_type: NUMBER
+        expr: COUNT(DISTINCT CUSTOMER_ID)
+        description: Number of customers
+    description: ''
+    synonyms: []
+    primary_key:
+      columns:
+        - CUSTOMER_ID
+  - name: service_areas
+    base_table:
+      database: COMCAST_REVENUE
+      schema: ANALYTICS
+      table: SERVICE_AREAS
+    dimensions:
+      - name: area_id
+        data_type: TEXT
+        expr: AREA_ID
+        description: Unique service area identifier
+        unique: true
+      - name: city
+        data_type: TEXT
+        expr: CITY
+        description: City name
+      - name: state
+        data_type: TEXT
+        expr: STATE
+        description: State code
+      - name: region
+        data_type: TEXT
+        expr: REGION
+        description: Region name
+      - name: lat
+        data_type: NUMBER
+        expr: LAT
+        description: Latitude
+      - name: lon
+        data_type: NUMBER
+        expr: LON
+        description: Longitude
+    facts:
+      - name: area_count
+        data_type: NUMBER
+        expr: COUNT(DISTINCT AREA_ID)
+        description: Number of defined service areas
+    description: ''
+    synonyms: []
+    primary_key:
+      columns:
+        - AREA_ID
+  - name: order_system_data
+    base_table:
+      database: COMCAST_REVENUE
+      schema: ANALYTICS
+      table: ORDER_SYSTEM_DATA
+    dimensions:
+      - name: order_id
+        data_type: TEXT
+        expr: ORDER_ID
+        description: Unique order identifier
+        unique: true
+      - name: customer_id
+        data_type: TEXT
+        expr: CUSTOMER_ID
+        description: Customer placing the order
+      - name: order_date
+        data_type: DATE
+        expr: ORDER_DATE
+        description: Order date
+      - name: product_id
+        data_type: TEXT
+        expr: PRODUCT_ID
+        description: Product in the order
+      - name: promo_code
+        data_type: TEXT
+        expr: PROMO_CODE
+        description: Promotion applied at order time
+      - name: order_status
+        data_type: TEXT
+        expr: ORDER_STATUS
+        description: Order status
+      - name: line_number
+        data_type: TEXT
+        expr: LINE_NUMBER
+        description: Mobile line number on the order (may duplicate across accounts)
+      - name: account_id
+        data_type: TEXT
+        expr: ACCOUNT_ID
+        description: Billing account identifier
+      - name: promo_start_cycle
+        data_type: NUMBER
+        expr: PROMO_START_CYCLE
+        description: Expected cycle the promo should be applied starting on billing
+      - name: promo_duration_months
+        data_type: NUMBER
+        expr: PROMO_DURATION_MONTHS
+        description: Promotion duration in months from order system
+      - name: first_bill_flag
+        data_type: BOOLEAN
+        expr: FIRST_BILL_FLAG
+        description: Indicates first bill scenario (priority customer experience)
+    facts:
+      - name: orders_count
+        data_type: NUMBER
+        expr: COUNT(ORDER_ID)
+        description: Number of orders
+      - name: order_base_revenue
+        data_type: NUMBER
+        expr: SUM(BASE_AMOUNT)
+        description: Sum of base amounts from orders
+      - name: order_discount_total
+        data_type: NUMBER
+        expr: SUM(DISCOUNT_AMOUNT)
+        description: Total order-side discounts
+      - name: order_final_revenue
+        data_type: NUMBER
+        expr: SUM(FINAL_AMOUNT)
+        description: Sum of final amounts from orders
+    description: ''
+    synonyms: []
+    primary_key:
+      columns:
+        - ORDER_ID
+  - name: billing_system_data
+    base_table:
+      database: COMCAST_REVENUE
+      schema: ANALYTICS
+      table: BILLING_SYSTEM_DATA
+    dimensions:
+      - name: billing_id
+        data_type: TEXT
+        expr: BILLING_ID
+        description: Unique billing identifier
+        unique: true
+      - name: customer_id
+        data_type: TEXT
+        expr: CUSTOMER_ID
+        description: Billed customer
+      - name: billing_date
+        data_type: DATE
+        expr: BILLING_DATE
+        description: Billing date
+      - name: product_id
+        data_type: TEXT
+        expr: PRODUCT_ID
+        description: Billed product
+      - name: promo_code
+        data_type: TEXT
+        expr: PROMO_CODE
+        description: Promotion used in billing
+      - name: billing_cycle
+        data_type: TEXT
+        expr: BILLING_CYCLE
+        description: Billing cycle identifier
+      - name: billing_cycle_number
+        data_type: NUMBER
+        expr: BILLING_CYCLE_NUMBER
+        description: Billing cycle ordinal number for the customer account
+      - name: line_number
+        data_type: TEXT
+        expr: LINE_NUMBER
+        description: Mobile line number on the billing record
+      - name: account_id
+        data_type: TEXT
+        expr: ACCOUNT_ID
+        description: Billing account identifier
+      - name: promo_applied_cycle
+        data_type: NUMBER
+        expr: PROMO_APPLIED_CYCLE
+        description: Cycle number when promo was actually applied in billing
+      - name: promo_duration_months
+        data_type: NUMBER
+        expr: PROMO_DURATION_MONTHS
+        description: Promotion duration in months from billing system
+    facts:
+      - name: billing_base_revenue
+        data_type: NUMBER
+        expr: SUM(BASE_AMOUNT)
+        description: Sum of base amounts from billing
+      - name: billing_discount_total
+        data_type: NUMBER
+        expr: SUM(DISCOUNT_AMOUNT)
+        description: Total billing-side discounts
+      - name: billing_final_revenue
+        data_type: NUMBER
+        expr: SUM(FINAL_AMOUNT)
+        description: Sum of final amounts from billing
+    description: ''
+    synonyms: []
+    primary_key:
+      columns:
+        - BILLING_ID
+  - name: promotion_reconciliation
+    base_table:
+      database: COMCAST_REVENUE
+      schema: ANALYTICS
+      table: PROMOTION_RECONCILIATION
+    dimensions:
+      - name: record_id
+        data_type: TEXT
+        expr: RECORD_ID
+        description: Unique reconciliation record id
+        unique: true
+      - name: customer_id
+        data_type: TEXT
+        expr: CUSTOMER_ID
+        description: Customer identifier
+      - name: transaction_date
+        data_type: DATE
+        expr: TRANSACTION_DATE
+        description: Transaction date
+      - name: product_id
+        data_type: TEXT
+        expr: PRODUCT_ID
+        description: Product identifier
+      - name: product_name
+        data_type: TEXT
+        expr: PRODUCT_NAME
+        description: Product name
+      - name: product_category
+        data_type: TEXT
+        expr: PRODUCT_CATEGORY
+        description: Product category
+      - name: promo_code
+        data_type: TEXT
+        expr: PROMO_CODE
+        description: Promotion code
+      - name: promo_name
+        data_type: TEXT
+        expr: PROMO_NAME
+        description: Promotion name
+      - name: reconciliation_status
+        data_type: TEXT
+        expr: RECONCILIATION_STATUS
+        description: MATCHED, DISCOUNT_MISMATCH, AMOUNT_MISMATCH, ORDER_ONLY, BILLING_ONLY
+      - name: risk_level
+        data_type: TEXT
+        expr: RISK_LEVEL
+        description: HIGH, MEDIUM, LOW risk classification
+      - name: service_city
+        data_type: TEXT
+        expr: SERVICE_CITY
+        description: City of service
+      - name: service_state
+        data_type: TEXT
+        expr: SERVICE_STATE
+        description: State of service
+      - name: service_region
+        data_type: TEXT
+        expr: SERVICE_REGION
+        description: Region of service
+      - name: customer_lat
+        data_type: NUMBER
+        expr: CUSTOMER_LAT
+        description: Customer latitude
+      - name: customer_lon
+        data_type: NUMBER
+        expr: CUSTOMER_LON
+        description: Customer longitude
+      - name: discount_variance
+        data_type: NUMBER
+        expr: DISCOUNT_VARIANCE
+        description: Discount variance (order - billing)
+      - name: final_amount_variance
+        data_type: NUMBER
+        expr: FINAL_AMOUNT_VARIANCE
+        description: Final amount variance (order - billing)
+      - name: abs_variance
+        data_type: NUMBER
+        expr: ABS_VARIANCE
+        description: Absolute discount variance used for severity ranking
+    time_dimensions:
+      - name: transaction_date
+        data_type: DATE
+        expr: TRANSACTION_DATE
+        description: Transaction date for temporal analysis
+    facts:
+      - name: order_base_amount
+        data_type: NUMBER
+        expr: SUM(ORDER_BASE_AMOUNT)
+        description: Total order-side base amount
+      - name: order_discount_amount
+        data_type: NUMBER
+        expr: SUM(ORDER_DISCOUNT_AMOUNT)
+        description: Total order-side discount amount
+      - name: order_final_amount
+        data_type: NUMBER
+        expr: SUM(ORDER_FINAL_AMOUNT)
+        description: Total order-side final amount
+      - name: billing_base_amount
+        data_type: NUMBER
+        expr: SUM(BILLING_BASE_AMOUNT)
+        description: Total billing-side base amount
+      - name: billing_discount_amount
+        data_type: NUMBER
+        expr: SUM(BILLING_DISCOUNT_AMOUNT)
+        description: Total billing-side discount amount
+      - name: billing_final_amount
+        data_type: NUMBER
+        expr: SUM(BILLING_FINAL_AMOUNT)
+        description: Total billing-side final amount
+      - name: discount_variance
+        data_type: NUMBER
+        expr: SUM(DISCOUNT_VARIANCE)
+        description: Total discount variance (order - billing)
+      - name: final_amount_variance
+        data_type: NUMBER
+        expr: SUM(FINAL_AMOUNT_VARIANCE)
+        description: Total final amount variance (order - billing)
+      - name: abs_variance
+        data_type: NUMBER
+        expr: SUM(ABS_VARIANCE)
+        description: Sum of absolute discount variance
+      - name: high_risk_revenue_at_risk
+        data_type: NUMBER
+        expr: SUM(CASE WHEN RISK_LEVEL = 'HIGH' THEN ABS(DISCOUNT_VARIANCE) ELSE 0 END)
+        description: Revenue at risk from high-risk reconciliation cases
+      - name: auto_recoverable_variance_10
+        data_type: NUMBER
+        expr: SUM(CASE WHEN RISK_LEVEL IN ('LOW','MEDIUM') AND ABS(DISCOUNT_VARIANCE) <= 10 THEN ABS(DISCOUNT_VARIANCE) ELSE 0 END)
+        description: Variance eligible for automated recovery using $10 threshold
+    description: ''
+    synonyms: []
+    primary_key:
+      columns:
+        - RECORD_ID
+  - name: reconciliation_summary
+    base_table:
+      database: COMCAST_REVENUE
+      schema: ANALYTICS
+      table: RECONCILIATION_SUMMARY
+    dimensions:
+      - name: dummy_key
+        data_type: TEXT
+        expr: DUMMY_KEY
+        description: Singleton dimension for summary aggregation
+        unique: true
+    facts:
+      - name: total_records
+        data_type: NUMBER
+        expr: SUM(TOTAL_RECORDS)
+        description: Total reconciliation records
+      - name: matched_records
+        data_type: NUMBER
+        expr: SUM(MATCHED_RECORDS)
+        description: Counts of matched records
+      - name: exception_records
+        data_type: NUMBER
+        expr: SUM(EXCEPTION_RECORDS)
+        description: Counts of exception records
+      - name: match_rate_pct
+        data_type: NUMBER
+        expr: AVG(MATCH_RATE_PCT)
+        description: Average match rate percent
+      - name: total_discount_variance
+        data_type: NUMBER
+        expr: SUM(TOTAL_DISCOUNT_VARIANCE)
+        description: Sum of absolute discount variance
+      - name: total_amount_variance
+        data_type: NUMBER
+        expr: SUM(TOTAL_AMOUNT_VARIANCE)
+        description: Sum of absolute final amount variance
+      - name: high_risk_count
+        data_type: NUMBER
+        expr: SUM(HIGH_RISK_COUNT)
+        description: Count of high risk items
+      - name: medium_risk_count
+        data_type: NUMBER
+        expr: SUM(MEDIUM_RISK_COUNT)
+        description: Count of medium risk items
+      - name: low_risk_count
+        data_type: NUMBER
+        expr: SUM(LOW_RISK_COUNT)
+        description: Count of low risk items
+    description: ''
+    synonyms: []
+    primary_key:
+      columns:
+        - DUMMY_KEY
+  - name: promotion_conflicts
+    base_table:
+      database: COMCAST_REVENUE
+      schema: ANALYTICS
+      table: PROMOTION_CONFLICTS
+    dimensions:
+      - name: conflict_id
+        data_type: TEXT
+        expr: CONFLICT_ID
+        description: Unique conflict identifier
+        unique: true
+      - name: primary_promo
+        data_type: TEXT
+        expr: PRIMARY_PROMO
+        description: Primary promotion code
+      - name: conflicting_promo
+        data_type: TEXT
+        expr: CONFLICTING_PROMO
+        description: Conflicting promotion code
+      - name: conflict_type
+        data_type: TEXT
+        expr: CONFLICT_TYPE
+        description: CANNIBALIZATION, STACKING_VIOLATION, BUSINESS_RULE, DEMOGRAPHIC_CONFLICT
+      - name: severity_level
+        data_type: TEXT
+        expr: SEVERITY_LEVEL
+        description: HIGH, MEDIUM, LOW severity classification
+      - name: conflict_description
+        data_type: TEXT
+        expr: CONFLICT_DESCRIPTION
+        description: Human-readable description of the conflict
+      - name: financial_impact_description
+        data_type: TEXT
+        expr: FINANCIAL_IMPACT_DESCRIPTION
+        description: Business impact explanation
+    facts:
+      - name: conflict_count
+        data_type: NUMBER
+        expr: COUNT(CONFLICT_ID)
+        description: Number of promotion conflicts defined
+      - name: high_severity_conflicts
+        data_type: NUMBER
+        expr: SUM(CASE WHEN SEVERITY_LEVEL = 'HIGH' THEN 1 ELSE 0 END)
+        description: Count of high-severity promotion conflicts
+    description: 'Promotion stacking violations prevention (BOGO + First Line Free = revenue cannibalization)'
+    synonyms: [promotion rules, stacking violations, promo conflicts]
+    primary_key:
+      columns:
+        - CONFLICT_ID
+  - name: customer_profiles
+    base_table:
+      database: COMCAST_REVENUE
+      schema: ANALYTICS
+      table: CUSTOMER_PROFILES
+    dimensions:
+      - name: customer_id
+        data_type: TEXT
+        expr: CUSTOMER_ID
+        description: Unique customer identifier
+        unique: true
+      - name: account_id
+        data_type: TEXT
+        expr: ACCOUNT_ID
+        description: Billing account identifier
+      - name: customer_segment
+        data_type: TEXT
+        expr: CUSTOMER_SEGMENT
+        description: RESIDENTIAL, BUSINESS, STUDENT, SENIOR customer segments
+      - name: tenure_months
+        data_type: NUMBER
+        expr: TENURE_MONTHS
+        description: Customer tenure in months
+      - name: promotion_usage_frequency
+        data_type: TEXT
+        expr: PROMOTION_USAGE_FREQUENCY
+        description: LOW, MEDIUM, HIGH promotion usage patterns
+      - name: churn_risk_score
+        data_type: NUMBER
+        expr: CHURN_RISK_SCORE
+        description: ML-derived churn risk score (0.00-1.00)
+      - name: payment_history_score
+        data_type: NUMBER
+        expr: PAYMENT_HISTORY_SCORE
+        description: Payment reliability score (1-100)
+      - name: billing_disputes_last_12m
+        data_type: NUMBER
+        expr: BILLING_DISPUTES_LAST_12M
+        description: Number of billing disputes in last 12 months
+      - name: service_region
+        data_type: TEXT
+        expr: SERVICE_REGION
+        description: Primary service region
+    facts:
+      - name: lifetime_value
+        data_type: NUMBER
+        expr: SUM(LIFETIME_VALUE)
+        description: Total customer lifetime value
+      - name: avg_churn_risk_score
+        data_type: NUMBER
+        expr: AVG(CHURN_RISK_SCORE)
+        description: Average churn risk score
+      - name: high_risk_customers
+        data_type: NUMBER
+        expr: SUM(CASE WHEN CHURN_RISK_SCORE > 0.3 THEN 1 ELSE 0 END)
+        description: Count of high churn risk customers
+      - name: frequent_promo_users
+        data_type: NUMBER
+        expr: SUM(CASE WHEN PROMOTION_USAGE_FREQUENCY = 'HIGH' THEN 1 ELSE 0 END)
+        description: Count of frequent promotion users
+      - name: dispute_prone_customers
+        data_type: NUMBER
+        expr: SUM(CASE WHEN BILLING_DISPUTES_LAST_12M >= 3 THEN 1 ELSE 0 END)
+        description: Customers with 3+ disputes in last 12 months
+    description: 'Customer clustering for promotion issue patterns and ML-powered risk segmentation'
+    synonyms: [customer risk, customer behavior, customer segmentation, churn risk]
+    primary_key:
+      columns:
+        - CUSTOMER_ID
+  - name: customer_billing_cycles
+    base_table:
+      database: COMCAST_REVENUE
+      schema: ANALYTICS
+      table: CUSTOMER_BILLING_CYCLES
+    dimensions:
+      - name: customer_id
+        data_type: TEXT
+        expr: CUSTOMER_ID
+        description: Customer identifier
+      - name: account_id
+        data_type: TEXT
+        expr: ACCOUNT_ID
+        description: Billing account identifier
+      - name: billing_cycle_day
+        data_type: NUMBER
+        expr: BILLING_CYCLE_DAY
+        description: Day of month for billing cycle (1-31)
+      - name: cycle_start_date
+        data_type: DATE
+        expr: CYCLE_START_DATE
+        description: Billing cycle start date
+      - name: cycle_end_date
+        data_type: DATE
+        expr: CYCLE_END_DATE
+        description: Billing cycle end date
+      - name: next_bill_date
+        data_type: DATE
+        expr: NEXT_BILL_DATE
+        description: Next scheduled billing date
+      - name: proration_policy
+        data_type: TEXT
+        expr: PRORATION_POLICY
+        description: FULL_MONTH, DAILY_PRORATION, WEEKLY_PRORATION
+      - name: timezone
+        data_type: TEXT
+        expr: TIMEZONE
+        description: Customer timezone for billing
+    facts:
+      - name: customer_cycles_count
+        data_type: NUMBER
+        expr: COUNT(DISTINCT CUSTOMER_ID)
+        description: Number of customers with billing cycles
+      - name: avg_cycle_day
+        data_type: NUMBER
+        expr: AVG(BILLING_CYCLE_DAY)
+        description: Average billing cycle day
+    description: 'Billing cycle timing management for promotion activation alignment'
+    synonyms: [billing cycles, cycle timing, billing schedule]
+    primary_key:
+      columns:
+        - CUSTOMER_ID
+        - CYCLE_START_DATE
+  - name: enhanced_promotion_reconciliation
+    base_table:
+      database: COMCAST_REVENUE
+      schema: ANALYTICS
+      table: ENHANCED_PROMOTION_RECONCILIATION
+    dimensions:
+      - name: record_id
+        data_type: TEXT
+        expr: RECORD_ID
+        description: Unique reconciliation record
+        unique: true
+      - name: customer_id
+        data_type: TEXT
+        expr: CUSTOMER_ID
+        description: Customer identifier
+      - name: customer_segment
+        data_type: TEXT
+        expr: CUSTOMER_SEGMENT
+        description: RESIDENTIAL, BUSINESS, STUDENT, SENIOR
+      - name: business_issue_classification
+        data_type: TEXT
+        expr: BUSINESS_ISSUE_CLASSIFICATION
+        description: STACKING_VIOLATION, PROMO_TIMING_MISMATCH, DUPLICATE_LINE_NUMBER, FIRST_BILL_ISSUE
+      - name: business_priority
+        data_type: TEXT
+        expr: BUSINESS_PRIORITY
+        description: CHURN_RISK, CUSTOMER_EXPERIENCE, MOBILE_PRIORITY, STANDARD
+      - name: cycle_timing_variance
+        data_type: NUMBER
+        expr: CYCLE_TIMING_VARIANCE
+        description: Difference in promotion timing cycles
+      - name: line_number_mismatch
+        data_type: BOOLEAN
+        expr: LINE_NUMBER_MISMATCH
+        description: True if order and billing line numbers differ
+      - name: churn_risk_score
+        data_type: NUMBER
+        expr: CHURN_RISK_SCORE
+        description: Customer churn likelihood (0.00-1.00)
+      - name: promotion_usage_frequency
+        data_type: TEXT
+        expr: PROMOTION_USAGE_FREQUENCY
+        description: LOW, MEDIUM, HIGH frequency of promotion usage
+      - name: tenure_months
+        data_type: NUMBER
+        expr: TENURE_MONTHS
+        description: Customer tenure in months
+      - name: promo_code
+        data_type: TEXT
+        expr: PROMO_CODE
+        description: Promotion code
+      - name: promo_name
+        data_type: TEXT
+        expr: PROMO_NAME
+        description: Promotion name
+      - name: discount_variance
+        data_type: NUMBER
+        expr: DISCOUNT_VARIANCE
+        description: Discount variance amount
+      - name: order_line_number
+        data_type: TEXT
+        expr: ORDER_LINE_NUMBER
+        description: Order system line number
+      - name: billing_line_number
+        data_type: TEXT
+        expr: BILLING_LINE_NUMBER
+        description: Billing system line number
+      - name: product_category
+        data_type: TEXT
+        expr: PRODUCT_CATEGORY
+        description: Product category
+    facts:
+      - name: high_priority_issues
+        data_type: NUMBER
+        expr: SUM(CASE WHEN BUSINESS_PRIORITY IN ('CHURN_RISK', 'CUSTOMER_EXPERIENCE') THEN 1 ELSE 0 END)
+        description: Count of high-priority business issues
+      - name: stacking_violations_prevented
+        data_type: NUMBER
+        expr: SUM(CASE WHEN BUSINESS_ISSUE_CLASSIFICATION = 'STACKING_VIOLATION' THEN 1 ELSE 0 END)
+        description: Revenue protection - stacking violations caught
+      - name: timing_mismatches_detected
+        data_type: NUMBER
+        expr: SUM(CASE WHEN BUSINESS_ISSUE_CLASSIFICATION = 'PROMO_TIMING_MISMATCH' THEN 1 ELSE 0 END)
+        description: Timing issues requiring intervention
+      - name: mobile_line_conflicts
+        data_type: NUMBER
+        expr: SUM(CASE WHEN BUSINESS_ISSUE_CLASSIFICATION = 'DUPLICATE_LINE_NUMBER' THEN 1 ELSE 0 END)
+        description: Mobile line management issues
+      - name: churn_risk_customers
+        data_type: NUMBER
+        expr: SUM(CASE WHEN BUSINESS_PRIORITY = 'CHURN_RISK' THEN 1 ELSE 0 END)
+        description: Customers at risk of churning due to billing issues
+      - name: avg_churn_risk_score
+        data_type: NUMBER
+        expr: AVG(CHURN_RISK_SCORE)
+        description: Average customer churn risk across reconciliation issues
+      - name: revenue_protection_value
+        data_type: NUMBER
+        expr: SUM(CASE WHEN BUSINESS_ISSUE_CLASSIFICATION = 'STACKING_VIOLATION' THEN ABS(DISCOUNT_VARIANCE) ELSE 0 END)
+        description: Revenue protected through stacking violation prevention
+    description: 'Comprehensive business intelligence view combining reconciliation data with customer context, timing analysis, and business impact scoring for anticipatory revenue assurance'
+    synonyms: [business reconciliation, enhanced revenue intelligence, customer context reconciliation]
+    primary_key:
+      columns:
+        - RECORD_ID
+  - name: business_priority_dashboard
+    base_table:
+      database: COMCAST_REVENUE
+      schema: ANALYTICS
+      table: BUSINESS_PRIORITY_DASHBOARD
+    dimensions:
+      - name: dashboard_key
+        data_type: TEXT
+        expr: "'BUSINESS_METRICS'"
+        description: Static key for dashboard aggregations
+    facts:
+      - name: total_transactions
+        data_type: NUMBER
+        expr: TOTAL_TRANSACTIONS
+        description: Total revenue transactions processed
+      - name: first_bill_accuracy_pct
+        data_type: NUMBER
+        expr: FIRST_BILL_ACCURACY_PCT
+        description: First bill accuracy percentage (target 95%)
+      - name: mobile_line_duplicates
+        data_type: NUMBER
+        expr: MOBILE_LINE_DUPLICATES
+        description: Mobile line duplicate conflicts detected
+      - name: promo_timing_issues
+        data_type: NUMBER
+        expr: PROMO_TIMING_ISSUES
+        description: Promotion timing mismatches requiring intervention
+      - name: stacking_violations
+        data_type: NUMBER
+        expr: STACKING_VIOLATIONS
+        description: Revenue cannibalization violations prevented
+      - name: high_risk_variance
+        data_type: NUMBER
+        expr: HIGH_RISK_VARIANCE
+        description: Financial impact of high-risk reconciliation issues
+      - name: churn_risk_customers
+        data_type: NUMBER
+        expr: CHURN_RISK_CUSTOMERS
+        description: Customers at high churn risk due to billing problems
+      - name: preventable_issues
+        data_type: NUMBER
+        expr: PREVENTABLE_ISSUES
+        description: Issues that could be prevented with AI intervention
+    description: 'Executive dashboard metrics for revenue assurance performance and business impact measurement'
+    synonyms: [executive metrics, business kpis, revenue dashboard]
+    primary_key:
+      columns:
+        - DASHBOARD_KEY
+  - name: promotion_activation_log
+    base_table:
+      database: COMCAST_REVENUE
+      schema: ANALYTICS
+      table: PROMOTION_ACTIVATION_LOG
+    dimensions:
+      - name: activation_id
+        data_type: TEXT
+        expr: ACTIVATION_ID
+        description: Unique activation event identifier
+        unique: true
+      - name: customer_id
+        data_type: TEXT
+        expr: CUSTOMER_ID
+        description: Customer identifier
+      - name: order_id
+        data_type: TEXT
+        expr: ORDER_ID
+        description: Related order identifier
+      - name: promo_code
+        data_type: TEXT
+        expr: PROMO_CODE
+        description: Promotion code activated
+      - name: activation_date
+        data_type: DATE
+        expr: ACTIVATION_DATE
+        description: Exact activation date
+      - name: scheduled_billing_cycle
+        data_type: DATE
+        expr: SCHEDULED_BILLING_CYCLE
+        description: Expected billing cycle for promotion
+      - name: actual_billing_cycle
+        data_type: DATE
+        expr: ACTUAL_BILLING_CYCLE
+        description: Actual billing cycle when promotion applied
+      - name: cycle_miss_reason
+        data_type: TEXT
+        expr: CYCLE_MISS_REASON
+        description: LATE_ACTIVATION, EARLY_ACTIVATION, BILLING_SYSTEM_MISS, ON_TIME
+      - name: proration_applied
+        data_type: BOOLEAN
+        expr: PRORATION_APPLIED
+        description: Whether proration was applied
+      - name: days_into_cycle
+        data_type: NUMBER
+        expr: DAYS_INTO_CYCLE
+        description: Days into billing cycle when activated
+      - name: activation_source
+        data_type: TEXT
+        expr: ACTIVATION_SOURCE
+        description: CUSTOMER_SERVICE, ONLINE, AUTO_SYSTEM activation source
+    facts:
+      - name: activation_count
+        data_type: NUMBER
+        expr: COUNT(ACTIVATION_ID)
+        description: Number of promotion activations
+      - name: proration_amount_total
+        data_type: NUMBER
+        expr: SUM(PRORATION_AMOUNT)
+        description: Total proration amounts applied
+      - name: timing_mismatches
+        data_type: NUMBER
+        expr: SUM(CASE WHEN CYCLE_MISS_REASON != 'ON_TIME' THEN 1 ELSE 0 END)
+        description: Count of activation timing mismatches
+      - name: late_activations
+        data_type: NUMBER
+        expr: SUM(CASE WHEN CYCLE_MISS_REASON = 'LATE_ACTIVATION' THEN 1 ELSE 0 END)
+        description: Count of late activations causing proration
+      - name: avg_days_into_cycle
+        data_type: NUMBER
+        expr: AVG(DAYS_INTO_CYCLE)
+        description: Average days into cycle for activations
+    description: 'Promotion activation timeline tracking to detect proration issues before billing'
+    synonyms: [activation timing, promo timing, billing timing, proration issues]
+    primary_key:
+      columns:
+        - ACTIVATION_ID
+relationships:
+  - name: orders_to_products
+    left_table: order_system_data
+    right_table: products
+    expr: order_system_data.product_id = products.product_id
+  - name: billing_to_products
+    left_table: billing_system_data
+    right_table: products
+    expr: billing_system_data.product_id = products.product_id
+  - name: orders_to_billing
+    left_table: order_system_data
+    right_table: billing_system_data
+    expr: order_system_data.order_id = REPLACE(billing_system_data.billing_id, 'BILL-', '')
+  - name: customers_to_orders
+    left_table: customers
+    right_table: order_system_data
+    expr: customers.customer_id = order_system_data.customer_id
+  - name: customers_to_billing
+    left_table: customers
+    right_table: billing_system_data
+    expr: customers.customer_id = billing_system_data.customer_id
+  - name: reconciliation_to_customers
+    left_table: customers
+    right_table: promotion_reconciliation
+    expr: customers.customer_id = promotion_reconciliation.customer_id
+  - name: customers_to_profiles
+    left_table: customers
+    right_table: customer_profiles
+    expr: customers.customer_id = customer_profiles.customer_id
+  - name: customers_to_billing_cycles
+    left_table: customers
+    right_table: customer_billing_cycles
+    expr: customers.customer_id = customer_billing_cycles.customer_id
+  - name: orders_to_activation_log
+    left_table: order_system_data
+    right_table: promotion_activation_log
+    expr: order_system_data.order_id = promotion_activation_log.order_id
+  - name: promos_to_conflicts_primary
+    left_table: promotion_types
+    right_table: promotion_conflicts
+    expr: promotion_types.promo_code = promotion_conflicts.primary_promo
+  - name: promos_to_conflicts_conflicting
+    left_table: promotion_types
+    right_table: promotion_conflicts
+    expr: promotion_types.promo_code = promotion_conflicts.conflicting_promo
+  - name: profiles_to_activation_log
+    left_table: customer_profiles
+    right_table: promotion_activation_log
+    expr: customer_profiles.customer_id = promotion_activation_log.customer_id
+  - name: enhanced_reconciliation_to_customers
+    left_table: customers
+    right_table: enhanced_promotion_reconciliation
+    expr: customers.customer_id = enhanced_promotion_reconciliation.customer_id
+  - name: enhanced_reconciliation_to_profiles
+    left_table: customer_profiles
+    right_table: enhanced_promotion_reconciliation
+    expr: customer_profiles.customer_id = enhanced_promotion_reconciliation.customer_id
+  - name: enhanced_reconciliation_to_cycles
+    left_table: customer_billing_cycles
+    right_table: enhanced_promotion_reconciliation
+    expr: customer_billing_cycles.customer_id = enhanced_promotion_reconciliation.customer_id
+  - name: enhanced_reconciliation_to_orders
+    left_table: order_system_data
+    right_table: enhanced_promotion_reconciliation
+    expr: order_system_data.order_id = enhanced_promotion_reconciliation.record_id
+  - name: enhanced_reconciliation_to_activation
+    left_table: promotion_activation_log
+    right_table: enhanced_promotion_reconciliation
+    expr: promotion_activation_log.order_id = enhanced_promotion_reconciliation.record_id
+  - name: dashboard_to_enhanced_reconciliation
+    left_table: enhanced_promotion_reconciliation
+    right_table: business_priority_dashboard
+    expr: "'BUSINESS_METRICS' = business_priority_dashboard.dashboard_key"
+verified_queries:
+  - name: reconciliation_dashboard
+    question: What is the reconciliation dashboard by region and risk level?
+    sql: SELECT pr.service_region, pr.risk_level, COUNT(*) AS record_count, SUM(ABS(pr.discount_variance)) AS total_abs_variance, SUM(CASE WHEN pr.reconciliation_status = 'MATCHED' THEN 1 ELSE 0 END) AS matched_records FROM __promotion_reconciliation AS pr GROUP BY pr.service_region, pr.risk_level ORDER BY total_abs_variance DESC
+  - name: high_risk_city_hotspots
+    question: Which cities have the highest high-risk reconciliation variances?
+    sql: SELECT pr.service_city, pr.service_state, SUM(ABS(pr.discount_variance)) AS total_abs_variance, COUNT(*) AS issues FROM __promotion_reconciliation AS pr WHERE pr.risk_level = 'HIGH' GROUP BY pr.service_city, pr.service_state ORDER BY total_abs_variance DESC LIMIT 20
+  - name: promotion_performance
+    question: Which promotions produce the highest exception rates and variances?
+    sql: SELECT pr.promo_name, COUNT(*) AS total_records, AVG(CASE WHEN pr.reconciliation_status = 'MATCHED' THEN 1 ELSE 0 END) AS match_rate, SUM(ABS(pr.discount_variance)) AS total_abs_variance FROM __promotion_reconciliation AS pr GROUP BY pr.promo_name ORDER BY match_rate ASC, total_abs_variance DESC
+  - name: revenue_impact_summary
+    question: What is the revenue at risk and potential recovery by risk level?
+    sql: SELECT pr.risk_level, SUM(ABS(pr.discount_variance)) AS revenue_at_risk, SUM(CASE WHEN pr.risk_level IN ('LOW', 'MEDIUM') AND ABS(pr.discount_variance) <= 10 THEN ABS(pr.discount_variance) ELSE 0 END) AS auto_recovery_opportunity, SUM(CASE WHEN pr.risk_level = 'HIGH' THEN ABS(pr.discount_variance) * 0.8 ELSE 0 END) AS manual_recovery_opportunity FROM __promotion_reconciliation AS pr GROUP BY pr.risk_level ORDER BY revenue_at_risk DESC
+  - name: trend_of_risk_over_time
+    question: How do risk levels and variances trend over time?
+    sql: SELECT pr.transaction_date, pr.risk_level, COUNT(*) AS count_records, SUM(ABS(pr.discount_variance)) AS total_abs_variance FROM __promotion_reconciliation AS pr GROUP BY pr.transaction_date, pr.risk_level ORDER BY pr.transaction_date ASC
+  - name: Show top 10 high-risk DISCOUNT_MISMATCH records with variance > $20, including product, promo, and region.
+    question: Show top 10 high-risk DISCOUNT_MISMATCH records with variance > $20, including product, promo, and region.
+    sql: |-
+      SELECT
+        pr.product_name,
+        pr.promo_name,
+        pr.service_region,
+        pr.discount_variance,
+        pr.abs_variance
+      FROM
+        promotion_reconciliation AS pr
+      WHERE
+        pr.risk_level = 'HIGH'
+        AND pr.reconciliation_status = 'DISCOUNT_MISMATCH'
+        AND ABS(pr.discount_variance) > 20
+      ORDER BY
+        pr.abs_variance DESC NULLS LAST
+      LIMIT
+        10
+    use_as_onboarding_question: false
+    verified_by: Doug Hall
+    verified_at: 1755103065
+  - name: How much variance is auto-recoverable at a $10 threshold, and what is the manual recovery opportunity?
+    question: How much variance is auto-recoverable at a $10 threshold, and what is the manual recovery opportunity?
+    sql: |-
+      SELECT
+        SUM(
+          CASE
+            WHEN pr.risk_level IN ('LOW', 'MEDIUM')
+            AND ABS(pr.discount_variance) <= 10 THEN ABS(pr.discount_variance)
+            ELSE 0
+          END
+        ) AS auto_recoverable_variance,
+        SUM(
+          CASE
+            WHEN pr.risk_level = 'HIGH' THEN ABS(pr.discount_variance) * 0.8
+            ELSE 0
+          END
+        ) AS manual_recovery_opportunity
+      FROM
+        promotion_reconciliation AS pr
+    use_as_onboarding_question: false
+    verified_by: Doug Hall
+    verified_at: 1755103110
+  - name: first_bill_accuracy_issues
+    question: Show first-bill issues where the billing cycle number is not 1, with severity and variance.
+    sql: |
+      SELECT
+        pr.customer_id,
+        pr.product_name,
+        pr.reconciliation_status,
+        pr.risk_level,
+        pr.service_region,
+        pr.discount_variance,
+        b.billing_cycle_number
+      FROM promotion_reconciliation pr
+      JOIN billing_system_data b
+        ON REPLACE(b.billing_id,'BILL-','') = REPLACE(pr.record_id,'ORD-','')
+      JOIN order_system_data o
+        ON o.customer_id = pr.customer_id
+      WHERE o.first_bill_flag = TRUE
+        AND b.billing_cycle_number <> 1
+      ORDER BY ABS(pr.discount_variance) DESC
+  - name: duplicate_mobile_lines
+    question: Find duplicate mobile line numbers across accounts with counts and regions.
+    sql: |
+      WITH dups AS (
+        SELECT line_number, COUNT(*) AS cnt
+        FROM order_system_data
+        WHERE line_number IS NOT NULL
+        GROUP BY 1 HAVING COUNT(*) > 1
+      )
+      SELECT d.line_number,
+             d.cnt,
+             ANY_VALUE(pr.service_region) AS sample_region
+      FROM dups d
+      LEFT JOIN order_system_data o
+        ON o.line_number = d.line_number
+      LEFT JOIN promotion_reconciliation pr
+        ON pr.customer_id = o.customer_id
+      GROUP BY d.line_number, d.cnt
+      ORDER BY d.cnt DESC
+  - name: promo_timing_mismatches
+    question: Show promo timing mismatches comparing order start cycle vs billing applied cycle.
+    sql: |
+      SELECT
+        pr.customer_id,
+        pr.product_name,
+        o.promo_start_cycle,
+        b.promo_applied_cycle,
+        pr.reconciliation_status,
+        pr.risk_level,
+        pr.discount_variance
+      FROM promotion_reconciliation pr
+      JOIN order_system_data o
+        ON o.customer_id = pr.customer_id
+      JOIN billing_system_data b
+        ON REPLACE(b.billing_id,'BILL-','') = REPLACE(pr.record_id,'ORD-','')
+      WHERE b.promo_applied_cycle <> o.promo_start_cycle
+      ORDER BY ABS(pr.discount_variance) DESC
+  - name: promotion_stacking_violations
+    question: Show promotion stacking violations that could cause revenue cannibalization like BOGO plus First Line Free
+    sql: |
+      SELECT 
+        pc.primary_promo,
+        pc.conflicting_promo,
+        pc.conflict_type,
+        pc.severity_level,
+        pc.conflict_description,
+        COUNT(pr.record_id) as violation_count,
+        SUM(ABS(pr.discount_variance)) as revenue_impact
+      FROM promotion_conflicts pc
+      LEFT JOIN promotion_reconciliation pr 
+        ON pr.promo_code = pc.primary_promo
+      WHERE pc.severity_level = 'HIGH'
+        AND pc.conflict_type = 'CANNIBALIZATION'
+      GROUP BY pc.primary_promo, pc.conflicting_promo, pc.conflict_type, 
+               pc.severity_level, pc.conflict_description
+      ORDER BY revenue_impact DESC
+  - name: first_bill_accuracy_analysis
+    question: What is the first bill accuracy rate (targeting 95%) and show failure cases for customer experience protection?
+    sql: |
+      SELECT 
+        'FIRST_BILL_ACCURACY' as metric_type,
+        COUNT(*) as total_first_bills,
+        SUM(CASE WHEN pr.reconciliation_status = 'MATCHED' THEN 1 ELSE 0 END) as accurate_bills,
+        ROUND(
+          SUM(CASE WHEN pr.reconciliation_status = 'MATCHED' THEN 1 ELSE 0 END) * 100.0 / COUNT(*), 2
+        ) as accuracy_percentage,
+        95.0 as target_percentage,
+        SUM(CASE WHEN pr.reconciliation_status != 'MATCHED' THEN 1 ELSE 0 END) as failure_cases,
+        SUM(CASE WHEN pr.reconciliation_status != 'MATCHED' THEN ABS(pr.discount_variance) ELSE 0 END) as failure_impact
+      FROM promotion_reconciliation pr
+      JOIN order_system_data o ON o.customer_id = pr.customer_id
+      WHERE o.first_bill_flag = TRUE
+  - name: customer_risk_clustering_analysis
+    question: Identify customer clusters prone to promotion issues using ML risk scoring for proactive intervention
+    sql: |
+      SELECT 
+        cp.customer_segment,
+        cp.promotion_usage_frequency,
+        CASE 
+          WHEN cp.churn_risk_score > 0.3 THEN 'HIGH_CHURN_RISK'
+          WHEN cp.churn_risk_score > 0.15 THEN 'MEDIUM_CHURN_RISK'
+          ELSE 'LOW_CHURN_RISK'
+        END as churn_risk_category,
+        COUNT(DISTINCT cp.customer_id) as customer_count,
+        AVG(cp.churn_risk_score) as avg_churn_risk,
+        AVG(cp.billing_disputes_last_12m) as avg_disputes,
+        COUNT(pr.record_id) as total_reconciliation_records,
+        SUM(CASE WHEN pr.risk_level = 'HIGH' THEN 1 ELSE 0 END) as high_risk_issues,
+        SUM(ABS(pr.discount_variance)) as total_variance_impact
+      FROM customer_profiles cp
+      LEFT JOIN promotion_reconciliation pr ON cp.customer_id = pr.customer_id
+      GROUP BY cp.customer_segment, cp.promotion_usage_frequency, churn_risk_category
+      ORDER BY high_risk_issues DESC, total_variance_impact DESC
+  - name: anticipatory_billing_validation
+    question: Show pre-billing validation opportunities by detecting timing mismatches before invoice generation
+    sql: |
+      SELECT 
+        pal.customer_id,
+        pal.promo_code,
+        pal.cycle_miss_reason,
+        pal.days_into_cycle,
+        pal.proration_applied,
+        pal.proration_amount,
+        cp.churn_risk_score,
+        cp.customer_segment,
+        cbc.next_bill_date,
+        DATEDIFF(day, CURRENT_DATE(), cbc.next_bill_date) as days_until_billing,
+        CASE 
+          WHEN pal.cycle_miss_reason = 'LATE_ACTIVATION' AND cp.churn_risk_score > 0.3 THEN 'URGENT_INTERVENTION'
+          WHEN pal.cycle_miss_reason = 'LATE_ACTIVATION' THEN 'PROACTIVE_REVIEW'
+          WHEN pal.proration_applied = TRUE THEN 'MONITOR_BILLING'
+          ELSE 'STANDARD_PROCESSING'
+        END as recommended_action
+      FROM promotion_activation_log pal
+      JOIN customer_profiles cp ON pal.customer_id = cp.customer_id
+      JOIN customer_billing_cycles cbc ON pal.customer_id = cbc.customer_id
+      WHERE pal.cycle_miss_reason != 'ON_TIME'
+        AND cbc.next_bill_date > CURRENT_DATE()
+      ORDER BY 
+        CASE recommended_action
+          WHEN 'URGENT_INTERVENTION' THEN 1
+          WHEN 'PROACTIVE_REVIEW' THEN 2
+          WHEN 'MONITOR_BILLING' THEN 3
+          ELSE 4
+        END,
+        days_until_billing ASC
+  - name: mobile_line_conflict_detection
+    question: Detect mobile line number conflicts and duplicates across accounts to prevent billing errors
+    sql: |
+      SELECT 
+        o.line_number,
+        COUNT(DISTINCT o.customer_id) as customer_count,
+        COUNT(DISTINCT o.account_id) as account_count,
+        COUNT(o.order_id) as order_count,
+        LISTAGG(DISTINCT o.customer_id, ', ') as customer_list,
+        LISTAGG(DISTINCT pr.service_region, ', ') as regions_affected,
+        SUM(CASE WHEN pr.risk_level = 'HIGH' THEN 1 ELSE 0 END) as high_risk_conflicts,
+        SUM(ABS(pr.discount_variance)) as total_variance_impact
+      FROM order_system_data o
+      LEFT JOIN promotion_reconciliation pr ON o.customer_id = pr.customer_id
+      WHERE o.line_number IS NOT NULL
+        AND o.product_id LIKE '%MOB%'
+      GROUP BY o.line_number
+      HAVING COUNT(DISTINCT o.customer_id) > 1
+      ORDER BY customer_count DESC, total_variance_impact DESC
+  - name: proration_prevention_analysis
+    question: Analyze proration scenarios to recommend deferring promotions to next cycle vs applying proration
+    sql: |
+      SELECT 
+        pal.promo_code,
+        pt.promo_name,
+        COUNT(*) as total_activations,
+        SUM(CASE WHEN pal.proration_applied = TRUE THEN 1 ELSE 0 END) as proration_cases,
+        ROUND(SUM(CASE WHEN pal.proration_applied = TRUE THEN 1 ELSE 0 END) * 100.0 / COUNT(*), 2) as proration_rate,
+        AVG(pal.days_into_cycle) as avg_days_into_cycle,
+        SUM(pal.proration_amount) as total_proration_amount,
+        AVG(pal.proration_amount) as avg_proration_amount,
+        CASE 
+          WHEN AVG(pal.days_into_cycle) > 20 THEN 'RECOMMEND_DEFER_TO_NEXT_CYCLE'
+          WHEN SUM(pal.proration_amount) / COUNT(*) > 10 THEN 'HIGH_PRORATION_IMPACT'
+          ELSE 'ACCEPTABLE_PRORATION'
+        END as recommendation
+      FROM promotion_activation_log pal
+      JOIN promotion_types pt ON pal.promo_code = pt.promo_code
+      WHERE pal.activation_date >= CURRENT_DATE() - 90
+      GROUP BY pal.promo_code, pt.promo_name
+      ORDER BY proration_rate DESC, total_proration_amount DESC
+  - name: ai_insights_summary
+    question: Generate AI-powered insights summary for operational team focusing on prevention vs reaction
+    sql: |
+      WITH preventable_issues AS (
+        SELECT 
+          'STACKING_VIOLATIONS' as issue_type,
+          COUNT(*) as issue_count,
+          'Revenue cannibalization prevention' as prevention_value,
+          SUM(ABS(pr.discount_variance)) as financial_impact
+        FROM promotion_reconciliation pr
+        JOIN promotion_conflicts pc ON pr.promo_code = pc.primary_promo
+        WHERE pc.severity_level = 'HIGH'
+        
+        UNION ALL
+        
+        SELECT 
+          'TIMING_MISMATCHES' as issue_type,
+          COUNT(*) as issue_count,
+          'Proactive cycle management' as prevention_value,
+          SUM(pal.proration_amount) as financial_impact
+        FROM promotion_activation_log pal
+        WHERE pal.cycle_miss_reason = 'LATE_ACTIVATION'
+        
+        UNION ALL
+        
+        SELECT 
+          'FIRST_BILL_FAILURES' as issue_type,
+          COUNT(*) as issue_count,
+          'Customer experience protection' as prevention_value,
+          SUM(ABS(pr.discount_variance)) as financial_impact
+        FROM promotion_reconciliation pr
+        JOIN order_system_data o ON o.customer_id = pr.customer_id
+        WHERE o.first_bill_flag = TRUE 
+          AND pr.reconciliation_status != 'MATCHED'
+        
+        UNION ALL
+        
+        SELECT 
+          'HIGH_RISK_CUSTOMERS' as issue_type,
+          COUNT(DISTINCT cp.customer_id) as issue_count,
+          'Targeted intervention' as prevention_value,
+          SUM(ABS(pr.discount_variance)) as financial_impact
+        FROM customer_profiles cp
+        JOIN promotion_reconciliation pr ON cp.customer_id = pr.customer_id
+        WHERE cp.churn_risk_score > 0.3 
+          AND pr.risk_level = 'HIGH'
+      )
+      SELECT 
+        issue_type,
+        issue_count,
+        prevention_value,
+        ROUND(financial_impact, 2) as financial_impact,
+        ROUND(financial_impact / SUM(financial_impact) OVER() * 100, 1) as pct_of_total_impact
+      FROM preventable_issues
+      ORDER BY financial_impact DESC
+  - name: anticipatory_billing_issues_detection
+    question: Which customers are likely to have billing issues before their next invoice is generated?
+    sql: SELECT epr.customer_id, epr.customer_segment, epr.churn_risk_score, epr.business_issue_classification, epr.business_priority, cbc.next_bill_date, pal.cycle_miss_reason, epr.cycle_timing_variance FROM __enhanced_promotion_reconciliation AS epr LEFT JOIN __customer_billing_cycles AS cbc ON epr.customer_id = cbc.customer_id LEFT JOIN __promotion_activation_log AS pal ON epr.record_id = pal.order_id WHERE epr.business_issue_classification IN ('STACKING_VIOLATION', 'PROMO_TIMING_MISMATCH', 'FIRST_BILL_ISSUE') AND cbc.next_bill_date > CURRENT_DATE ORDER BY epr.churn_risk_score DESC, cbc.next_bill_date ASC
+  - name: revenue_cannibalization_prevention
+    question: What promotion stacking violations are we preventing to protect revenue?
+    sql: SELECT epr.promo_code, epr.promo_name, COUNT(*) AS violations_prevented, SUM(ABS(epr.discount_variance)) AS revenue_protected, pc.conflict_type, pc.severity_level FROM __enhanced_promotion_reconciliation AS epr LEFT JOIN __promotion_conflicts AS pc ON epr.promo_code = pc.primary_promo WHERE epr.business_issue_classification = 'STACKING_VIOLATION' GROUP BY epr.promo_code, epr.promo_name, pc.conflict_type, pc.severity_level ORDER BY revenue_protected DESC
+  - name: first_bill_accuracy_performance
+    question: How is our first bill accuracy performing against the 95% target?
+    sql: SELECT 'BUSINESS_METRICS' as dashboard_key, CASE WHEN 95.0 >= 95 THEN 'MEETING_TARGET' ELSE 'BELOW_TARGET' END AS performance_status FROM __business_priority_dashboard AS bpd
+  - name: customer_experience_risk_clustering
+    question: Which customer segments are most prone to billing issues that impact experience?
+    sql: SELECT epr.customer_segment, epr.promotion_usage_frequency, COUNT(*) AS issue_count, AVG(epr.churn_risk_score) AS avg_churn_risk, SUM(CASE WHEN epr.business_priority = 'CHURN_RISK' THEN 1 ELSE 0 END) AS churn_risk_customers, SUM(CASE WHEN epr.business_priority = 'CUSTOMER_EXPERIENCE' THEN 1 ELSE 0 END) AS experience_impact_customers FROM __enhanced_promotion_reconciliation AS epr WHERE epr.business_issue_classification IN ('STACKING_VIOLATION', 'PROMO_TIMING_MISMATCH', 'FIRST_BILL_ISSUE', 'DUPLICATE_LINE_NUMBER') GROUP BY epr.customer_segment, epr.promotion_usage_frequency ORDER BY avg_churn_risk DESC, issue_count DESC
+  - name: mobile_line_conflict_early_warning
+    question: What mobile line conflicts need immediate attention to prevent customer impact?
+    sql: SELECT epr.customer_id, epr.order_line_number, epr.billing_line_number, epr.product_category, epr.churn_risk_score, epr.customer_segment, epr.tenure_months FROM __enhanced_promotion_reconciliation AS epr WHERE epr.business_issue_classification = 'DUPLICATE_LINE_NUMBER' AND epr.line_number_mismatch = TRUE AND epr.product_category = 'Mobile' ORDER BY epr.churn_risk_score DESC, epr.tenure_months ASC
+  - name: promotion_timing_intervention_queue
+    question: Which promotion timing mismatches require immediate intervention to prevent proration?
+    sql: SELECT epr.customer_id, epr.promo_code, epr.promo_name, epr.cycle_timing_variance, pal.cycle_miss_reason, pal.proration_applied, pal.proration_amount, cbc.next_bill_date, epr.business_priority FROM __enhanced_promotion_reconciliation AS epr LEFT JOIN __promotion_activation_log AS pal ON epr.record_id = pal.order_id LEFT JOIN __customer_billing_cycles AS cbc ON epr.customer_id = cbc.customer_id WHERE epr.business_issue_classification = 'PROMO_TIMING_MISMATCH' AND ABS(epr.cycle_timing_variance) > 1 ORDER BY pal.proration_amount DESC, cbc.next_bill_date ASC
+  - name: executive_revenue_protection_summary
+    question: What is the executive summary of revenue protection and customer experience metrics?
+    sql: SELECT bpd.dashboard_key FROM __business_priority_dashboard AS bpd
+
+custom_instructions: |
+  Revenue Intelligence Platform for Anticipatory Billing Issue Detection and Customer Experience Protection
+
+  BUSINESS CONTEXT:
+  This semantic model powers AI-driven revenue assurance for Comcast, focusing on preventing billing issues 
+  before they impact customers. The system addresses critical business pain points including promotion 
+  stacking violations (revenue cannibalization), timing mismatches that cause proration, first bill 
+  accuracy (95% target), mobile line conflicts, and customer churn risk from billing problems.
+
+  KEY BUSINESS OBJECTIVES:
+  1. ANTICIPATORY DETECTION: Identify potential billing issues before invoice generation
+  2. REVENUE PROTECTION: Prevent promotion stacking violations that cannibalize revenue
+  3. CUSTOMER EXPERIENCE: Maintain 95% first bill accuracy and prevent churn-inducing billing errors
+  4. OPERATIONAL EFFICIENCY: Enable AI-powered recommendations to reduce manual intervention
+
+  CRITICAL BUSINESS RULES:
+  - First Bill Accuracy Target: 95% (executive KPI)
+  - Revenue Cannibalization Prevention: Block conflicting promotions (e.g., BOGO + First Line Free)
+  - Timing Management: Detect cycle mismatches before proration occurs
+  - Customer Risk Clustering: Identify high-churn-risk customers with billing issues
+  - Mobile Line Management: Prevent duplicate line number conflicts
+
+  AI INTELLIGENCE FOCUS AREAS:
+  1. Pattern Recognition: Customer segments prone to promotion issues
+  2. Predictive Analytics: Billing problems before invoice generation
+  3. Business Impact Scoring: Prioritize interventions by revenue/experience impact
+  4. Operational Recommendations: AI-suggested fixes for billing operations team
+
+  Natural Language Query Examples:
+  - "Show me customers at risk for first bill issues before next billing cycle"
+  - "Which promotions have stacking conflicts that could cause revenue loss?"
+  - "What timing mismatches should we fix to prevent proration?"
+  - "Which high churn risk customers have promotion problems requiring immediate attention?"
+  - "Generate executive summary of revenue protection and customer experience metrics"
+  - "What mobile line conflicts need immediate resolution?"
+  - "Which customer segments are most prone to billing issues?"
+  
+  Snowflake AI and Intelligence can use this enhanced model for natural language exploration, 
+  chatbot experiences, and ML-powered insights for anticipatory revenue assurance and 
+  customer experience protection.
