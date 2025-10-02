@@ -1,0 +1,534 @@
+name: freewheel_adtech_analytics
+description: Snowflake Cortex Agent semantic model for FreeWheel-style adtech analytics across auctions, bids, wins/impressions, losses, and conversions with campaign and publisher context
+tables:
+  - name: auctions
+    base_table:
+      database: FREEWHEEL_DATA_PLATFORM
+      schema: EXCHANGE_LOGS
+      table: AUCTIONS
+    primary_key:
+      columns:
+        - AUCTION_ID
+    dimensions:
+      - name: auction_id
+        data_type: TEXT
+        expr: AUCTION_ID
+        description: Unique exchange auction identifier
+        unique: true
+      - name: inventory_id
+        data_type: TEXT
+        expr: INVENTORY_ID
+        description: Publisher inventory unit (site/app/ad unit)
+      - name: line_item_id
+        data_type: TEXT
+        expr: LINE_ITEM_ID
+        description: Line item that targets this auction
+      - name: campaign_id
+        data_type: TEXT
+        expr: CAMPAIGN_ID
+        description: Parent campaign identifier
+      - name: advertiser_id
+        data_type: TEXT
+        expr: ADVERTISER_ID
+        description: Brand/advertiser buying the media
+      - name: ssp_id
+        data_type: TEXT
+        expr: SSP_ID
+        description: Supply source / exchange id
+      - name: ad_format
+        data_type: TEXT
+        expr: AD_FORMAT
+        description: Ad format such as Video, Display, Audio
+      - name: channel
+        data_type: TEXT
+        expr: CHANNEL
+        description: Distribution channel (CTV, Desktop, Mobile)
+      - name: device_type
+        data_type: TEXT
+        expr: DEVICE_TYPE
+        description: Device type (CTV, Phone, Tablet)
+      - name: platform
+        data_type: TEXT
+        expr: PLATFORM
+        description: Platform/OS (iOS, Android, Web, Roku, FireTV)
+      - name: geo_country
+        data_type: TEXT
+        expr: GEO_COUNTRY
+        description: Country code or country name
+      - name: iab_category
+        data_type: TEXT
+        expr: IAB_CATEGORY
+        description: IAB content category of the impression opportunity
+      - name: deal_id
+        data_type: TEXT
+        expr: DEAL_ID
+        description: Deal id for preferred/private marketplace auctions
+      - name: user_id
+        data_type: TEXT
+        expr: USER_ID
+        description: Pseudonymous audience identifier
+      - name: floor_price_cpm
+        data_type: NUMBER
+        expr: FLOOR_PRICE_CPM
+        description: Floor price in CPM
+    time_dimensions:
+      - name: auction_time
+        data_type: TIMESTAMP
+        expr: AUCTION_TIMESTAMP
+        description: Timestamp the auction occurred
+      - name: auction_timestamp
+        data_type: TIMESTAMP
+        expr: AUCTION_TIMESTAMP
+        description: Alias for AUCTION_TIMESTAMP to support agent-generated queries
+    facts:
+      - name: auctions
+        data_type: NUMBER
+        expr: COUNT(AUCTION_ID)
+        description: Total auctions
+      - name: average_floor_cpm
+        data_type: NUMBER
+        expr: AVG(FLOOR_PRICE_CPM)
+        description: Average floor CPM for auctions
+    description: ''
+    synonyms:
+      - auction
+      - auction_logs
+
+  - name: bids
+    base_table:
+      database: FREEWHEEL_DATA_PLATFORM
+      schema: EXCHANGE_LOGS
+      table: BIDS
+    primary_key:
+      columns:
+        - BID_ID
+    dimensions:
+      - name: bid_id
+        data_type: TEXT
+        expr: BID_ID
+        description: Unique bid identifier
+        unique: true
+      - name: auction_id
+        data_type: TEXT
+        expr: AUCTION_ID
+        description: Linked auction id
+      - name: line_item_id
+        data_type: TEXT
+        expr: LINE_ITEM_ID
+        description: Line item that submitted the bid
+      - name: creative_id
+        data_type: TEXT
+        expr: CREATIVE_ID
+        description: Creative rendered if the bid wins
+      - name: bid_currency
+        data_type: TEXT
+        expr: BID_CURRENCY
+        description: Currency of bid price (typically USD)
+      - name: bid_price_cpm
+        data_type: NUMBER
+        expr: BID_PRICE_CPM
+        description: Bid price in CPM
+    time_dimensions:
+      - name: bid_time
+        data_type: TIMESTAMP
+        expr: BID_TIMESTAMP
+        description: When the bid was made
+      - name: bid_timestamp
+        data_type: TIMESTAMP
+        expr: BID_TIMESTAMP
+        description: Alias for BID_TIMESTAMP to support agent-generated queries
+    facts:
+      - name: bids
+        data_type: NUMBER
+        expr: COUNT(BID_ID)
+        description: Total bids submitted
+      - name: average_bid_cpm
+        data_type: NUMBER
+        expr: AVG(BID_PRICE_CPM)
+        description: Average bid CPM
+    description: ''
+    synonyms:
+      - bid_logs
+
+  - name: impressions
+    base_table:
+      database: FREEWHEEL_DATA_PLATFORM
+      schema: EXCHANGE_LOGS
+      table: WINS_IMPRESSIONS
+    primary_key:
+      columns:
+        - IMPRESSION_ID
+    dimensions:
+      - name: impression_id
+        data_type: TEXT
+        expr: IMPRESSION_ID
+        description: Unique impression id
+        unique: true
+      - name: bid_id
+        data_type: TEXT
+        expr: BID_ID
+        description: Winning bid id
+      - name: auction_id
+        data_type: TEXT
+        expr: AUCTION_ID
+        description: Source auction id
+      - name: line_item_id
+        data_type: TEXT
+        expr: LINE_ITEM_ID
+        description: Line item responsible for the impression
+      - name: campaign_id
+        data_type: TEXT
+        expr: CAMPAIGN_ID
+        description: Campaign that owns the line item
+      - name: advertiser_id
+        data_type: TEXT
+        expr: ADVERTISER_ID
+        description: Advertiser for the impression
+      - name: publisher_id
+        data_type: TEXT
+        expr: PUBLISHER_ID
+        description: Publisher who delivered the impression
+      - name: inventory_id
+        data_type: TEXT
+        expr: INVENTORY_ID
+        description: Inventory unit id
+      - name: channel
+        data_type: TEXT
+        expr: CHANNEL
+        description: Delivery channel (CTV, Desktop, Mobile)
+      - name: device_type
+        data_type: TEXT
+        expr: DEVICE_TYPE
+        description: Device type
+      - name: ad_format
+        data_type: TEXT
+        expr: AD_FORMAT
+        description: Ad format (Video, Display, Audio)
+      - name: geo_country
+        data_type: TEXT
+        expr: GEO_COUNTRY
+        description: Country where impression was served
+      - name: was_viewable
+        data_type: BOOLEAN
+        expr: WAS_VIEWABLE
+        description: Whether the impression met the viewability threshold
+      - name: was_clicked
+        data_type: BOOLEAN
+        expr: WAS_CLICKED
+        description: Whether the impression was clicked
+      - name: clearing_price_cpm
+        data_type: NUMBER
+        expr: CLEARING_PRICE_CPM
+        description: Clearing price in CPM for the won auction
+    time_dimensions:
+      - name: impression_time
+        data_type: TIMESTAMP
+        expr: IMPRESSION_TIMESTAMP
+        description: Timestamp the impression was rendered
+      - name: impression_timestamp
+        data_type: TIMESTAMP
+        expr: IMPRESSION_TIMESTAMP
+        description: Alias for IMPRESSION_TIMESTAMP to support agent-generated queries
+    facts:
+      - name: impressions
+        data_type: NUMBER
+        expr: COUNT(IMPRESSION_ID)
+        description: Total impressions
+      - name: viewable_impressions
+        data_type: NUMBER
+        expr: SUM(CASE WHEN WAS_VIEWABLE THEN 1 ELSE 0 END)
+        description: Impressions that were viewable
+      - name: clicks
+        data_type: NUMBER
+        expr: SUM(CASE WHEN WAS_CLICKED THEN 1 ELSE 0 END)
+        description: Total clicks
+      - name: average_clearing_cpm
+        data_type: NUMBER
+        expr: AVG(CLEARING_PRICE_CPM)
+        description: Average clearing CPM for won auctions
+      - name: spend_usd
+        data_type: NUMBER
+        expr: SUM(CLEARING_PRICE_CPM / 1000)
+        description: Media spend in USD derived from CPM
+    description: ''
+    synonyms:
+      - wins
+      - wins_impressions
+
+  - name: conversions
+    base_table:
+      database: FREEWHEEL_DATA_PLATFORM
+      schema: EXCHANGE_LOGS
+      table: CONVERSIONS
+    primary_key:
+      columns:
+        - CONVERSION_ID
+    dimensions:
+      - name: conversion_id
+        data_type: TEXT
+        expr: CONVERSION_ID
+        description: Unique conversion identifier
+        unique: true
+      - name: impression_id
+        data_type: TEXT
+        expr: IMPRESSION_ID
+        description: Downstream impression credited with the conversion
+      - name: conversion_type
+        data_type: TEXT
+        expr: CONVERSION_TYPE
+        description: Type of conversion (Signup, Purchase, Lead)
+      - name: attribution_model
+        data_type: TEXT
+        expr: ATTRIBUTION_MODEL
+        description: Attribution model used (last_click, view_through)
+      - name: conversion_value
+        data_type: NUMBER
+        expr: CONVERSION_VALUE
+        description: Value of the conversion
+    time_dimensions:
+      - name: conversion_time
+        data_type: TIMESTAMP
+        expr: CONVERSION_TIMESTAMP
+        description: When the conversion occurred
+      - name: conversion_timestamp
+        data_type: TIMESTAMP
+        expr: CONVERSION_TIMESTAMP
+        description: Alias for CONVERSION_TIMESTAMP to support agent-generated queries
+    facts:
+      - name: conversions
+        data_type: NUMBER
+        expr: COUNT(CONVERSION_ID)
+        description: Total conversions
+      - name: conversion_value
+        data_type: NUMBER
+        expr: SUM(CONVERSION_VALUE)
+        description: Sum of conversion values
+    description: ''
+    synonyms:
+      - postbacks
+
+  - name: losses
+    base_table:
+      database: FREEWHEEL_DATA_PLATFORM
+      schema: EXCHANGE_LOGS
+      table: LOSSES
+    primary_key:
+      columns:
+        - LOSS_ID
+    dimensions:
+      - name: loss_id
+        data_type: TEXT
+        expr: LOSS_ID
+        description: Unique loss record id
+        unique: true
+      - name: auction_id
+        data_type: TEXT
+        expr: AUCTION_ID
+        description: Auction that was lost
+      - name: line_item_id
+        data_type: TEXT
+        expr: LINE_ITEM_ID
+        description: Line item that participated
+      - name: loss_reason
+        data_type: TEXT
+        expr: LOSS_REASON
+        description: Reason for losing the auction (Outbid, Below floor, Creative filtered)
+    time_dimensions:
+      - name: loss_time
+        data_type: TIMESTAMP
+        expr: LOSS_TIMESTAMP
+        description: When the loss occurred
+    facts:
+      - name: lost_auctions
+        data_type: NUMBER
+        expr: COUNT(LOSS_ID)
+        description: Number of losses
+    description: ''
+    synonyms:
+      - loss_logs
+
+  - name: campaigns
+    base_table:
+      database: FREEWHEEL_DATA_PLATFORM
+      schema: AD_SALES
+      table: CAMPAIGNS
+    primary_key:
+      columns:
+        - CAMPAIGN_ID
+    dimensions:
+      - name: campaign_id
+        data_type: TEXT
+        expr: CAMPAIGN_ID
+        description: Campaign id
+        unique: true
+      - name: advertiser_id
+        data_type: TEXT
+        expr: ADVERTISER_ID
+        description: Advertiser owner
+      - name: campaign_name
+        data_type: TEXT
+        expr: CAMPAIGN_NAME
+        description: Human-readable name
+      - name: objective
+        data_type: TEXT
+        expr: OBJECTIVE
+        description: Primary goal (Awareness, Performance, Subscriber growth)
+      - name: total_budget_usd
+        data_type: NUMBER
+        expr: TOTAL_BUDGET_USD
+        description: Total campaign budget in USD
+    time_dimensions:
+      - name: start_date
+        data_type: DATE
+        expr: START_DATE
+        description: Flight start date
+      - name: end_date
+        data_type: DATE
+        expr: END_DATE
+        description: Flight end date
+    facts:
+      - name: total_budget_usd
+        data_type: NUMBER
+        expr: SUM(TOTAL_BUDGET_USD)
+        description: Planned total budget in USD
+    synonyms:
+      - flights
+    description: ''
+
+relationships:
+  - name: bids_in_auctions
+    left_table: auctions
+    right_table: bids
+    expr: auctions.auction_id = bids.auction_id
+  - name: wins_from_bids
+    left_table: bids
+    right_table: impressions
+    expr: bids.bid_id = impressions.bid_id
+  - name: impressions_to_auctions
+    left_table: auctions
+    right_table: impressions
+    expr: auctions.auction_id = impressions.auction_id
+  - name: conversions_from_impressions
+    left_table: impressions
+    right_table: conversions
+    expr: impressions.impression_id = conversions.impression_id
+  - name: losses_from_auctions
+    left_table: auctions
+    right_table: losses
+    expr: auctions.auction_id = losses.auction_id
+  - name: impressions_to_campaigns
+    left_table: campaigns
+    right_table: impressions
+    expr: campaigns.campaign_id = impressions.campaign_id
+
+verified_queries:
+  - name: campaign_performance_last_30_days
+    question: What are spend, impressions, clicks, conversions, eCPM, CTR, CVR, CPA for each campaign over the last 30 days?
+    sql: |
+      SELECT i.CAMPAIGN_ID,
+             c.CAMPAIGN_NAME,
+             SUM(i.CLEARING_PRICE_CPM / 1000) AS spend_usd,
+             COUNT(DISTINCT i.IMPRESSION_ID) AS impressions,
+             SUM(CASE WHEN i.WAS_CLICKED THEN 1 ELSE 0 END) AS clicks,
+             COUNT(DISTINCT v.CONVERSION_ID) AS conversions,
+             CASE WHEN COUNT(DISTINCT i.IMPRESSION_ID) > 0 THEN ROUND((SUM(i.CLEARING_PRICE_CPM / 1000) / COUNT(DISTINCT i.IMPRESSION_ID)) * 1000, 2) ELSE 0 END AS ecpm,
+             CASE WHEN COUNT(DISTINCT i.IMPRESSION_ID) > 0 THEN ROUND(SUM(CASE WHEN i.WAS_CLICKED THEN 1 ELSE 0 END) / COUNT(DISTINCT i.IMPRESSION_ID) * 100, 2) ELSE 0 END AS ctr_pct,
+             CASE WHEN COUNT(DISTINCT i.IMPRESSION_ID) > 0 THEN ROUND(COUNT(DISTINCT v.CONVERSION_ID) / COUNT(DISTINCT i.IMPRESSION_ID) * 100, 2) ELSE 0 END AS cvr_pct,
+             CASE WHEN COUNT(DISTINCT v.CONVERSION_ID) > 0 THEN ROUND(SUM(i.CLEARING_PRICE_CPM / 1000) / COUNT(DISTINCT v.CONVERSION_ID), 2) ELSE NULL END AS cpa
+      FROM FREEWHEEL_DATA_PLATFORM.EXCHANGE_LOGS.WINS_IMPRESSIONS i
+      LEFT JOIN FREEWHEEL_DATA_PLATFORM.EXCHANGE_LOGS.CONVERSIONS v ON i.IMPRESSION_ID = v.IMPRESSION_ID
+      LEFT JOIN FREEWHEEL_DATA_PLATFORM.AD_SALES.CAMPAIGNS c ON i.CAMPAIGN_ID = c.CAMPAIGN_ID
+      WHERE i.IMPRESSION_TIMESTAMP >= DATEADD(day, -30, CURRENT_DATE())
+      GROUP BY i.CAMPAIGN_ID, c.CAMPAIGN_NAME
+      ORDER BY spend_usd DESC;
+  - name: supply_path_win_rate
+    question: Which supply sources (SSP) and publishers deliver the highest win rate and viewability?
+    sql: |
+      SELECT a.SSP_ID,
+             i.PUBLISHER_ID,
+             COUNT(DISTINCT i.IMPRESSION_ID) AS wins,
+             COUNT(DISTINCT a.AUCTION_ID) AS auctions,
+             ROUND(COUNT(DISTINCT i.IMPRESSION_ID) / NULLIF(COUNT(DISTINCT a.AUCTION_ID), 0) * 100, 2) AS win_rate_pct,
+             ROUND(SUM(CASE WHEN i.WAS_VIEWABLE THEN 1 ELSE 0 END) / NULLIF(COUNT(DISTINCT i.IMPRESSION_ID), 0) * 100, 2) AS viewability_pct
+      FROM FREEWHEEL_DATA_PLATFORM.EXCHANGE_LOGS.AUCTIONS a
+      LEFT JOIN FREEWHEEL_DATA_PLATFORM.EXCHANGE_LOGS.WINS_IMPRESSIONS i ON a.AUCTION_ID = i.AUCTION_ID
+      GROUP BY a.SSP_ID, i.PUBLISHER_ID
+      ORDER BY win_rate_pct DESC, viewability_pct DESC
+      LIMIT 20;
+  - name: pricing_pressure_by_channel
+    question: How do bid prices compare to floors by channel over the last quarter?
+    sql: |
+      SELECT a.CHANNEL,
+             ROUND(AVG(b.BID_PRICE_CPM), 2) AS avg_bid_cpm,
+             ROUND(AVG(a.FLOOR_PRICE_CPM), 2) AS avg_floor_cpm,
+             ROUND(AVG(b.BID_PRICE_CPM - a.FLOOR_PRICE_CPM), 2) AS avg_bid_minus_floor
+      FROM FREEWHEEL_DATA_PLATFORM.EXCHANGE_LOGS.AUCTIONS a
+      JOIN FREEWHEEL_DATA_PLATFORM.EXCHANGE_LOGS.BIDS b ON a.AUCTION_ID = b.AUCTION_ID
+      WHERE a.AUCTION_TIMESTAMP >= DATEADD(quarter, -1, CURRENT_DATE())
+      GROUP BY a.CHANNEL
+      ORDER BY avg_bid_minus_floor DESC;
+  - name: viewability_and_ctr_by_channel
+    question: What are viewability and CTR by channel and ad format?
+    sql: |
+      SELECT i.CHANNEL,
+             i.AD_FORMAT,
+             COUNT(*) AS impressions,
+             ROUND(SUM(CASE WHEN i.WAS_VIEWABLE THEN 1 ELSE 0 END) / NULLIF(COUNT(*), 0) * 100, 2) AS viewability_pct,
+             ROUND(SUM(CASE WHEN i.WAS_CLICKED THEN 1 ELSE 0 END) / NULLIF(COUNT(*), 0) * 100, 2) AS ctr_pct
+      FROM FREEWHEEL_DATA_PLATFORM.EXCHANGE_LOGS.WINS_IMPRESSIONS i
+      GROUP BY i.CHANNEL, i.AD_FORMAT
+      ORDER BY impressions DESC;
+  - name: pacing_vs_budget
+    question: Are campaigns pacing to budget this month?
+    sql: |
+      WITH spend AS (
+        SELECT CAMPAIGN_ID, SUM(CLEARING_PRICE_CPM / 1000) AS spend_usd
+        FROM FREEWHEEL_DATA_PLATFORM.EXCHANGE_LOGS.WINS_IMPRESSIONS
+        WHERE DATE_TRUNC('month', IMPRESSION_TIMESTAMP) = DATE_TRUNC('month', CURRENT_DATE())
+        GROUP BY CAMPAIGN_ID
+      )
+      SELECT c.CAMPAIGN_ID, c.CAMPAIGN_NAME, c.TOTAL_BUDGET_USD,
+             COALESCE(s.spend_usd, 0) AS month_spend_usd,
+             ROUND(COALESCE(s.spend_usd, 0) / NULLIF(c.TOTAL_BUDGET_USD, 0) * 100, 2) AS pct_of_budget
+      FROM FREEWHEEL_DATA_PLATFORM.AD_SALES.CAMPAIGNS c
+      LEFT JOIN spend s ON c.CAMPAIGN_ID = s.CAMPAIGN_ID
+      WHERE DATE_TRUNC('month', CURRENT_DATE()) BETWEEN DATE_TRUNC('month', c.START_DATE) AND DATE_TRUNC('month', c.END_DATE)
+      ORDER BY pct_of_budget DESC;
+  - name: advertiser_roas_summary
+    question: What is ROAS by advertiser year-to-date?
+    sql: |
+      SELECT i.ADVERTISER_ID,
+             ROUND(SUM(i.CLEARING_PRICE_CPM / 1000), 2) AS spend_usd,
+             ROUND(SUM(v.CONVERSION_VALUE), 2) AS revenue_usd,
+             CASE WHEN SUM(i.CLEARING_PRICE_CPM / 1000) > 0 THEN ROUND(SUM(v.CONVERSION_VALUE) / SUM(i.CLEARING_PRICE_CPM / 1000), 2) ELSE NULL END AS roas
+      FROM FREEWHEEL_DATA_PLATFORM.EXCHANGE_LOGS.WINS_IMPRESSIONS i
+      LEFT JOIN FREEWHEEL_DATA_PLATFORM.EXCHANGE_LOGS.CONVERSIONS v ON i.IMPRESSION_ID = v.IMPRESSION_ID
+      WHERE DATE_TRUNC('year', i.IMPRESSION_TIMESTAMP) = DATE_TRUNC('year', CURRENT_DATE())
+      GROUP BY i.ADVERTISER_ID
+      ORDER BY roas DESC NULLS LAST;
+
+custom_instructions: |
+  Business context:
+  - FreeWheel unifies buy- and sell-side TV/video advertising across CTV and digital. Core operational logs include Auctions (auction requests), Bids, Wins/Impressions, Losses, and Conversions.
+  - Key personas: Ad Operations, Campaign Managers, and Executives tracking pacing and performance.
+  - Common KPIs: eCPM, CTR, Viewability, Win Rate, CVR, CPA, ROAS, Spend by supply path.
+  - Spend is derived from CPM pricing per impression: spend_usd = SUM(clearing_price_cpm / 1000).
+  - Win Rate = Wins / Auctions. Viewability = Viewable Impressions / Impressions. CTR = Clicks / Impressions.
+  - Data arrives near real-time for auctions/bids/impressions and with delay for conversions.
+
+  SQL generation guidance (to avoid identifier errors):
+  - Always reference fully qualified physical tables with aliases:
+    - FREEWHEEL_DATA_PLATFORM.EXCHANGE_LOGS.AUCTIONS AS a
+    - FREEWHEEL_DATA_PLATFORM.EXCHANGE_LOGS.BIDS AS b
+    - FREEWHEEL_DATA_PLATFORM.EXCHANGE_LOGS.WINS_IMPRESSIONS AS i (logical name "impressions")
+    - FREEWHEEL_DATA_PLATFORM.EXCHANGE_LOGS.CONVERSIONS AS v (logical name "conversions")
+    - FREEWHEEL_DATA_PLATFORM.AD_SALES.CAMPAIGNS AS c (logical name "campaigns")
+  - When referencing timestamps, you may use either the physical column names or the provided aliases:
+    - a.AUCTION_TIMESTAMP or a.auction_timestamp
+    - b.BID_TIMESTAMP or b.bid_timestamp
+    - i.IMPRESSION_TIMESTAMP or i.impression_timestamp
+    - v.CONVERSION_TIMESTAMP or v.conversion_timestamp
+  - Use DATEADD('quarter'| 'month' | 'year', ...) and CURRENT_DATE() with parentheses for portability.
+  - Use i.CLEARING_PRICE_CPM / 1000 for spend; avoid NULLIF guards around 1000.
+
+
