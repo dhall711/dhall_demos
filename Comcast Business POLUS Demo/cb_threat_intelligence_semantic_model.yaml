@@ -1,0 +1,183 @@
+name: cb_threat_intelligence
+description: SecurityEdge threat intelligence with MITRE Attack classification for cybersecurity analytics
+tables:
+  - name: security_edge_events
+    base_table:
+      database: POLUS_PLATFORM
+      schema: THREAT_INTEL
+      table: SECURITY_EDGE_EVENTS
+    dimensions:
+      - name: event_id
+        data_type: TEXT
+        expr: EVENT_ID
+        description: Unique threat event identifier
+        unique: true
+      - name: threat_customer_id
+        data_type: TEXT
+        expr: CUSTOMER_ID
+        description: Customer associated with the threat event
+      - name: akamai_threat_category
+        data_type: TEXT
+        expr: AKAMAI_THREAT_CATEGORY
+        description: Akamai threat classification (malware, phishing, botnet, ransomware, suspicious)
+      - name: blocked_domain
+        data_type: TEXT
+        expr: BLOCKED_DOMAIN
+        description: Domain that was blocked by SecurityEdge
+      - name: security_edge_action
+        data_type: TEXT
+        expr: SECURITY_EDGE_ACTION
+        description: Action taken by SecurityEdge (BLOCKED, ALLOWED, MONITORED)
+      - name: scan_cycle_id
+        data_type: TEXT
+        expr: SCAN_CYCLE_ID
+        description: 10-minute scan cycle identifier
+      - name: mitre_tactic
+        data_type: TEXT
+        expr: MITRE_TACTIC
+        description: MITRE Attack tactic classification
+      - name: mitre_technique
+        data_type: TEXT
+        expr: MITRE_TECHNIQUE
+        description: MITRE Attack technique classification
+      - name: pattern_matched
+        data_type: BOOLEAN
+        expr: PATTERN_MATCHED
+        description: Whether threat matched existing pattern (cost optimization)
+      - name: ai_processed
+        data_type: BOOLEAN
+        expr: AI_PROCESSED
+        description: Whether event was processed by AI for MITRE classification
+    time_dimensions:
+      - name: timestamp
+        data_type: TIMESTAMP
+        expr: TIMESTAMP
+        description: When the threat event occurred
+    facts:
+      - name: threat_score
+        data_type: NUMBER
+        expr: AVG(THREAT_SCORE)
+        description: Akamai threat severity score (0-100)
+      - name: classification_confidence
+        data_type: NUMBER
+        expr: AVG(CLASSIFICATION_CONFIDENCE)
+        description: AI classification confidence score (0.0-1.0)
+      - name: threat_event_count
+        data_type: NUMBER
+        expr: COUNT(EVENT_ID)
+        description: Total number of threat events
+      - name: blocked_events
+        data_type: NUMBER
+        expr: COUNT(CASE WHEN SECURITY_EDGE_ACTION = 'BLOCKED' THEN EVENT_ID END)
+        description: Number of blocked threat events
+      - name: monitored_events
+        data_type: NUMBER
+        expr: COUNT(CASE WHEN SECURITY_EDGE_ACTION = 'MONITORED' THEN EVENT_ID END)
+        description: Number of monitored threat events
+      - name: ai_processing_rate
+        data_type: NUMBER
+        expr: SUM(CASE WHEN AI_PROCESSED = TRUE THEN 1 ELSE 0 END) * 100.0 / COUNT(*)
+        description: Percentage of events processed by AI
+      - name: pattern_match_rate
+        data_type: NUMBER
+        expr: SUM(CASE WHEN PATTERN_MATCHED = TRUE THEN 1 ELSE 0 END) * 100.0 / COUNT(*)
+        description: Percentage of events that matched patterns (cost savings)
+    description: ''
+    synonyms: []
+    primary_key:
+      columns:
+        - EVENT_ID
+  - name: customer_data
+    base_table:
+      database: POLUS_PLATFORM
+      schema: ATLAS_INTERNAL
+      table: CUSTOMER_INSIGHTS
+    dimensions:
+      - name: customer_id
+        data_type: TEXT
+        expr: CUSTOMER_ID
+        description: Customer identifier
+        unique: true
+      - name: company_name
+        data_type: TEXT
+        expr: COMPANY_NAME
+        description: Customer company name
+      - name: industry
+        data_type: TEXT
+        expr: INDUSTRY
+        description: Customer industry
+      - name: security_edge_enabled
+        data_type: BOOLEAN
+        expr: SECURITY_EDGE_ENABLED
+        description: Whether SecurityEdge is enabled
+    facts:
+      - name: contract_value
+        data_type: NUMBER
+        expr: SUM(CONTRACT_VALUE)
+        description: Customer contract value
+    description: ''
+    synonyms: []
+    primary_key:
+      columns:
+        - CUSTOMER_ID
+  - name: compliance_data
+    base_table:
+      database: POLUS_PLATFORM
+      schema: COMPLIANCE
+      table: AI_COMPLIANCE_DASHBOARD
+    dimensions:
+      - name: compliance_customer_id
+        data_type: TEXT
+        expr: CUSTOMER_ID
+        description: Customer identifier from compliance records
+        unique: true
+      - name: compliance_status
+        data_type: TEXT
+        expr: COMPLIANCE_STATUS
+        description: PCI compliance status
+    facts:
+      - name: compliance_score
+        data_type: NUMBER
+        expr: AVG(AI_COMPLIANCE_SCORE)
+        description: AI compliance score
+    description: ''
+    synonyms: []
+    primary_key:
+      columns:
+        - COMPLIANCE_STATUS
+relationships:
+  - name: threats_customer
+    left_table: security_edge_events
+    right_table: customer_data
+    expr: security_edge_events.threat_customer_id = customer_data.customer_id
+  - name: threats_compliance
+    left_table: security_edge_events
+    right_table: compliance_data
+    expr: security_edge_events.threat_customer_id = compliance_data.compliance_customer_id
+verified_queries:
+  - name: blocked_threats_today
+    question: How many threats were blocked today?
+    sql: SELECT COUNT(EVENT_ID) FROM POLUS_PLATFORM.THREAT_INTEL.SECURITY_EDGE_EVENTS WHERE SECURITY_EDGE_ACTION = 'BLOCKED' AND DATE(TIMESTAMP) = CURRENT_DATE
+  - name: common_threat_categories
+    question: What are the most common threat categories?
+    sql: SELECT AKAMAI_THREAT_CATEGORY, COUNT(EVENT_ID) as event_count FROM POLUS_PLATFORM.THREAT_INTEL.SECURITY_EDGE_EVENTS GROUP BY AKAMAI_THREAT_CATEGORY ORDER BY event_count DESC
+  - name: customers_most_threats
+    question: Which customers had the most threat events?
+    sql: SELECT CUSTOMER_ID, COUNT(EVENT_ID) as threat_count FROM POLUS_PLATFORM.THREAT_INTEL.SECURITY_EDGE_EVENTS GROUP BY CUSTOMER_ID ORDER BY threat_count DESC LIMIT 10
+  - name: malware_high_severity
+    question: Show me malware threats with high severity scores
+    sql: SELECT EVENT_ID, CUSTOMER_ID, BLOCKED_DOMAIN, THREAT_SCORE FROM POLUS_PLATFORM.THREAT_INTEL.SECURITY_EDGE_EVENTS WHERE AKAMAI_THREAT_CATEGORY = 'malware' AND THREAT_SCORE > 70
+  - name: blocked_vs_monitored
+    question: What percentage of threats are being blocked vs monitored?
+    sql: SELECT SECURITY_EDGE_ACTION, COUNT(*) * 100.0 / (SELECT COUNT(*) FROM POLUS_PLATFORM.THREAT_INTEL.SECURITY_EDGE_EVENTS) as percentage FROM POLUS_PLATFORM.THREAT_INTEL.SECURITY_EDGE_EVENTS GROUP BY SECURITY_EDGE_ACTION
+custom_instructions: |
+  Business context:
+  - SecurityEdge is Comcast Business's cybersecurity service powered by Akamai
+  - Threat events are DNS queries blocked or monitored for security threats
+  - MITRE Attack framework provides standardized threat classification
+  - Pattern matching reduces AI processing costs while maintaining security effectiveness
+  - Higher threat scores indicate more dangerous security threats
+  - Blocked events represent threats prevented from reaching customers
+  - AI processing enhances basic Akamai categorization with advanced threat intelligence
+  - Threat data can be joined with customer and compliance data via CUSTOMER_ID
+  - Use this model for cybersecurity analysis, threat trend monitoring, and service effectiveness reporting
