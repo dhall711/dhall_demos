@@ -1,0 +1,182 @@
+name: cb_customer_analytics
+description: Comcast Business customer insights with AI-powered analytics for sales intelligence and service optimization
+tables:
+  - name: customer_insights
+    base_table:
+      database: POLUS_PLATFORM
+      schema: ATLAS_INTERNAL
+      table: CUSTOMER_INSIGHTS
+    dimensions:
+      - name: customer_id
+        data_type: TEXT
+        expr: CUSTOMER_ID
+        description: Unique customer identifier
+        unique: true
+      - name: company_name
+        data_type: TEXT
+        expr: COMPANY_NAME
+        description: Business name of the customer
+      - name: industry
+        data_type: TEXT
+        expr: INDUSTRY
+        description: Customer industry sector (Healthcare, Hospitality, Automotive, Legal, Manufacturing)
+      - name: internet_service
+        data_type: TEXT
+        expr: INTERNET_SERVICE
+        description: Internet service tier (Essential, Performance 250, Advanced 500)
+      - name: internet_speed
+        data_type: TEXT
+        expr: INTERNET_SPEED
+        description: Internet speed package (50/15 Mbps, 250/25 Mbps, 500/30 Mbps)
+      - name: phone_service
+        data_type: TEXT
+        expr: PHONE_SERVICE
+        description: Phone service type (Basic Phone, Voice Edge, Full Service)
+      - name: tv_service
+        data_type: BOOLEAN
+        expr: TV_SERVICE
+        description: Whether customer has Business TV service
+      - name: ethernet_service
+        data_type: TEXT
+        expr: ETHERNET_SERVICE
+        description: Dedicated internet access or Ethernet service speed
+      - name: security_edge_enabled
+        data_type: BOOLEAN
+        expr: SECURITY_EDGE_ENABLED
+        description: Whether SecurityEdge cybersecurity is enabled
+      - name: wifi_pro_enabled
+        data_type: BOOLEAN
+        expr: WIFI_PRO_ENABLED
+        description: Whether WiFi Pro managed WiFi is enabled
+      - name: connection_pro_enabled
+        data_type: BOOLEAN
+        expr: CONNECTION_PRO_ENABLED
+        description: Whether Connection Pro 4G LTE backup is enabled
+      - name: customer_compliance_status
+        data_type: TEXT
+        expr: COMPLIANCE_STATUS
+        description: PCI compliance status from customer record
+      - name: data_retention_period
+        data_type: TEXT
+        expr: DATA_RETENTION_PERIOD
+        description: Data retention policy period (1_YEAR, 2_YEARS)
+    time_dimensions:
+      - name: customer_event_date
+        data_type: TIMESTAMP
+        expr: EVENT_DATE
+        description: Date when customer record was created or updated
+      - name: last_threat_date
+        data_type: TIMESTAMP
+        expr: LAST_THREAT_DATE
+        description: Date of most recent threat event
+    facts:
+      - name: customer_threat_events_count
+        data_type: NUMBER
+        expr: SUM(THREAT_EVENTS_COUNT)
+        description: Number of security threat events detected for customer
+      - name: contract_value
+        data_type: NUMBER
+        expr: SUM(CONTRACT_VALUE)
+        description: Monthly contract value in dollars
+      - name: customer_risk_score
+        data_type: NUMBER
+        expr: AVG(RISK_SCORE)
+        description: Customer risk assessment score (0-10 scale)
+      - name: customer_count
+        data_type: NUMBER
+        expr: COUNT(DISTINCT CUSTOMER_ID)
+        description: Number of customers
+      - name: total_revenue
+        data_type: NUMBER
+        expr: SUM(CONTRACT_VALUE)
+        description: Total monthly recurring revenue
+    description: ''
+    synonyms: []
+    primary_key:
+      columns:
+        - CUSTOMER_ID
+  - name: compliance_data
+    base_table:
+      database: POLUS_PLATFORM
+      schema: COMPLIANCE
+      table: AI_COMPLIANCE_DASHBOARD
+    dimensions:
+      - name: compliance_customer_id
+        data_type: TEXT
+        expr: CUSTOMER_ID
+        description: Customer identifier from compliance records
+        unique: true
+      - name: compliance_status
+        data_type: TEXT
+        expr: COMPLIANCE_STATUS
+        description: PCI compliance status
+    facts:
+      - name: compliance_score
+        data_type: NUMBER
+        expr: AVG(AI_COMPLIANCE_SCORE)
+        description: AI compliance score
+    description: ''
+    synonyms: []
+    primary_key:
+      columns:
+        - COMPLIANCE_STATUS
+  - name: threat_events
+    base_table:
+      database: POLUS_PLATFORM
+      schema: THREAT_INTEL
+      table: SECURITY_EDGE_EVENTS
+    dimensions:
+      - name: threat_customer_id
+        data_type: TEXT
+        expr: CUSTOMER_ID
+        description: Customer identifier from threat events
+      - name: threat_category
+        data_type: TEXT
+        expr: AKAMAI_THREAT_CATEGORY
+        description: Type of security threat
+    facts:
+      - name: threat_count
+        data_type: NUMBER
+        expr: COUNT(EVENT_ID)
+        description: Number of threat events
+    description: ''
+    synonyms: []
+    primary_key:
+      columns:
+        - EVENT_ID
+relationships:
+  - name: customer_compliance
+    left_table: customer_insights
+    right_table: compliance_data
+    expr: customer_insights.customer_id = compliance_data.compliance_customer_id
+  - name: customer_threats
+    left_table: customer_insights
+    right_table: threat_events
+    expr: customer_insights.customer_id = threat_events.threat_customer_id
+verified_queries:
+  - name: security_edge_customers
+    question: How many customers have SecurityEdge enabled?
+    sql: SELECT COUNT(DISTINCT CUSTOMER_ID) FROM POLUS_PLATFORM.ATLAS_INTERNAL.CUSTOMER_INSIGHTS WHERE SECURITY_EDGE_ENABLED = TRUE
+  - name: contract_value_by_industry
+    question: What is the average contract value by industry?
+    sql: SELECT INDUSTRY, AVG(CONTRACT_VALUE) FROM POLUS_PLATFORM.ATLAS_INTERNAL.CUSTOMER_INSIGHTS GROUP BY INDUSTRY
+  - name: high_risk_no_security
+    question: Which customers have high risk scores but no SecurityEdge?
+    sql: SELECT CUSTOMER_ID, COMPANY_NAME, RISK_SCORE FROM POLUS_PLATFORM.ATLAS_INTERNAL.CUSTOMER_INSIGHTS WHERE RISK_SCORE > 7 AND SECURITY_EDGE_ENABLED = FALSE
+  - name: healthcare_advanced_internet
+    question: Show me customers in healthcare with Advanced 500 internet
+    sql: SELECT CUSTOMER_ID, COMPANY_NAME FROM POLUS_PLATFORM.ATLAS_INTERNAL.CUSTOMER_INSIGHTS WHERE INDUSTRY = 'Healthcare' AND INTERNET_SERVICE = 'Advanced 500'
+  - name: wifi_pro_percentage
+    question: What percentage of customers have WiFi Pro?
+    sql: SELECT (SUM(CASE WHEN WIFI_PRO_ENABLED = TRUE THEN 1 ELSE 0 END) * 100.0 / COUNT(*)) as wifi_pro_rate FROM POLUS_PLATFORM.ATLAS_INTERNAL.CUSTOMER_INSIGHTS
+custom_instructions: |
+  Business context:
+  - This model contains Comcast Business customer data for sales and marketing analytics
+  - SecurityEdge is our cybersecurity service that blocks malware and phishing
+  - WiFi Pro provides managed WiFi services for business customers
+  - Connection Pro offers 4G LTE backup for business continuity
+  - Essential, Performance 250, and Advanced 500 are our internet service tiers
+  - Risk scores help identify customers who need additional security services
+  - Contract values indicate monthly recurring revenue per customer
+  - Customer data can be joined with compliance and threat intelligence data via CUSTOMER_ID
+  - Use this model for customer segmentation, upselling analysis, and service adoption metrics
