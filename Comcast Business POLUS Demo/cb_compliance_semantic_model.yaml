@@ -1,0 +1,149 @@
+name: cb_compliance_analytics
+description: PCI compliance and regulatory framework analytics for automated compliance reporting
+tables:
+  - name: compliance_dashboard
+    base_table:
+      database: POLUS_PLATFORM
+      schema: COMPLIANCE
+      table: AI_COMPLIANCE_DASHBOARD
+    dimensions:
+      - name: compliance_customer_id
+        data_type: TEXT
+        expr: CUSTOMER_ID
+        description: Customer identifier for compliance tracking
+        unique: true
+      - name: company_name
+        data_type: TEXT
+        expr: COMPANY_NAME
+        description: Customer company name
+      - name: industry
+        data_type: TEXT
+        expr: INDUSTRY
+        description: Customer industry (Healthcare, Hospitality, Automotive, etc.)
+      - name: compliance_status
+        data_type: TEXT
+        expr: COMPLIANCE_STATUS
+        description: Current compliance status (PCI_COMPLIANT, NON_COMPLIANT, PENDING)
+    time_dimensions:
+      - name: assessment_timestamp
+        data_type: TIMESTAMP
+        expr: ASSESSMENT_TIMESTAMP
+        description: When compliance assessment was performed
+    facts:
+      - name: ai_compliance_score
+        data_type: NUMBER
+        expr: AVG(AI_COMPLIANCE_SCORE)
+        description: AI-calculated compliance score (0.0-1.0)
+      - name: compliant_customers
+        data_type: NUMBER
+        expr: COUNT(DISTINCT CASE WHEN COMPLIANCE_STATUS = 'PCI_COMPLIANT' THEN CUSTOMER_ID END)
+        description: Number of compliant customers
+      - name: non_compliant_customers
+        data_type: NUMBER
+        expr: COUNT(DISTINCT CASE WHEN COMPLIANCE_STATUS = 'NON_COMPLIANT' THEN CUSTOMER_ID END)
+        description: Number of non-compliant customers
+      - name: total_customers
+        data_type: NUMBER
+        expr: COUNT(DISTINCT CUSTOMER_ID)
+        description: Total customers in compliance program
+      - name: compliance_rate
+        data_type: NUMBER
+        expr: SUM(CASE WHEN COMPLIANCE_STATUS = 'PCI_COMPLIANT' THEN 1 ELSE 0 END) * 100.0 / COUNT(*)
+        description: Percentage of customers that are compliant
+    description: ''
+    synonyms: []
+    primary_key:
+      columns:
+        - COMPLIANCE_STATUS
+  - name: customer_data
+    base_table:
+      database: POLUS_PLATFORM
+      schema: ATLAS_INTERNAL
+      table: CUSTOMER_INSIGHTS
+    dimensions:
+      - name: customer_id
+        data_type: TEXT
+        expr: CUSTOMER_ID
+        description: Customer identifier
+        unique: true
+      - name: company_name
+        data_type: TEXT
+        expr: COMPANY_NAME
+        description: Customer company name
+      - name: industry
+        data_type: TEXT
+        expr: INDUSTRY
+        description: Customer industry
+      - name: security_edge_enabled
+        data_type: BOOLEAN
+        expr: SECURITY_EDGE_ENABLED
+        description: Whether SecurityEdge is enabled
+    facts:
+      - name: contract_value
+        data_type: NUMBER
+        expr: SUM(CONTRACT_VALUE)
+        description: Customer contract value
+    description: ''
+    synonyms: []
+    primary_key:
+      columns:
+        - CUSTOMER_ID
+  - name: threat_events
+    base_table:
+      database: POLUS_PLATFORM
+      schema: THREAT_INTEL
+      table: SECURITY_EDGE_EVENTS
+    dimensions:
+      - name: threat_customer_id
+        data_type: TEXT
+        expr: CUSTOMER_ID
+        description: Customer identifier from threat events
+      - name: threat_category
+        data_type: TEXT
+        expr: AKAMAI_THREAT_CATEGORY
+        description: Type of security threat
+    facts:
+      - name: threat_count
+        data_type: NUMBER
+        expr: COUNT(EVENT_ID)
+        description: Number of threat events
+    description: ''
+    synonyms: []
+    primary_key:
+      columns:
+        - EVENT_ID
+relationships:
+  - name: compliance_customer
+    left_table: compliance_dashboard
+    right_table: customer_data
+    expr: compliance_dashboard.compliance_customer_id = customer_data.customer_id
+  - name: compliance_threats
+    left_table: compliance_dashboard
+    right_table: threat_events
+    expr: compliance_dashboard.compliance_customer_id = threat_events.threat_customer_id
+verified_queries:
+  - name: pci_compliant_count
+    question: How many customers are PCI compliant?
+    sql: SELECT COUNT(DISTINCT CUSTOMER_ID) FROM POLUS_PLATFORM.COMPLIANCE.AI_COMPLIANCE_DASHBOARD WHERE COMPLIANCE_STATUS = 'PCI_COMPLIANT'
+  - name: compliance_score_by_industry
+    question: What is the average compliance score by industry?
+    sql: SELECT INDUSTRY, AVG(AI_COMPLIANCE_SCORE) FROM POLUS_PLATFORM.COMPLIANCE.AI_COMPLIANCE_DASHBOARD GROUP BY INDUSTRY
+  - name: non_compliant_customers
+    question: Which customers need immediate compliance attention?
+    sql: SELECT CUSTOMER_ID, COMPANY_NAME FROM POLUS_PLATFORM.COMPLIANCE.AI_COMPLIANCE_DASHBOARD WHERE COMPLIANCE_STATUS = 'NON_COMPLIANT'
+  - name: healthcare_non_compliant
+    question: Show me non-compliant customers in healthcare
+    sql: SELECT CUSTOMER_ID, COMPANY_NAME FROM POLUS_PLATFORM.COMPLIANCE.AI_COMPLIANCE_DASHBOARD WHERE COMPLIANCE_STATUS = 'NON_COMPLIANT' AND INDUSTRY = 'Healthcare'
+  - name: compliance_rate_percentage
+    question: What percentage of our customers are compliant?
+    sql: SELECT (SUM(CASE WHEN COMPLIANCE_STATUS = 'PCI_COMPLIANT' THEN 1 ELSE 0 END) * 100.0 / COUNT(*)) as compliance_rate FROM POLUS_PLATFORM.COMPLIANCE.AI_COMPLIANCE_DASHBOARD
+custom_instructions: |
+  Business context:
+  - PCI DSS compliance is required for businesses that process credit card payments
+  - AI compliance scores help prioritize customers needing compliance assistance
+  - Different industries have different compliance requirements (PCI, HIPAA, NIST)
+  - Compliance status directly impacts customer risk and business operations
+  - Automated compliance reporting reduces manual audit preparation time
+  - SecurityEdge helps customers meet cybersecurity compliance requirements
+  - Compliance data can be joined with customer and threat data via CUSTOMER_ID
+  - Use this model for regulatory reporting, compliance monitoring, and risk assessment
