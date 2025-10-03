@@ -1,0 +1,664 @@
+name: comcast_isco_supply_chain_analytics
+description: Comcast Integrated Supply Chain Operations (ISCO) analytics for inventory management, logistics optimization, demand forecasting, and vendor performance tracking across the enterprise supply chain network
+tables:
+  - name: supplier_profiles
+    base_table:
+      database: ISCO_ANALYTICS
+      schema: PROD
+      table: SUPPLIER_PROFILES
+    dimensions:
+      - name: supplier_id
+        data_type: TEXT
+        expr: SUPPLIER_ID
+        description: Unique supplier identifier
+        unique: true
+      - name: supplier_name
+        data_type: TEXT
+        expr: SUPPLIER_NAME
+        description: Name of the supplier company
+      - name: supplier_type
+        data_type: TEXT
+        expr: SUPPLIER_TYPE
+        description: Type of supplier (OEM, Distributor, Services, etc.)
+      - name: supplier_category
+        data_type: TEXT
+        expr: SUPPLIER_CATEGORY
+        description: Product category specialization
+      - name: geographic_region
+        data_type: TEXT
+        expr: GEOGRAPHIC_REGION
+        description: Primary geographic service region
+      - name: tier_level
+        data_type: TEXT
+        expr: TIER_LEVEL
+        description: Supplier tier classification (Tier 1, 2, 3)
+      - name: contract_status
+        data_type: TEXT
+        expr: CONTRACT_STATUS
+        description: Current contract status with Comcast
+      - name: annual_spend_millions
+        data_type: NUMBER
+        expr: ANNUAL_SPEND_MILLIONS
+        description: Annual spend with supplier in millions
+      - name: supplier_score
+        data_type: NUMBER
+        expr: SUPPLIER_SCORE
+        description: Supplier performance score (1-100)
+    facts:
+      - name: annual_spend_millions
+        data_type: NUMBER
+        expr: AVG(ANNUAL_SPEND_MILLIONS)
+        description: Average annual spend with supplier in millions
+      - name: supplier_score
+        data_type: NUMBER
+        expr: AVG(SUPPLIER_SCORE)
+        description: Average supplier performance score (1-100)
+    description: ''
+    synonyms: ['suppliers', 'vendors', 'partners', 'contractor profiles', 'supply base', 'vendor network']
+    primary_key:
+      columns:
+        - SUPPLIER_ID
+
+  - name: inventory_levels
+    base_table:
+      database: ISCO_ANALYTICS
+      schema: PROD
+      table: INVENTORY_FACT
+    dimensions:
+      - name: inventory_id
+        data_type: TEXT
+        expr: INVENTORY_ID
+        description: Unique inventory record identifier
+        unique: true
+      - name: product_sku
+        data_type: TEXT
+        expr: PRODUCT_SKU
+        description: Product stock keeping unit identifier
+      - name: warehouse_location
+        data_type: TEXT
+        expr: WAREHOUSE_LOCATION
+        description: Warehouse or distribution center location
+      - name: inventory_quarter
+        data_type: TEXT
+        expr: INVENTORY_QUARTER
+        description: Inventory reporting quarter (Q1, Q2, Q3, Q4)
+      - name: inventory_year
+        data_type: INTEGER
+        expr: INVENTORY_YEAR
+        description: Inventory reporting year
+      - name: product_category
+        data_type: TEXT
+        expr: PRODUCT_CATEGORY
+        description: Product category classification
+      - name: product_type
+        data_type: TEXT
+        expr: PRODUCT_TYPE
+        description: Specific product type or model
+      - name: storage_type
+        data_type: TEXT
+        expr: STORAGE_TYPE
+        description: Storage classification (Regular, Cold, Hazmat, etc.)
+      - name: inventory_turnover_ratio
+        data_type: NUMBER
+        expr: INVENTORY_TURNOVER_RATIO
+        description: Inventory turnover ratio for this record
+      - name: units_on_hand
+        data_type: NUMBER
+        expr: UNITS_ON_HAND
+        description: Units currently in inventory
+      - name: inventory_value_millions
+        data_type: NUMBER
+        expr: INVENTORY_VALUE_MILLIONS
+        description: Inventory value in millions
+      - name: units_shipped
+        data_type: NUMBER
+        expr: UNITS_SHIPPED
+        description: Units shipped during period
+      - name: stockout_incidents
+        data_type: NUMBER
+        expr: STOCKOUT_INCIDENTS
+        description: Number of stockout incidents
+      - name: excess_inventory_value
+        data_type: NUMBER
+        expr: EXCESS_INVENTORY_VALUE
+        description: Value of excess or obsolete inventory
+    time_dimensions:
+      - name: inventory_date
+        data_type: DATE
+        expr: CONCAT(INVENTORY_YEAR, '-', 
+          CASE INVENTORY_QUARTER 
+            WHEN 'Q1' THEN '03-31'
+            WHEN 'Q2' THEN '06-30' 
+            WHEN 'Q3' THEN '09-30'
+            WHEN 'Q4' THEN '12-31'
+          END)::DATE
+        description: Inventory reporting period end date
+    facts:
+      - name: units_on_hand
+        data_type: NUMBER
+        expr: SUM(UNITS_ON_HAND)
+        description: Total units currently in inventory
+      - name: inventory_value_millions
+        data_type: NUMBER
+        expr: SUM(INVENTORY_VALUE_MILLIONS)
+        description: Total inventory value in millions
+      - name: units_shipped
+        data_type: NUMBER
+        expr: SUM(UNITS_SHIPPED)
+        description: Total units shipped during period
+      - name: inventory_turnover_ratio
+        data_type: NUMBER
+        expr: AVG(INVENTORY_TURNOVER_RATIO)
+        description: Average inventory turnover ratio
+      - name: stockout_incidents
+        data_type: NUMBER
+        expr: SUM(STOCKOUT_INCIDENTS)
+        description: Total number of stockout incidents
+      - name: excess_inventory_value
+        data_type: NUMBER
+        expr: SUM(EXCESS_INVENTORY_VALUE)
+        description: Value of excess or obsolete inventory
+    description: ''
+    synonyms: ['inventory', 'stock levels', 'warehouse data', 'product inventory', 'stock management', 'inventory metrics']
+    primary_key:
+      columns:
+        - INVENTORY_ID
+
+  - name: logistics_performance
+    base_table:
+      database: ISCO_ANALYTICS
+      schema: PROD
+      table: LOGISTICS_METRICS
+    dimensions:
+      - name: logistics_id
+        data_type: TEXT
+        expr: LOGISTICS_ID
+        description: Unique logistics record identifier
+        unique: true
+      - name: shipment_quarter
+        data_type: TEXT
+        expr: SHIPMENT_QUARTER
+        description: Shipment quarter period
+      - name: shipment_year
+        data_type: INTEGER
+        expr: SHIPMENT_YEAR
+        description: Shipment year
+      - name: transport_mode
+        data_type: TEXT
+        expr: TRANSPORT_MODE
+        description: Transportation method (Ground, Air, LTL, FTL, etc.)
+      - name: service_region
+        data_type: TEXT
+        expr: SERVICE_REGION
+        description: Geographic service region for delivery
+      - name: shipment_type
+        data_type: TEXT
+        expr: SHIPMENT_TYPE
+        description: Type of shipment (Forward, Reverse, Emergency, etc.)
+      - name: delivery_priority
+        data_type: TEXT
+        expr: DELIVERY_PRIORITY
+        description: Delivery priority level (Standard, Express, Critical)
+      - name: total_shipments
+        data_type: NUMBER
+        expr: TOTAL_SHIPMENTS
+        description: Number of shipments
+      - name: shipping_cost_millions
+        data_type: NUMBER
+        expr: SHIPPING_COST_MILLIONS
+        description: Shipping costs in millions
+      - name: on_time_delivery_rate
+        data_type: NUMBER
+        expr: ON_TIME_DELIVERY_RATE
+        description: On-time delivery percentage
+      - name: average_transit_days
+        data_type: NUMBER
+        expr: AVERAGE_TRANSIT_DAYS
+        description: Transit time in days
+      - name: cost_per_shipment
+        data_type: NUMBER
+        expr: COST_PER_SHIPMENT
+        description: Cost per shipment
+      - name: damage_incidents
+        data_type: NUMBER
+        expr: DAMAGE_INCIDENTS
+        description: Shipping damage incidents
+    time_dimensions:
+      - name: shipment_date
+        data_type: DATE
+        expr: CONCAT(SHIPMENT_YEAR, '-', 
+          CASE SHIPMENT_QUARTER 
+            WHEN 'Q1' THEN '03-31'
+            WHEN 'Q2' THEN '06-30' 
+            WHEN 'Q3' THEN '09-30'
+            WHEN 'Q4' THEN '12-31'
+          END)::DATE
+        description: Shipment period end date
+    facts:
+      - name: total_shipments
+        data_type: NUMBER
+        expr: SUM(TOTAL_SHIPMENTS)
+        description: Total number of shipments
+      - name: shipping_cost_millions
+        data_type: NUMBER
+        expr: SUM(SHIPPING_COST_MILLIONS)
+        description: Total shipping costs in millions
+      - name: on_time_delivery_rate
+        data_type: NUMBER
+        expr: AVG(ON_TIME_DELIVERY_RATE)
+        description: Average on-time delivery percentage
+      - name: average_transit_days
+        data_type: NUMBER
+        expr: AVG(AVERAGE_TRANSIT_DAYS)
+        description: Average transit time in days
+      - name: cost_per_shipment
+        data_type: NUMBER
+        expr: AVG(COST_PER_SHIPMENT)
+        description: Average cost per shipment
+      - name: damage_incidents
+        data_type: NUMBER
+        expr: SUM(DAMAGE_INCIDENTS)
+        description: Total shipping damage incidents
+    description: ''
+    synonyms: ['logistics', 'shipping data', 'transportation metrics', 'delivery performance', 'freight data', 'distribution analytics']
+    primary_key:
+      columns:
+        - LOGISTICS_ID
+
+  - name: demand_forecasting
+    base_table:
+      database: ISCO_ANALYTICS
+      schema: PROD
+      table: DEMAND_FORECAST
+    dimensions:
+      - name: forecast_id
+        data_type: TEXT
+        expr: FORECAST_ID
+        description: Unique demand forecast identifier
+        unique: true
+      - name: product_sku
+        data_type: TEXT
+        expr: PRODUCT_SKU
+        description: Product being forecasted
+      - name: forecast_quarter
+        data_type: TEXT
+        expr: FORECAST_QUARTER
+        description: Forecast quarter period
+      - name: forecast_year
+        data_type: INTEGER
+        expr: FORECAST_YEAR
+        description: Forecast year
+      - name: forecast_method
+        data_type: TEXT
+        expr: FORECAST_METHOD
+        description: Forecasting methodology used
+      - name: market_segment
+        data_type: TEXT
+        expr: MARKET_SEGMENT
+        description: Customer market segment
+      - name: demand_driver
+        data_type: TEXT
+        expr: DEMAND_DRIVER
+        description: Primary demand driver factor
+      - name: forecasted_demand_units
+        data_type: NUMBER
+        expr: FORECASTED_DEMAND_UNITS
+        description: Forecasted demand in units
+      - name: actual_demand_units
+        data_type: NUMBER
+        expr: ACTUAL_DEMAND_UNITS
+        description: Actual demand in units
+      - name: forecast_accuracy_percent
+        data_type: NUMBER
+        expr: FORECAST_ACCURACY_PERCENT
+        description: Forecast accuracy percentage
+      - name: demand_variance_percent
+        data_type: NUMBER
+        expr: DEMAND_VARIANCE_PERCENT
+        description: Demand variance percentage
+      - name: safety_stock_days
+        data_type: NUMBER
+        expr: SAFETY_STOCK_DAYS
+        description: Safety stock in days of supply
+    time_dimensions:
+      - name: forecast_date
+        data_type: DATE
+        expr: CONCAT(FORECAST_YEAR, '-', 
+          CASE FORECAST_QUARTER 
+            WHEN 'Q1' THEN '03-31'
+            WHEN 'Q2' THEN '06-30' 
+            WHEN 'Q3' THEN '09-30'
+            WHEN 'Q4' THEN '12-31'
+          END)::DATE
+        description: Forecast period end date
+    facts:
+      - name: forecasted_demand_units
+        data_type: NUMBER
+        expr: SUM(FORECASTED_DEMAND_UNITS)
+        description: Total forecasted demand in units
+      - name: actual_demand_units
+        data_type: NUMBER
+        expr: SUM(ACTUAL_DEMAND_UNITS)
+        description: Actual demand in units
+      - name: forecast_accuracy_percent
+        data_type: NUMBER
+        expr: AVG(FORECAST_ACCURACY_PERCENT)
+        description: Average forecast accuracy percentage
+      - name: demand_variance_percent
+        data_type: NUMBER
+        expr: AVG(DEMAND_VARIANCE_PERCENT)
+        description: Average demand variance percentage
+      - name: safety_stock_days
+        data_type: NUMBER
+        expr: AVG(SAFETY_STOCK_DAYS)
+        description: Average safety stock in days of supply
+    description: ''
+    synonyms: ['demand forecast', 'demand planning', 'forecast accuracy', 'demand analytics', 'planning data', 'demand signals']
+    primary_key:
+      columns:
+        - FORECAST_ID
+
+  - name: product_catalog
+    base_table:
+      database: ISCO_ANALYTICS
+      schema: PROD
+      table: PRODUCT_CATALOG
+    dimensions:
+      - name: catalog_id
+        data_type: TEXT
+        expr: CATALOG_ID
+        description: Unique catalog record identifier
+        unique: true
+      - name: product_sku
+        data_type: TEXT
+        expr: PRODUCT_SKU
+        description: Product being cataloged
+      - name: supplier_id
+        data_type: TEXT
+        expr: SUPPLIER_ID
+        description: Supplier providing the product
+      - name: product_name
+        data_type: TEXT
+        expr: PRODUCT_NAME
+        description: Commercial product name
+      - name: product_description
+        data_type: TEXT
+        expr: PRODUCT_DESCRIPTION
+        description: Detailed product description for search
+      - name: technical_specifications
+        data_type: TEXT
+        expr: TECHNICAL_SPECIFICATIONS
+        description: Technical specifications and features
+      - name: vendor_overview
+        data_type: TEXT
+        expr: VENDOR_OVERVIEW
+        description: Vendor company overview and capabilities
+      - name: installation_guide
+        data_type: TEXT
+        expr: INSTALLATION_GUIDE
+        description: Installation instructions and guidance
+      - name: compatibility_notes
+        data_type: TEXT
+        expr: COMPATIBILITY_NOTES
+        description: Compatibility information and requirements
+      - name: feature_highlights
+        data_type: TEXT
+        expr: FEATURE_HIGHLIGHTS
+        description: Key product features and benefits
+      - name: market_positioning
+        data_type: TEXT
+        expr: MARKET_POSITIONING
+        description: Market positioning and competitive analysis
+      - name: customer_use_cases
+        data_type: TEXT
+        expr: CUSTOMER_USE_CASES
+        description: Customer use cases and applications
+      - name: competitive_advantages
+        data_type: TEXT
+        expr: COMPETITIVE_ADVANTAGES
+        description: Competitive advantages and differentiators
+      - name: certification_compliance
+        data_type: TEXT
+        expr: CERTIFICATION_COMPLIANCE
+        description: Certifications and compliance standards
+      - name: product_image_url
+        data_type: TEXT
+        expr: PRODUCT_IMAGE_URL
+        description: Primary product image URL for visual identification
+      - name: product_image_alt_text
+        data_type: TEXT
+        expr: PRODUCT_IMAGE_ALT_TEXT
+        description: Alternative text description of product image for accessibility and search
+      - name: additional_images
+        data_type: VARIANT
+        expr: ADDITIONAL_IMAGES
+        description: Array of additional product image URLs for comprehensive visual catalog
+      - name: image_classification_tags
+        data_type: VARIANT
+        expr: IMAGE_CLASSIFICATION_TAGS
+        description: Machine-generated tags for image classification and visual search
+      - name: product_documentation_urls
+        data_type: VARIANT
+        expr: PRODUCT_DOCUMENTATION_URLS
+        description: Array of product documentation and manual URLs
+    facts:
+      - name: catalog_record_count
+        data_type: NUMBER
+        expr: COUNT(*)
+        description: Total number of catalog records
+      - name: products_with_images
+        data_type: NUMBER
+        expr: COUNT(CASE WHEN PRODUCT_IMAGE_URL IS NOT NULL THEN 1 END)
+        description: Count of products with primary images available
+    description: ''
+    synonyms: ['product catalog', 'product information', 'product specs', 'vendor details', 'equipment catalog', 'product database', 'product images', 'visual catalog', 'equipment photos']
+    primary_key:
+      columns:
+        - CATALOG_ID
+
+  - name: vendor_performance
+    base_table:
+      database: ISCO_ANALYTICS
+      schema: PROD
+      table: VENDOR_SCORECARD
+    dimensions:
+      - name: scorecard_id
+        data_type: TEXT
+        expr: SCORECARD_ID
+        description: Unique vendor scorecard identifier
+        unique: true
+      - name: supplier_id
+        data_type: TEXT
+        expr: SUPPLIER_ID
+        description: Supplier being evaluated
+      - name: evaluation_quarter
+        data_type: TEXT
+        expr: EVALUATION_QUARTER
+        description: Performance evaluation quarter
+      - name: evaluation_year
+        data_type: INTEGER
+        expr: EVALUATION_YEAR
+        description: Performance evaluation year
+      - name: performance_category
+        data_type: TEXT
+        expr: PERFORMANCE_CATEGORY
+        description: Performance evaluation category
+      - name: metric_type
+        data_type: TEXT
+        expr: METRIC_TYPE
+        description: Type of performance metric
+      - name: quality_score
+        data_type: NUMBER
+        expr: QUALITY_SCORE
+        description: Quality performance score
+      - name: delivery_performance_score
+        data_type: NUMBER
+        expr: DELIVERY_PERFORMANCE_SCORE
+        description: Delivery performance score
+      - name: cost_competitiveness_score
+        data_type: NUMBER
+        expr: COST_COMPETITIVENESS_SCORE
+        description: Cost competitiveness score
+      - name: defect_rate_percent
+        data_type: NUMBER
+        expr: DEFECT_RATE_PERCENT
+        description: Defect rate percentage
+      - name: on_time_delivery_percent
+        data_type: NUMBER
+        expr: ON_TIME_DELIVERY_PERCENT
+        description: On-time delivery percentage
+      - name: cost_savings_millions
+        data_type: NUMBER
+        expr: COST_SAVINGS_MILLIONS
+        description: Cost savings achieved in millions
+    time_dimensions:
+      - name: evaluation_date
+        data_type: DATE
+        expr: CONCAT(EVALUATION_YEAR, '-', 
+          CASE EVALUATION_QUARTER 
+            WHEN 'Q1' THEN '03-31'
+            WHEN 'Q2' THEN '06-30' 
+            WHEN 'Q3' THEN '09-30'
+            WHEN 'Q4' THEN '12-31'
+          END)::DATE
+        description: Performance evaluation period end date
+    facts:
+      - name: quality_score
+        data_type: NUMBER
+        expr: AVG(QUALITY_SCORE)
+        description: Average quality performance score
+      - name: delivery_performance_score
+        data_type: NUMBER
+        expr: AVG(DELIVERY_PERFORMANCE_SCORE)
+        description: Average delivery performance score
+      - name: cost_competitiveness_score
+        data_type: NUMBER
+        expr: AVG(COST_COMPETITIVENESS_SCORE)
+        description: Average cost competitiveness score
+      - name: defect_rate_percent
+        data_type: NUMBER
+        expr: AVG(DEFECT_RATE_PERCENT)
+        description: Average defect rate percentage
+      - name: on_time_delivery_percent
+        data_type: NUMBER
+        expr: AVG(ON_TIME_DELIVERY_PERCENT)
+        description: Average on-time delivery percentage
+      - name: cost_savings_millions
+        data_type: NUMBER
+        expr: SUM(COST_SAVINGS_MILLIONS)
+        description: Total cost savings achieved in millions
+    description: ''
+    synonyms: ['vendor performance', 'supplier scorecard', 'vendor metrics', 'supplier evaluation', 'performance data', 'vendor analytics']
+    primary_key:
+      columns:
+        - SCORECARD_ID
+
+relationships:
+  - name: supplier_performance
+    left_table: supplier_profiles
+    right_table: vendor_performance
+    expr: supplier_profiles.supplier_id = vendor_performance.supplier_id
+
+  - name: inventory_demand_correlation
+    left_table: inventory_levels
+    right_table: demand_forecasting
+    expr: inventory_levels.product_sku = demand_forecasting.product_sku AND inventory_levels.inventory_quarter = demand_forecasting.forecast_quarter AND inventory_levels.inventory_year = demand_forecasting.forecast_year
+
+  - name: logistics_inventory_flow
+    left_table: logistics_performance
+    right_table: inventory_levels
+    expr: logistics_performance.shipment_quarter = inventory_levels.inventory_quarter AND logistics_performance.shipment_year = inventory_levels.inventory_year
+
+  - name: supplier_logistics_performance
+    left_table: supplier_profiles
+    right_table: logistics_performance
+    expr: supplier_profiles.geographic_region = logistics_performance.service_region
+
+  - name: product_catalog_supplier
+    left_table: product_catalog
+    right_table: supplier_profiles
+    expr: product_catalog.supplier_id = supplier_profiles.supplier_id
+
+  - name: product_catalog_inventory
+    left_table: product_catalog
+    right_table: inventory_levels
+    expr: product_catalog.product_sku = inventory_levels.product_sku
+
+  - name: product_catalog_demand
+    left_table: product_catalog
+    right_table: demand_forecasting
+    expr: product_catalog.product_sku = demand_forecasting.product_sku
+
+verified_queries:
+  - name: q1_inventory_turnover_analysis
+    question: How did our inventory turnover perform in Q1 across different product categories?
+    sql: SELECT il.PRODUCT_CATEGORY, il.INVENTORY_QUARTER, il.INVENTORY_YEAR, AVG(il.INVENTORY_TURNOVER_RATIO) as avg_turnover_ratio, SUM(il.INVENTORY_VALUE_MILLIONS) as total_inventory_value, SUM(il.STOCKOUT_INCIDENTS) as total_stockouts, SUM(il.EXCESS_INVENTORY_VALUE) as excess_inventory FROM ISCO_ANALYTICS.PROD.INVENTORY_FACT il WHERE il.INVENTORY_QUARTER = 'Q1' GROUP BY il.PRODUCT_CATEGORY, il.INVENTORY_QUARTER, il.INVENTORY_YEAR ORDER BY il.INVENTORY_YEAR DESC, avg_turnover_ratio DESC
+
+  - name: top_suppliers_cost_performance
+    question: Which suppliers provide the best cost performance and quality scores?
+    sql: SELECT sp.SUPPLIER_NAME, sp.SUPPLIER_TYPE, sp.TIER_LEVEL, AVG(vp.COST_COMPETITIVENESS_SCORE) as avg_cost_score, AVG(vp.QUALITY_SCORE) as avg_quality_score, AVG(vp.DELIVERY_PERFORMANCE_SCORE) as delivery_score, SUM(vp.COST_SAVINGS_MILLIONS) as total_savings FROM ISCO_ANALYTICS.PROD.SUPPLIER_PROFILES sp JOIN ISCO_ANALYTICS.PROD.VENDOR_SCORECARD vp ON sp.SUPPLIER_ID = vp.SUPPLIER_ID GROUP BY sp.SUPPLIER_NAME, sp.SUPPLIER_TYPE, sp.TIER_LEVEL ORDER BY avg_cost_score DESC, avg_quality_score DESC
+
+  - name: logistics_cost_optimization_opportunities
+    question: Where are our biggest opportunities for logistics cost optimization by transport mode?
+    sql: SELECT lp.TRANSPORT_MODE, lp.SERVICE_REGION, lp.SHIPMENT_YEAR, SUM(lp.TOTAL_SHIPMENTS) as total_shipments, SUM(lp.SHIPPING_COST_MILLIONS) as total_cost, AVG(lp.COST_PER_SHIPMENT) as avg_cost_per_shipment, AVG(lp.ON_TIME_DELIVERY_RATE) as avg_otd_rate, SUM(lp.DAMAGE_INCIDENTS) as total_damage FROM ISCO_ANALYTICS.PROD.LOGISTICS_METRICS lp GROUP BY lp.TRANSPORT_MODE, lp.SERVICE_REGION, lp.SHIPMENT_YEAR ORDER BY total_cost DESC, avg_cost_per_shipment DESC
+
+  - name: demand_forecast_accuracy_trends
+    question: How accurate are our demand forecasts by product category and forecasting method?
+    sql: SELECT df.FORECAST_METHOD, df.MARKET_SEGMENT, df.FORECAST_YEAR, df.FORECAST_QUARTER, AVG(df.FORECAST_ACCURACY_PERCENT) as avg_accuracy, SUM(df.FORECASTED_DEMAND_UNITS) as total_forecasted, SUM(df.ACTUAL_DEMAND_UNITS) as total_actual, AVG(df.DEMAND_VARIANCE_PERCENT) as avg_variance FROM ISCO_ANALYTICS.PROD.DEMAND_FORECAST df GROUP BY df.FORECAST_METHOD, df.MARKET_SEGMENT, df.FORECAST_YEAR, df.FORECAST_QUARTER ORDER BY df.FORECAST_YEAR DESC, df.FORECAST_QUARTER DESC, avg_accuracy DESC
+
+  - name: supply_chain_kpi_dashboard
+    question: What are our key supply chain performance indicators this quarter?
+    sql: SELECT 'Inventory Performance' as kpi_category, AVG(il.INVENTORY_TURNOVER_RATIO) as metric_value, 'Turnover Ratio' as metric_unit FROM ISCO_ANALYTICS.PROD.INVENTORY_FACT il WHERE il.INVENTORY_QUARTER = 'Q3' AND il.INVENTORY_YEAR = 2024 UNION ALL SELECT 'Logistics Performance', AVG(lp.ON_TIME_DELIVERY_RATE), 'Percent OTD' FROM ISCO_ANALYTICS.PROD.LOGISTICS_METRICS lp WHERE lp.SHIPMENT_QUARTER = 'Q3' AND lp.SHIPMENT_YEAR = 2024 UNION ALL SELECT 'Supplier Performance', AVG(vp.QUALITY_SCORE), 'Quality Score' FROM ISCO_ANALYTICS.PROD.VENDOR_SCORECARD vp WHERE vp.EVALUATION_QUARTER = 'Q3' AND vp.EVALUATION_YEAR = 2024 UNION ALL SELECT 'Forecast Accuracy', AVG(df.FORECAST_ACCURACY_PERCENT), 'Percent Accurate' FROM ISCO_ANALYTICS.PROD.DEMAND_FORECAST df WHERE df.FORECAST_QUARTER = 'Q3' AND df.FORECAST_YEAR = 2024
+
+  - name: reverse_logistics_optimization
+    question: How can we optimize our reverse logistics operations and reduce costs?
+    sql: SELECT lp.SERVICE_REGION, lp.TRANSPORT_MODE, lp.SHIPMENT_YEAR, SUM(lp.TOTAL_SHIPMENTS) as reverse_shipments, SUM(lp.SHIPPING_COST_MILLIONS) as reverse_logistics_cost, AVG(lp.AVERAGE_TRANSIT_DAYS) as avg_return_time, SUM(lp.DAMAGE_INCIDENTS) as damage_during_return FROM ISCO_ANALYTICS.PROD.LOGISTICS_METRICS lp WHERE lp.SHIPMENT_TYPE = 'Reverse' GROUP BY lp.SERVICE_REGION, lp.TRANSPORT_MODE, lp.SHIPMENT_YEAR ORDER BY reverse_logistics_cost DESC, avg_return_time DESC
+
+  - name: product_catalog_search_analysis
+    question: What products support DOCSIS 3.1 technology and which vendors provide them?
+    sql: SELECT pc.PRODUCT_NAME, pc.PRODUCT_SKU, sp.SUPPLIER_NAME, sp.TIER_LEVEL, pc.TECHNICAL_SPECIFICATIONS, pc.COMPETITIVE_ADVANTAGES FROM ISCO_ANALYTICS.PROD.PRODUCT_CATALOG pc JOIN ISCO_ANALYTICS.PROD.SUPPLIER_PROFILES sp ON pc.SUPPLIER_ID = sp.SUPPLIER_ID WHERE UPPER(pc.PRODUCT_DESCRIPTION) LIKE '%DOCSIS 3.1%' OR UPPER(pc.TECHNICAL_SPECIFICATIONS) LIKE '%DOCSIS 3.1%' ORDER BY sp.TIER_LEVEL, pc.PRODUCT_NAME
+
+  - name: visual_product_catalog_analysis
+    question: Show me products with images and their visual characteristics for white colored devices?
+    sql: SELECT pc.PRODUCT_NAME, pc.PRODUCT_SKU, pc.PRODUCT_IMAGE_URL, pc.PRODUCT_IMAGE_ALT_TEXT, pc.IMAGE_CLASSIFICATION_TAGS, sp.SUPPLIER_NAME FROM ISCO_ANALYTICS.PROD.PRODUCT_CATALOG pc JOIN ISCO_ANALYTICS.PROD.SUPPLIER_PROFILES sp ON pc.SUPPLIER_ID = sp.SUPPLIER_ID WHERE pc.PRODUCT_IMAGE_URL IS NOT NULL AND (UPPER(pc.PRODUCT_IMAGE_ALT_TEXT) LIKE '%WHITE%' OR ARRAY_CONTAINS('white device'::VARIANT, pc.IMAGE_CLASSIFICATION_TAGS)) ORDER BY pc.PRODUCT_NAME
+
+custom_instructions: |
+  Business context:
+  - Comcast ISCO (Integrated Supply Chain Operations) manages enterprise-wide supply chain for the largest cable and internet provider in the United States
+  - Core focus on achieving lowest cost per unit while improving service levels and customer experience
+  - Key business areas include Supply Chain Operations, Planning, Business Operations & Finance, and Systems/Technology/Analytics
+  - Supply chain encompasses inventory flow and distribution across the entire Comcast network including equipment like modems, set-top boxes, and other materials
+  - Critical functions include forward logistics (customer delivery) and reverse logistics (equipment retrieval and refurbishment)
+  - New Product Introduction (NPI) process requires seamless integration of new products into existing supply chain
+  - Sales and Operations Planning (S&OP) alignment is essential for meeting future business demands
+  - Cost per unit (CPU) optimization is a primary KPI across all supply chain operations
+  - Technology-driven decision making with focus on process improvements and automation opportunities
+  - Customer-facing initiatives include self-install products, same-day delivery, and service level improvements
+  
+  Data context:
+  - Inventory data tracked in real-time using barcodes and RFID technology across warehouses and distribution centers
+  - Logistics and transportation data includes shipping schedules, costs, delivery windows, and tracking for forward/reverse flows
+  - Demand forecasting leverages historical sales, customer orders, and market trends for inventory planning
+  - Operational KPIs include cost per unit, service levels, efficiency metrics, and continuous improvement tracking
+  - Vendor and supplier data encompasses performance, contracts, pricing, and supply base management
+  - Product catalog contains rich text descriptions, technical specifications, vendor overviews, and competitive analysis for Cortex Search
+  - Customer order data, installation appointments, and product returns drive supply chain alignment
+  - Financial data supports budgeting, cost analysis, forecasting, and operational efficiency measurement
+  - Master Data Management (MDM) ensures consistency across planning and reporting systems
+  
+  Query Guidelines:
+  - Always include SUPPLIER_ID, INVENTORY_QUARTER, INVENTORY_YEAR in GROUP BY when aggregating supplier or time-series data
+  - For inventory analysis, use SUM(INVENTORY_VALUE_MILLIONS) and AVG(INVENTORY_TURNOVER_RATIO) with proper grouping
+  - For logistics optimization, include TRANSPORT_MODE and SERVICE_REGION in analysis for actionable insights
+  - Use AVG() for performance scores, rates, and ratios when aggregating across multiple records
+  - When analyzing vendor performance, ensure scorecard data is aggregated at supplier level to avoid double counting
+  - For demand forecasting accuracy, compare FORECASTED_DEMAND_UNITS vs ACTUAL_DEMAND_UNITS with proper time grain
+  - Focus on cost per unit optimization opportunities in logistics and inventory management
+  - Include reverse logistics analysis for equipment retrieval and refurbishment cost optimization
+  - Leverage product catalog text fields for natural language search queries about product features, vendor capabilities, and technical specifications
+  - Use LIKE or text search functions on PRODUCT_DESCRIPTION, TECHNICAL_SPECIFICATIONS, and VENDOR_OVERVIEW for content discovery
+  - Join product catalog with inventory and supplier data for comprehensive product and vendor analysis
+  - Utilize image URLs and alt text for visual product identification and multimodal search capabilities
+  - Query IMAGE_CLASSIFICATION_TAGS for automated visual feature discovery (colors, shapes, device types)
+  - Use PRODUCT_IMAGE_ALT_TEXT for accessibility-compliant image descriptions and visual search enhancement
+  - Combine text and image data for comprehensive product discovery using Cortex Search multimodal capabilities
