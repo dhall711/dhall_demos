@@ -1,0 +1,278 @@
+name: cb_unified_analytics
+description: Unified Comcast Business analytics model combining customer insights, compliance tracking, and threat intelligence for comprehensive business intelligence
+tables:
+  - name: customer_insights
+    base_table:
+      database: POLUS_PLATFORM
+      schema: ATLAS_INTERNAL
+      table: CUSTOMER_INSIGHTS
+    dimensions:
+      - name: customer_id
+        data_type: TEXT
+        expr: CUSTOMER_ID
+        description: Unique customer identifier
+        unique: true
+      - name: company_name
+        data_type: TEXT
+        expr: COMPANY_NAME
+        description: Business name of the customer
+      - name: industry
+        data_type: TEXT
+        expr: INDUSTRY
+        description: Customer industry sector (Healthcare, Hospitality, Automotive, Legal, Manufacturing)
+      - name: internet_service
+        data_type: TEXT
+        expr: INTERNET_SERVICE
+        description: Internet service tier (Essential, Performance 250, Advanced 500)
+      - name: internet_speed
+        data_type: TEXT
+        expr: INTERNET_SPEED
+        description: Internet speed package (50/15 Mbps, 250/25 Mbps, 500/30 Mbps)
+      - name: phone_service
+        data_type: TEXT
+        expr: PHONE_SERVICE
+        description: Phone service type (Basic Phone, Voice Edge, Full Service)
+      - name: tv_service
+        data_type: BOOLEAN
+        expr: TV_SERVICE
+        description: Whether customer has Business TV service
+      - name: ethernet_service
+        data_type: TEXT
+        expr: ETHERNET_SERVICE
+        description: Dedicated internet access or Ethernet service speed
+      - name: security_edge_enabled
+        data_type: BOOLEAN
+        expr: SECURITY_EDGE_ENABLED
+        description: Whether SecurityEdge cybersecurity is enabled
+      - name: wifi_pro_enabled
+        data_type: BOOLEAN
+        expr: WIFI_PRO_ENABLED
+        description: Whether WiFi Pro managed WiFi is enabled
+      - name: connection_pro_enabled
+        data_type: BOOLEAN
+        expr: CONNECTION_PRO_ENABLED
+        description: Whether Connection Pro 4G LTE backup is enabled
+      - name: customer_compliance_status
+        data_type: TEXT
+        expr: COMPLIANCE_STATUS
+        description: PCI compliance status from customer record
+      - name: data_retention_period
+        data_type: TEXT
+        expr: DATA_RETENTION_PERIOD
+        description: Data retention policy period (1_YEAR, 2_YEARS)
+    time_dimensions:
+      - name: customer_event_date
+        data_type: TIMESTAMP
+        expr: EVENT_DATE
+        description: Date when customer record was created or updated
+      - name: last_threat_date
+        data_type: TIMESTAMP
+        expr: LAST_THREAT_DATE
+        description: Date of most recent threat event
+    facts:
+      - name: customer_threat_events_count
+        data_type: NUMBER
+        expr: SUM(THREAT_EVENTS_COUNT)
+        description: Number of security threat events detected for customer
+      - name: contract_value
+        data_type: NUMBER
+        expr: SUM(CONTRACT_VALUE)
+        description: Monthly contract value in dollars
+      - name: customer_risk_score
+        data_type: NUMBER
+        expr: AVG(RISK_SCORE)
+        description: Customer risk assessment score (0-10 scale)
+      - name: customer_count
+        data_type: NUMBER
+        expr: COUNT(DISTINCT CUSTOMER_ID)
+        description: Number of customers
+      - name: total_revenue
+        data_type: NUMBER
+        expr: SUM(CONTRACT_VALUE)
+        description: Total monthly recurring revenue
+    description: ''
+    synonyms: []
+    primary_key:
+      columns:
+        - CUSTOMER_ID
+  - name: compliance_dashboard
+    base_table:
+      database: POLUS_PLATFORM
+      schema: COMPLIANCE
+      table: AI_COMPLIANCE_DASHBOARD
+    dimensions:
+      - name: compliance_customer_id
+        data_type: TEXT
+        expr: CUSTOMER_ID
+        description: Customer identifier for compliance tracking
+        unique: true
+      - name: compliance_company_name
+        data_type: TEXT
+        expr: COMPANY_NAME
+        description: Customer company name from compliance records
+      - name: compliance_industry
+        data_type: TEXT
+        expr: INDUSTRY
+        description: Customer industry from compliance perspective
+      - name: compliance_status
+        data_type: TEXT
+        expr: COMPLIANCE_STATUS
+        description: Current compliance status (PCI_COMPLIANT, NON_COMPLIANT, PENDING)
+    time_dimensions:
+      - name: assessment_timestamp
+        data_type: TIMESTAMP
+        expr: ASSESSMENT_TIMESTAMP
+        description: When compliance assessment was performed
+    facts:
+      - name: ai_compliance_score
+        data_type: NUMBER
+        expr: AVG(AI_COMPLIANCE_SCORE)
+        description: AI-calculated compliance score (0.0-1.0)
+      - name: compliant_customers
+        data_type: NUMBER
+        expr: COUNT(DISTINCT CASE WHEN COMPLIANCE_STATUS = 'PCI_COMPLIANT' THEN CUSTOMER_ID END)
+        description: Number of compliant customers
+      - name: non_compliant_customers
+        data_type: NUMBER
+        expr: COUNT(DISTINCT CASE WHEN COMPLIANCE_STATUS = 'NON_COMPLIANT' THEN CUSTOMER_ID END)
+        description: Number of non-compliant customers
+      - name: compliance_rate
+        data_type: NUMBER
+        expr: SUM(CASE WHEN COMPLIANCE_STATUS = 'PCI_COMPLIANT' THEN 1 ELSE 0 END) * 100.0 / COUNT(*)
+        description: Percentage of customers that are compliant
+    description: ''
+    synonyms: []
+    primary_key:
+      columns:
+        - COMPLIANCE_STATUS
+  - name: security_edge_events
+    base_table:
+      database: POLUS_PLATFORM
+      schema: THREAT_INTEL
+      table: SECURITY_EDGE_EVENTS
+    dimensions:
+      - name: event_id
+        data_type: TEXT
+        expr: EVENT_ID
+        description: Unique threat event identifier
+        unique: true
+      - name: threat_customer_id
+        data_type: TEXT
+        expr: CUSTOMER_ID
+        description: Customer associated with the threat event
+      - name: akamai_threat_category
+        data_type: TEXT
+        expr: AKAMAI_THREAT_CATEGORY
+        description: Akamai threat classification (malware, phishing, botnet, ransomware, suspicious)
+      - name: blocked_domain
+        data_type: TEXT
+        expr: BLOCKED_DOMAIN
+        description: Domain that was blocked by SecurityEdge
+      - name: security_edge_action
+        data_type: TEXT
+        expr: SECURITY_EDGE_ACTION
+        description: Action taken by SecurityEdge (BLOCKED, ALLOWED, MONITORED)
+      - name: scan_cycle_id
+        data_type: TEXT
+        expr: SCAN_CYCLE_ID
+        description: 10-minute scan cycle identifier
+      - name: mitre_tactic
+        data_type: TEXT
+        expr: MITRE_TACTIC
+        description: MITRE Attack tactic classification
+      - name: mitre_technique
+        data_type: TEXT
+        expr: MITRE_TECHNIQUE
+        description: MITRE Attack technique classification
+      - name: pattern_matched
+        data_type: BOOLEAN
+        expr: PATTERN_MATCHED
+        description: Whether threat matched existing pattern (cost optimization)
+      - name: ai_processed
+        data_type: BOOLEAN
+        expr: AI_PROCESSED
+        description: Whether event was processed by AI for MITRE classification
+    time_dimensions:
+      - name: threat_timestamp
+        data_type: TIMESTAMP
+        expr: TIMESTAMP
+        description: When the threat event occurred
+    facts:
+      - name: threat_score
+        data_type: NUMBER
+        expr: AVG(THREAT_SCORE)
+        description: Akamai threat severity score (0-100)
+      - name: classification_confidence
+        data_type: NUMBER
+        expr: AVG(CLASSIFICATION_CONFIDENCE)
+        description: AI classification confidence score (0.0-1.0)
+      - name: threat_event_count
+        data_type: NUMBER
+        expr: COUNT(EVENT_ID)
+        description: Total number of threat events
+      - name: blocked_events
+        data_type: NUMBER
+        expr: COUNT(CASE WHEN SECURITY_EDGE_ACTION = 'BLOCKED' THEN EVENT_ID END)
+        description: Number of blocked threat events
+      - name: monitored_events
+        data_type: NUMBER
+        expr: COUNT(CASE WHEN SECURITY_EDGE_ACTION = 'MONITORED' THEN EVENT_ID END)
+        description: Number of monitored threat events
+      - name: ai_processing_rate
+        data_type: NUMBER
+        expr: SUM(CASE WHEN AI_PROCESSED = TRUE THEN 1 ELSE 0 END) * 100.0 / COUNT(*)
+        description: Percentage of events processed by AI
+      - name: pattern_match_rate
+        data_type: NUMBER
+        expr: SUM(CASE WHEN PATTERN_MATCHED = TRUE THEN 1 ELSE 0 END) * 100.0 / COUNT(*)
+        description: Percentage of events that matched patterns (cost savings)
+    description: ''
+    synonyms: []
+    primary_key:
+      columns:
+        - EVENT_ID
+relationships:
+  - name: customer_to_compliance
+    left_table: customer_insights
+    right_table: compliance_dashboard
+    expr: customer_insights.customer_id = compliance_dashboard.compliance_customer_id
+  - name: customer_to_threats
+    left_table: customer_insights
+    right_table: security_edge_events
+    expr: customer_insights.customer_id = security_edge_events.threat_customer_id
+  - name: compliance_to_threats
+    left_table: compliance_dashboard
+    right_table: security_edge_events
+    expr: compliance_dashboard.compliance_customer_id = security_edge_events.threat_customer_id
+verified_queries:
+  - name: high_value_customers_with_threats
+    question: Show me high-value customers who have had security threats but don't have SecurityEdge enabled
+    sql: SELECT c.CUSTOMER_ID, c.COMPANY_NAME, c.CONTRACT_VALUE, COUNT(t.EVENT_ID) as threat_count FROM POLUS_PLATFORM.ATLAS_INTERNAL.CUSTOMER_INSIGHTS c LEFT JOIN POLUS_PLATFORM.THREAT_INTEL.SECURITY_EDGE_EVENTS t ON c.CUSTOMER_ID = t.CUSTOMER_ID WHERE c.CONTRACT_VALUE > 1000 AND c.SECURITY_EDGE_ENABLED = FALSE AND t.EVENT_ID IS NOT NULL GROUP BY c.CUSTOMER_ID, c.COMPANY_NAME, c.CONTRACT_VALUE ORDER BY threat_count DESC
+  - name: compliance_vs_threat_correlation
+    question: What is the relationship between compliance status and threat event frequency?
+    sql: SELECT comp.COMPLIANCE_STATUS, COUNT(DISTINCT comp.CUSTOMER_ID) as customer_count, COALESCE(AVG(threat_counts.threat_count), 0) as avg_threats_per_customer FROM POLUS_PLATFORM.COMPLIANCE.AI_COMPLIANCE_DASHBOARD comp LEFT JOIN (SELECT CUSTOMER_ID, COUNT(EVENT_ID) as threat_count FROM POLUS_PLATFORM.THREAT_INTEL.SECURITY_EDGE_EVENTS GROUP BY CUSTOMER_ID) threat_counts ON comp.CUSTOMER_ID = threat_counts.CUSTOMER_ID GROUP BY comp.COMPLIANCE_STATUS
+  - name: industry_risk_analysis
+    question: Which industries have the highest security risk based on threat events and compliance scores?
+    sql: SELECT c.INDUSTRY, COUNT(DISTINCT c.CUSTOMER_ID) as customer_count, AVG(comp.AI_COMPLIANCE_SCORE) as avg_compliance_score, COUNT(t.EVENT_ID) as total_threats, COUNT(t.EVENT_ID) * 1.0 / COUNT(DISTINCT c.CUSTOMER_ID) as threats_per_customer FROM POLUS_PLATFORM.ATLAS_INTERNAL.CUSTOMER_INSIGHTS c LEFT JOIN POLUS_PLATFORM.COMPLIANCE.AI_COMPLIANCE_DASHBOARD comp ON c.CUSTOMER_ID = comp.CUSTOMER_ID LEFT JOIN POLUS_PLATFORM.THREAT_INTEL.SECURITY_EDGE_EVENTS t ON c.CUSTOMER_ID = t.CUSTOMER_ID GROUP BY c.INDUSTRY ORDER BY threats_per_customer DESC
+  - name: security_edge_effectiveness
+    question: How effective is SecurityEdge at reducing threats for customers who have it enabled?
+    sql: SELECT c.SECURITY_EDGE_ENABLED, COUNT(DISTINCT c.CUSTOMER_ID) as customer_count, COUNT(t.EVENT_ID) as total_events, COUNT(CASE WHEN t.SECURITY_EDGE_ACTION = 'BLOCKED' THEN t.EVENT_ID END) as blocked_events, COUNT(CASE WHEN t.SECURITY_EDGE_ACTION = 'BLOCKED' THEN t.EVENT_ID END) * 100.0 / NULLIF(COUNT(t.EVENT_ID), 0) as block_rate FROM POLUS_PLATFORM.ATLAS_INTERNAL.CUSTOMER_INSIGHTS c LEFT JOIN POLUS_PLATFORM.THREAT_INTEL.SECURITY_EDGE_EVENTS t ON c.CUSTOMER_ID = t.CUSTOMER_ID WHERE t.EVENT_ID IS NOT NULL GROUP BY c.SECURITY_EDGE_ENABLED
+  - name: upselling_opportunities
+    question: Which customers should we target for SecurityEdge upselling based on high threat activity and contract value?
+    sql: SELECT c.CUSTOMER_ID, c.COMPANY_NAME, c.INDUSTRY, c.CONTRACT_VALUE, COUNT(t.EVENT_ID) as threat_count, comp.AI_COMPLIANCE_SCORE FROM POLUS_PLATFORM.ATLAS_INTERNAL.CUSTOMER_INSIGHTS c LEFT JOIN POLUS_PLATFORM.THREAT_INTEL.SECURITY_EDGE_EVENTS t ON c.CUSTOMER_ID = t.CUSTOMER_ID LEFT JOIN POLUS_PLATFORM.COMPLIANCE.AI_COMPLIANCE_DASHBOARD comp ON c.CUSTOMER_ID = comp.CUSTOMER_ID WHERE c.SECURITY_EDGE_ENABLED = FALSE AND c.CONTRACT_VALUE > 500 GROUP BY c.CUSTOMER_ID, c.COMPANY_NAME, c.INDUSTRY, c.CONTRACT_VALUE, comp.AI_COMPLIANCE_SCORE HAVING COUNT(t.EVENT_ID) > 10 ORDER BY threat_count DESC, c.CONTRACT_VALUE DESC
+custom_instructions: |
+  Business context:
+  - This unified model combines customer data, compliance tracking, and threat intelligence
+  - SecurityEdge is our cybersecurity service that blocks malware and phishing
+  - WiFi Pro provides managed WiFi services for business customers
+  - Connection Pro offers 4G LTE backup for business continuity
+  - Essential, Performance 250, and Advanced 500 are our internet service tiers
+  - PCI DSS compliance is required for businesses that process credit card payments
+  - AI compliance scores help prioritize customers needing compliance assistance
+  - Different industries have different compliance requirements (PCI, HIPAA, NIST)
+  - Threat events are DNS queries blocked or monitored for security threats
+  - MITRE Attack framework provides standardized threat classification
+  - Pattern matching reduces AI processing costs while maintaining security effectiveness
+  - Higher threat scores indicate more dangerous security threats
+  - Risk scores help identify customers who need additional security services
+  - Contract values indicate monthly recurring revenue per customer
