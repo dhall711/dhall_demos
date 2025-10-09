@@ -1,0 +1,240 @@
+name: ude_guest_analytics
+description: Universal Destinations & Experiences guest analytics for visitor insights, preferences, and demographic analysis
+tables:
+  - name: guest_profiles
+    base_table:
+      database: UNIVERSAL_DATA_PLATFORM
+      schema: GUEST_ANALYTICS
+      table: GUEST_PROFILES
+    dimensions:
+      - name: guest_id
+        data_type: TEXT
+        expr: GUEST_ID
+        description: Unique guest identifier
+        unique: true
+      - name: first_name
+        data_type: TEXT
+        expr: FIRST_NAME
+        description: Guest first name
+      - name: last_name
+        data_type: TEXT
+        expr: LAST_NAME
+        description: Guest last name
+      - name: email_address
+        data_type: TEXT
+        expr: EMAIL_ADDRESS
+        description: Guest email address for communications
+      - name: phone_number
+        data_type: TEXT
+        expr: PHONE_NUMBER
+        description: Guest contact phone number
+      - name: date_of_birth
+        data_type: DATE
+        expr: DATE_OF_BIRTH
+        description: Guest date of birth for age analysis
+      - name: zip_code
+        data_type: TEXT
+        expr: ZIP_CODE
+        description: Guest home zip code for geographic analysis
+      - name: state
+        data_type: TEXT
+        expr: STATE
+        description: Guest home state
+      - name: country
+        data_type: TEXT
+        expr: COUNTRY
+        description: Guest home country
+      - name: preferred_language
+        data_type: TEXT
+        expr: PREFERRED_LANGUAGE
+        description: Guest preferred language for communications
+      - name: membership_tier
+        data_type: TEXT
+        expr: MEMBERSHIP_TIER
+        description: Annual Pass tier level (Standard, Premier, Preferred)
+      - name: family_size
+        data_type: NUMBER
+        expr: FAMILY_SIZE
+        description: Number of family members typically visiting together
+      - name: preferred_park
+        data_type: TEXT
+        expr: PREFERRED_PARK
+        description: Guest's preferred Universal park location
+    time_dimensions:
+      - name: account_created_date
+        data_type: TIMESTAMP
+        expr: ACCOUNT_CREATED_DATE
+        description: When guest account was created
+      - name: last_visit_date
+        data_type: TIMESTAMP
+        expr: LAST_VISIT_DATE
+        description: Date of guest's most recent park visit
+    facts:
+      - name: total_visits
+        data_type: NUMBER
+        expr: COUNT(DISTINCT VISIT_DATE)
+        description: Total number of park visits by guest
+      - name: total_spend
+        data_type: NUMBER
+        expr: SUM(TOTAL_SPEND_AMOUNT)
+        description: Total amount spent across all visits
+      - name: avg_spend_per_visit
+        data_type: NUMBER
+        expr: AVG(TOTAL_SPEND_AMOUNT)
+        description: Average spend per visit
+      - name: guest_count
+        data_type: NUMBER
+        expr: COUNT(DISTINCT GUEST_ID)
+        description: Number of unique guests
+      - name: lifetime_value
+        data_type: NUMBER
+        expr: SUM(TOTAL_SPEND_AMOUNT) + SUM(MEMBERSHIP_VALUE)
+        description: Total lifetime value of guest relationship
+    description: ''
+    synonyms: []
+    primary_key:
+      columns:
+        - GUEST_ID
+  - name: visit_sessions
+    base_table:
+      database: UNIVERSAL_DATA_PLATFORM
+      schema: GUEST_ANALYTICS
+      table: VISIT_SESSIONS
+    dimensions:
+      - name: visit_id
+        data_type: TEXT
+        expr: VISIT_ID
+        description: Unique visit session identifier
+        unique: true
+      - name: guest_id
+        data_type: TEXT
+        expr: GUEST_ID
+        description: Guest associated with visit
+      - name: park_location
+        data_type: TEXT
+        expr: PARK_LOCATION
+        description: Universal park location (Orlando, Hollywood, Japan, Beijing, Singapore)
+      - name: visit_date
+        data_type: DATE
+        expr: VISIT_DATE
+        description: Date of park visit
+      - name: entry_time
+        data_type: TIMESTAMP
+        expr: ENTRY_TIME
+        description: Time guest entered the park
+      - name: exit_time
+        data_type: TIMESTAMP
+        expr: EXIT_TIME
+        description: Time guest exited the park
+      - name: ticket_type
+        data_type: TEXT
+        expr: TICKET_TYPE
+        description: Type of park ticket (Single Day, Multi-Day, Annual Pass)
+      - name: weather_conditions
+        data_type: TEXT
+        expr: WEATHER_CONDITIONS
+        description: Weather during visit (Sunny, Rainy, Cloudy)
+      - name: crowd_level
+        data_type: TEXT
+        expr: CROWD_LEVEL
+        description: Park crowd level during visit (Low, Medium, High, Peak)
+    facts:
+      - name: visit_duration_hours
+        data_type: NUMBER
+        expr: AVG(DATEDIFF('hour', ENTRY_TIME, EXIT_TIME))
+        description: Average visit duration in hours
+      - name: attractions_visited
+        data_type: NUMBER
+        expr: COUNT(DISTINCT ATTRACTION_ID)
+        description: Number of attractions visited during session
+      - name: total_spend
+        data_type: NUMBER
+        expr: SUM(SPEND_AMOUNT)
+        description: Total amount spent during visit
+      - name: visit_count
+        data_type: NUMBER
+        expr: COUNT(DISTINCT VISIT_ID)
+        description: Number of visit sessions
+    description: ''
+    synonyms: []
+    primary_key:
+      columns:
+        - VISIT_ID
+  - name: guest_preferences
+    base_table:
+      database: UNIVERSAL_DATA_PLATFORM
+      schema: GUEST_ANALYTICS
+      table: GUEST_PREFERENCES
+    dimensions:
+      - name: preference_id
+        data_type: TEXT
+        expr: PREFERENCE_ID
+        description: Unique preference record identifier
+        unique: true
+      - name: guest_id
+        data_type: TEXT
+        expr: GUEST_ID
+        description: Guest with preference
+      - name: preference_category
+        data_type: TEXT
+        expr: PREFERENCE_CATEGORY
+        description: Category of preference (Attraction Type, Food, Merchandise, Experience)
+      - name: preference_value
+        data_type: TEXT
+        expr: PREFERENCE_VALUE
+        description: Specific preference value
+      - name: preference_strength
+        data_type: TEXT
+        expr: PREFERENCE_STRENGTH
+        description: Strength of preference (Strong, Moderate, Weak)
+    facts:
+      - name: preference_score
+        data_type: NUMBER
+        expr: AVG(PREFERENCE_SCORE)
+        description: Numerical preference score (1-10)
+      - name: preference_count
+        data_type: NUMBER
+        expr: COUNT(DISTINCT PREFERENCE_ID)
+        description: Number of recorded preferences
+    description: ''
+    synonyms: []
+    primary_key:
+      columns:
+        - PREFERENCE_ID
+relationships:
+  - name: guest_visits
+    left_table: guest_profiles
+    right_table: visit_sessions
+    expr: guest_profiles.guest_id = visit_sessions.guest_id
+  - name: guest_preferences_link
+    left_table: guest_profiles
+    right_table: guest_preferences
+    expr: guest_profiles.guest_id = guest_preferences.guest_id
+verified_queries:
+  - name: top_spending_guests
+    question: Who are our highest spending guests?
+    sql: SELECT GUEST_ID, FIRST_NAME, LAST_NAME, SUM(TOTAL_SPEND_AMOUNT) as total_spend FROM UNIVERSAL_DATA_PLATFORM.GUEST_ANALYTICS.GUEST_PROFILES GROUP BY GUEST_ID, FIRST_NAME, LAST_NAME ORDER BY total_spend DESC LIMIT 20
+  - name: guest_demographics_by_park
+    question: What are the demographics of guests by park location?
+    sql: SELECT v.PARK_LOCATION, g.STATE, g.COUNTRY, COUNT(DISTINCT g.GUEST_ID) as guest_count FROM UNIVERSAL_DATA_PLATFORM.GUEST_ANALYTICS.GUEST_PROFILES g JOIN UNIVERSAL_DATA_PLATFORM.GUEST_ANALYTICS.VISIT_SESSIONS v ON g.GUEST_ID = v.GUEST_ID GROUP BY v.PARK_LOCATION, g.STATE, g.COUNTRY ORDER BY guest_count DESC
+  - name: membership_tier_analysis
+    question: How do different membership tiers compare in terms of spending and visits?
+    sql: SELECT g.MEMBERSHIP_TIER, COUNT(DISTINCT g.GUEST_ID) as member_count, AVG(g.TOTAL_SPEND_AMOUNT) as avg_spend, AVG(visit_counts.visit_count) as avg_visits FROM UNIVERSAL_DATA_PLATFORM.GUEST_ANALYTICS.GUEST_PROFILES g LEFT JOIN (SELECT GUEST_ID, COUNT(DISTINCT VISIT_ID) as visit_count FROM UNIVERSAL_DATA_PLATFORM.GUEST_ANALYTICS.VISIT_SESSIONS GROUP BY GUEST_ID) visit_counts ON g.GUEST_ID = visit_counts.GUEST_ID GROUP BY g.MEMBERSHIP_TIER ORDER BY avg_spend DESC
+  - name: seasonal_visit_patterns
+    question: What are the seasonal visit patterns across our parks?
+    sql: SELECT EXTRACT(MONTH FROM VISIT_DATE) as visit_month, PARK_LOCATION, COUNT(DISTINCT VISIT_ID) as visit_count, AVG(DATEDIFF('hour', ENTRY_TIME, EXIT_TIME)) as avg_duration FROM UNIVERSAL_DATA_PLATFORM.GUEST_ANALYTICS.VISIT_SESSIONS GROUP BY EXTRACT(MONTH FROM VISIT_DATE), PARK_LOCATION ORDER BY visit_month, visit_count DESC
+  - name: guest_preference_insights
+    question: What are the most popular guest preferences by category?
+    sql: SELECT PREFERENCE_CATEGORY, PREFERENCE_VALUE, COUNT(DISTINCT GUEST_ID) as guest_count, AVG(PREFERENCE_SCORE) as avg_score FROM UNIVERSAL_DATA_PLATFORM.GUEST_ANALYTICS.GUEST_PREFERENCES GROUP BY PREFERENCE_CATEGORY, PREFERENCE_VALUE ORDER BY guest_count DESC LIMIT 20
+custom_instructions: |
+  Business context:
+  - Universal Destinations & Experiences operates world-class theme parks across multiple global locations
+  - Guest analytics drives personalized experiences and targeted marketing campaigns
+  - Membership tiers include Standard, Premier, and Preferred Annual Passes with different benefits
+  - Park locations include Universal Orlando Resort, Universal Studios Hollywood, Universal Studios Japan, Universal Beijing Resort, and Universal Studios Singapore
+  - Guest preferences help optimize attraction offerings and park experiences
+  - Family size and demographics inform capacity planning and attraction design
+  - Seasonal patterns guide staffing and operational decisions
+  - Weather and crowd levels impact guest satisfaction and operational efficiency
+  - Guest lifetime value calculations support marketing investment decisions
+  - Privacy and data protection are critical for guest trust and regulatory compliance

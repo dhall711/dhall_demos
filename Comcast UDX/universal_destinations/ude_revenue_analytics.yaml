@@ -1,0 +1,292 @@
+name: ude_revenue_analytics
+description: Universal Destinations & Experiences revenue analytics for ticket sales, merchandise, food & beverage, and overall financial performance
+tables:
+  - name: ticket_sales
+    base_table:
+      database: UNIVERSAL_DATA_PLATFORM
+      schema: REVENUE_ANALYTICS
+      table: TICKET_SALES
+    dimensions:
+      - name: ticket_sale_id
+        data_type: TEXT
+        expr: TICKET_SALE_ID
+        description: Unique ticket sale transaction identifier
+        unique: true
+      - name: guest_id
+        data_type: TEXT
+        expr: GUEST_ID
+        description: Guest who purchased the ticket
+      - name: park_location
+        data_type: TEXT
+        expr: PARK_LOCATION
+        description: Universal park location for ticket
+      - name: ticket_type
+        data_type: TEXT
+        expr: TICKET_TYPE
+        description: Type of ticket (Single Day, Multi-Day, Annual Pass, Special Event)
+      - name: ticket_category
+        data_type: TEXT
+        expr: TICKET_CATEGORY
+        description: Ticket category (Adult, Child, Senior, Military)
+      - name: purchase_channel
+        data_type: TEXT
+        expr: PURCHASE_CHANNEL
+        description: Where ticket was purchased (Online, Mobile App, Gate, Hotel, Partner)
+      - name: pricing_tier
+        data_type: TEXT
+        expr: PRICING_TIER
+        description: Dynamic pricing tier (Value, Regular, Peak, Premium)
+      - name: promotional_code
+        data_type: TEXT
+        expr: PROMOTIONAL_CODE
+        description: Promotional code used (if any)
+      - name: bundle_package
+        data_type: TEXT
+        expr: BUNDLE_PACKAGE
+        description: Bundle package type (Express Pass, Vacation Package, etc.)
+      - name: guest_segment
+        data_type: TEXT
+        expr: GUEST_SEGMENT
+        description: Guest market segment (Local, Domestic Tourist, International)
+    time_dimensions:
+      - name: purchase_date
+        data_type: TIMESTAMP
+        expr: PURCHASE_TIMESTAMP
+        description: When ticket was purchased
+      - name: visit_date
+        data_type: DATE
+        expr: VISIT_DATE
+        description: Date ticket is valid for park visit
+    facts:
+      - name: ticket_price
+        data_type: NUMBER
+        expr: SUM(TICKET_PRICE)
+        description: Total ticket revenue
+      - name: discount_amount
+        data_type: NUMBER
+        expr: SUM(DISCOUNT_AMOUNT)
+        description: Total discount amount given
+      - name: net_revenue
+        data_type: NUMBER
+        expr: SUM(TICKET_PRICE - DISCOUNT_AMOUNT)
+        description: Net ticket revenue after discounts
+      - name: tickets_sold
+        data_type: NUMBER
+        expr: COUNT(TICKET_SALE_ID)
+        description: Number of tickets sold
+      - name: average_ticket_price
+        data_type: NUMBER
+        expr: AVG(TICKET_PRICE)
+        description: Average ticket price
+      - name: advance_purchase_days
+        data_type: NUMBER
+        expr: AVG(DATEDIFF('day', PURCHASE_TIMESTAMP, VISIT_DATE))
+        description: Average days purchased in advance
+    description: ''
+    synonyms: []
+    primary_key:
+      columns:
+        - TICKET_SALE_ID
+  - name: merchandise_sales
+    base_table:
+      database: UNIVERSAL_DATA_PLATFORM
+      schema: REVENUE_ANALYTICS
+      table: MERCHANDISE_SALES
+    dimensions:
+      - name: merchandise_sale_id
+        data_type: TEXT
+        expr: MERCHANDISE_SALE_ID
+        description: Unique merchandise transaction identifier
+        unique: true
+      - name: guest_id
+        data_type: TEXT
+        expr: GUEST_ID
+        description: Guest who made the purchase
+      - name: location_id
+        data_type: TEXT
+        expr: STORE_LOCATION_ID
+        description: Store or cart location where purchase was made
+      - name: store_type
+        data_type: TEXT
+        expr: STORE_TYPE
+        description: Type of retail location (Themed Store, Cart, Universal CityWalk)
+      - name: product_category
+        data_type: TEXT
+        expr: PRODUCT_CATEGORY
+        description: Category of merchandise (Apparel, Collectibles, Toys, Accessories)
+      - name: franchise
+        data_type: TEXT
+        expr: FRANCHISE
+        description: Product franchise (Harry Potter, Nintendo, Jurassic, Universal Studios)
+      - name: product_name
+        data_type: TEXT
+        expr: PRODUCT_NAME
+        description: Specific product purchased
+      - name: price_tier
+        data_type: TEXT
+        expr: PRICE_TIER
+        description: Product price tier (Budget, Mid-Range, Premium, Luxury)
+      - name: seasonal_item
+        data_type: BOOLEAN
+        expr: IS_SEASONAL_ITEM
+        description: Whether item is seasonal/limited edition
+      - name: personalization
+        data_type: BOOLEAN
+        expr: HAS_PERSONALIZATION
+        description: Whether item includes personalization
+    time_dimensions:
+      - name: purchase_timestamp
+        data_type: TIMESTAMP
+        expr: PURCHASE_TIMESTAMP
+        description: When merchandise was purchased
+    facts:
+      - name: unit_price
+        data_type: NUMBER
+        expr: AVG(UNIT_PRICE)
+        description: Average unit price of merchandise
+      - name: quantity_sold
+        data_type: NUMBER
+        expr: SUM(QUANTITY)
+        description: Total quantity of items sold
+      - name: total_revenue
+        data_type: NUMBER
+        expr: SUM(UNIT_PRICE * QUANTITY)
+        description: Total merchandise revenue
+      - name: profit_margin
+        data_type: NUMBER
+        expr: AVG((UNIT_PRICE - COST_OF_GOODS) / UNIT_PRICE) * 100
+        description: Average profit margin percentage
+      - name: transactions_count
+        data_type: NUMBER
+        expr: COUNT(DISTINCT MERCHANDISE_SALE_ID)
+        description: Number of merchandise transactions
+    description: ''
+    synonyms: []
+    primary_key:
+      columns:
+        - MERCHANDISE_SALE_ID
+  - name: food_beverage_sales
+    base_table:
+      database: UNIVERSAL_DATA_PLATFORM
+      schema: REVENUE_ANALYTICS
+      table: FOOD_BEVERAGE_SALES
+    dimensions:
+      - name: fb_sale_id
+        data_type: TEXT
+        expr: FB_SALE_ID
+        description: Unique food & beverage transaction identifier
+        unique: true
+      - name: guest_id
+        data_type: TEXT
+        expr: GUEST_ID
+        description: Guest who made the purchase
+      - name: restaurant_id
+        data_type: TEXT
+        expr: RESTAURANT_ID
+        description: Restaurant or food location identifier
+      - name: restaurant_type
+        data_type: TEXT
+        expr: RESTAURANT_TYPE
+        description: Type of dining location (Quick Service, Table Service, Mobile Cart, Bar)
+      - name: themed_restaurant
+        data_type: TEXT
+        expr: THEMED_RESTAURANT
+        description: Restaurant theme (Three Broomsticks, Toadstool Cafe, etc.)
+      - name: meal_period
+        data_type: TEXT
+        expr: MEAL_PERIOD
+        description: Meal time period (Breakfast, Lunch, Dinner, Snack)
+      - name: item_category
+        data_type: TEXT
+        expr: ITEM_CATEGORY
+        description: Food/beverage category (Entree, Beverage, Dessert, Snack, Alcohol)
+      - name: dietary_preference
+        data_type: TEXT
+        expr: DIETARY_PREFERENCE
+        description: Dietary options (Regular, Vegetarian, Vegan, Gluten-Free, Allergy-Friendly)
+      - name: franchise_themed
+        data_type: TEXT
+        expr: FRANCHISE_THEMED
+        description: Franchise theme of food item
+      - name: special_event_menu
+        data_type: BOOLEAN
+        expr: IS_SPECIAL_EVENT_MENU
+        description: Whether item is from special event menu
+    time_dimensions:
+      - name: purchase_timestamp
+        data_type: TIMESTAMP
+        expr: PURCHASE_TIMESTAMP
+        description: When food/beverage was purchased
+    facts:
+      - name: item_price
+        data_type: NUMBER
+        expr: AVG(ITEM_PRICE)
+        description: Average item price
+      - name: quantity_ordered
+        data_type: NUMBER
+        expr: SUM(QUANTITY)
+        description: Total quantity of items ordered
+      - name: total_fb_revenue
+        data_type: NUMBER
+        expr: SUM(ITEM_PRICE * QUANTITY)
+        description: Total food & beverage revenue
+      - name: average_order_value
+        data_type: NUMBER
+        expr: AVG(ORDER_TOTAL)
+        description: Average order value per transaction
+      - name: fb_transactions
+        data_type: NUMBER
+        expr: COUNT(DISTINCT FB_SALE_ID)
+        description: Number of food & beverage transactions
+      - name: guest_satisfaction_rating
+        data_type: NUMBER
+        expr: AVG(GUEST_RATING)
+        description: Average guest satisfaction rating for dining
+    description: ''
+    synonyms: []
+    primary_key:
+      columns:
+        - FB_SALE_ID
+relationships:
+  - name: guest_ticket_purchases
+    left_table: ticket_sales
+    right_table: merchandise_sales
+    expr: ticket_sales.guest_id = merchandise_sales.guest_id
+  - name: guest_merchandise_purchases
+    left_table: ticket_sales
+    right_table: food_beverage_sales
+    expr: ticket_sales.guest_id = food_beverage_sales.guest_id
+  - name: merchandise_dining_correlation
+    left_table: merchandise_sales
+    right_table: food_beverage_sales
+    expr: merchandise_sales.guest_id = food_beverage_sales.guest_id
+verified_queries:
+  - name: revenue_by_park_location
+    question: What is the total revenue breakdown by park location?
+    sql: SELECT ts.PARK_LOCATION, SUM(ts.TICKET_PRICE - ts.DISCOUNT_AMOUNT) as ticket_revenue, SUM(ms.UNIT_PRICE * ms.QUANTITY) as merchandise_revenue, SUM(fb.ITEM_PRICE * fb.QUANTITY) as fb_revenue, (SUM(ts.TICKET_PRICE - ts.DISCOUNT_AMOUNT) + SUM(ms.UNIT_PRICE * ms.QUANTITY) + SUM(fb.ITEM_PRICE * fb.QUANTITY)) as total_revenue FROM UNIVERSAL_DATA_PLATFORM.REVENUE_ANALYTICS.TICKET_SALES ts LEFT JOIN UNIVERSAL_DATA_PLATFORM.REVENUE_ANALYTICS.MERCHANDISE_SALES ms ON ts.GUEST_ID = ms.GUEST_ID LEFT JOIN UNIVERSAL_DATA_PLATFORM.REVENUE_ANALYTICS.FOOD_BEVERAGE_SALES fb ON ts.GUEST_ID = fb.GUEST_ID GROUP BY ts.PARK_LOCATION ORDER BY total_revenue DESC
+  - name: franchise_merchandise_performance
+    question: Which franchise merchandise generates the highest revenue and profit margins?
+    sql: SELECT FRANCHISE, PRODUCT_CATEGORY, SUM(UNIT_PRICE * QUANTITY) as total_revenue, AVG((UNIT_PRICE - COST_OF_GOODS) / UNIT_PRICE * 100) as avg_profit_margin, SUM(QUANTITY) as total_units_sold FROM UNIVERSAL_DATA_PLATFORM.REVENUE_ANALYTICS.MERCHANDISE_SALES GROUP BY FRANCHISE, PRODUCT_CATEGORY ORDER BY total_revenue DESC LIMIT 20
+  - name: seasonal_revenue_trends
+    question: How does revenue vary by season and special events?
+    sql: SELECT EXTRACT(MONTH FROM ts.PURCHASE_TIMESTAMP) as month, COUNT(DISTINCT ts.GUEST_ID) as unique_guests, SUM(ts.TICKET_PRICE - ts.DISCOUNT_AMOUNT) as ticket_revenue, AVG(ts.TICKET_PRICE) as avg_ticket_price FROM UNIVERSAL_DATA_PLATFORM.REVENUE_ANALYTICS.TICKET_SALES ts GROUP BY EXTRACT(MONTH FROM ts.PURCHASE_TIMESTAMP) ORDER BY month
+  - name: dining_revenue_by_meal_period
+    question: Which meal periods and restaurant types generate the most revenue?
+    sql: SELECT MEAL_PERIOD, RESTAURANT_TYPE, SUM(ITEM_PRICE * QUANTITY) as total_revenue, AVG(ORDER_TOTAL) as avg_order_value, COUNT(DISTINCT GUEST_ID) as unique_guests FROM UNIVERSAL_DATA_PLATFORM.REVENUE_ANALYTICS.FOOD_BEVERAGE_SALES GROUP BY MEAL_PERIOD, RESTAURANT_TYPE ORDER BY total_revenue DESC
+  - name: guest_spending_analysis
+    question: What is the average total spending per guest across all revenue streams?
+    sql: SELECT ts.GUEST_SEGMENT, COUNT(DISTINCT ts.GUEST_ID) as guest_count, AVG(ts.TICKET_PRICE - ts.DISCOUNT_AMOUNT) as avg_ticket_spend, AVG(ms.UNIT_PRICE * ms.QUANTITY) as avg_merchandise_spend, AVG(fb.ITEM_PRICE * fb.QUANTITY) as avg_fb_spend, AVG((ts.TICKET_PRICE - ts.DISCOUNT_AMOUNT) + COALESCE(ms.UNIT_PRICE * ms.QUANTITY, 0) + COALESCE(fb.ITEM_PRICE * fb.QUANTITY, 0)) as avg_total_spend FROM UNIVERSAL_DATA_PLATFORM.REVENUE_ANALYTICS.TICKET_SALES ts LEFT JOIN UNIVERSAL_DATA_PLATFORM.REVENUE_ANALYTICS.MERCHANDISE_SALES ms ON ts.GUEST_ID = ms.GUEST_ID LEFT JOIN UNIVERSAL_DATA_PLATFORM.REVENUE_ANALYTICS.FOOD_BEVERAGE_SALES fb ON ts.GUEST_ID = fb.GUEST_ID GROUP BY ts.GUEST_SEGMENT ORDER BY avg_total_spend DESC
+custom_instructions: |
+  Business context:
+  - Universal Destinations & Experiences generates revenue through multiple streams: tickets, merchandise, food & beverage, and experiences
+  - Dynamic pricing strategies adjust ticket prices based on demand, seasonality, and special events
+  - Franchise-themed merchandise (Harry Potter, Nintendo, etc.) often commands premium pricing and higher margins
+  - Food & beverage operations range from quick service to premium dining experiences with franchise themes
+  - Guest spending patterns vary significantly by market segment (local, domestic tourist, international)
+  - Advance purchase behavior indicates demand forecasting and revenue optimization opportunities
+  - Bundle packages and promotional codes impact pricing strategy and guest acquisition
+  - Seasonal and special event merchandise creates revenue spikes and inventory challenges
+  - Per capita spending metrics are key performance indicators for operational success
+  - Revenue per available guest (RevPAG) helps optimize capacity and pricing
+  - Cross-selling opportunities exist between ticket sales, merchandise, and dining
+  - Guest satisfaction ratings directly correlate with repeat visits and revenue retention

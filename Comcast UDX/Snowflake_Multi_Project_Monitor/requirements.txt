@@ -1,0 +1,20 @@
+# Core Streamlit and Data Processing
+streamlit>=1.28.0
+pandas>=1.5.0
+numpy>=1.21.0
+
+# Snowflake Connectivity
+snowflake-connector-python>=3.0.0
+
+# Visualization
+plotly>=5.15.0
+
+# Data and Time Utilities
+python-dateutil>=2.8.0
+pytz>=2022.1
+
+# Configuration and JSON handling
+toml>=0.10.0
+
+# Type hints and data validation
+typing-extensions>=4.0.0 

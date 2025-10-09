@@ -1,0 +1,195 @@
+# Multi-Project Monitoring Configuration
+# Define projects to monitor across your Snowflake environment
+
+projects:
+  sensitive_data_project:
+    name: "Sensitive Data Discovery & Masking"
+    type: "sensitive_data"
+    description: "Automated sensitive data discovery, classification, and dynamic data masking operations"
+    cost_center: "Data Governance"
+    priority: "high"
+    
+    # Identification patterns for project resources
+    patterns:
+      warehouses:
+        - "%SENSITIVE%"
+        - "%DDM%"
+        - "%DISCOVERY%"
+        - "%PRIVACY%"
+        - "%MASKING%"
+      
+      databases:
+        - "%SENSITIVE%"
+        - "%PII%"
+        - "%DISCOVERY%"
+        - "%PRIVACY%"
+        - "%MASKING%"
+        - "%GDPR%"
+      
+      users:
+        - "%DATA_DISCOVERY%"
+        - "%PRIVACY%"
+        - "%SECURITY%"
+        - "%GOVERNANCE%"
+      
+      schemas:
+        - "%SENSITIVE%"
+        - "%PII%"
+        - "%DISCOVERY%"
+    
+    # Expected operations and their characteristics
+    operations:
+      - name: "Column Profiling"
+        description: "Analyzing table columns for sensitive data patterns"
+        expected_frequency: "high"
+        resource_intensive: true
+        
+      - name: "AI Classification"
+        description: "Using Cortex AI for intelligent data classification"
+        expected_frequency: "medium"
+        resource_intensive: true
+        ai_enabled: true
+        
+      - name: "Masking Policy Creation"
+        description: "Generating and applying dynamic data masking policies"
+        expected_frequency: "low"
+        resource_intensive: false
+        
+      - name: "Sample Data Retrieval"
+        description: "Extracting sample data for pattern analysis"
+        expected_frequency: "high"
+        resource_intensive: false
+
+  schema_mapper:
+    name: "Schema Mapping & Transformation"
+    type: "schema_mapper"
+    description: "Schema mapping, data transformation, and ETL operations"
+    cost_center: "Data Engineering"
+    priority: "high"
+    
+    # Identification patterns for project resources
+    patterns:
+      warehouses:
+        - "%MAPPER%"
+        - "%TRANSFORM%"
+        - "%ETL%"
+        - "%SCHEMA%"
+        - "%MIGRATION%"
+      
+      databases:
+        - "%MAPPER%"
+        - "%TRANSFORM%"
+        - "%STAGING%"
+        - "%ETL%"
+        - "%SCHEMA%"
+        - "%MIGRATION%"
+      
+      users:
+        - "%MAPPER%"
+        - "%ETL%"
+        - "%TRANSFORM%"
+        - "%ENGINEER%"
+        - "%MIGRATION%"
+      
+      schemas:
+        - "%MAPPER%"
+        - "%TRANSFORM%"
+        - "%STAGING%"
+        - "%ETL%"
+    
+    # Expected operations and their characteristics
+    operations:
+      - name: "Schema Analysis"
+        description: "Analyzing source and target schema structures"
+        expected_frequency: "medium"
+        resource_intensive: false
+        
+      - name: "Data Mapping"
+        description: "Creating mappings between source and target schemas"
+        expected_frequency: "medium"
+        resource_intensive: false
+        
+      - name: "Transformation Execution"
+        description: "Executing data transformations and mappings"
+        expected_frequency: "high"
+        resource_intensive: true
+        
+      - name: "Validation & Testing"
+        description: "Validating mapped data and transformation results"
+        expected_frequency: "medium"
+        resource_intensive: true
+
+# Global monitoring configuration
+monitoring:
+  # Default time windows for analysis
+  default_time_windows:
+    real_time: 1    # hours
+    short_term: 6   # hours
+    daily: 24       # hours
+    weekly: 168     # hours (7 days)
+    monthly: 720    # hours (30 days)
+  
+  # Cost calculation models
+  cost_models:
+    warehouse_credit_cost: 3.00    # $ per credit
+    storage_cost_per_gb: 0.05      # $ per GB per month
+    ai_request_cost: 0.01          # $ per AI request (estimate)
+    data_transfer_cost: 0.02       # $ per GB transferred
+  
+  # Alert thresholds
+  thresholds:
+    cost:
+      daily_limit_per_project: 100.00      # $ per day
+      weekly_limit_per_project: 500.00     # $ per week
+      monthly_limit_per_project: 2000.00   # $ per month
+    
+    performance:
+      max_error_rate: 5.0                  # % error rate
+      max_avg_execution_time: 30000        # milliseconds
+      min_cache_hit_rate: 80.0             # % cache hit rate
+    
+    usage:
+      max_concurrent_queries: 50           # simultaneous queries
+      max_daily_queries_per_project: 10000 # queries per day
+      max_credits_per_hour: 20.0           # credits per hour per project
+  
+  # Insight generation settings
+  insights:
+    # Minimum thresholds for generating insights
+    min_cost_difference_ratio: 2.0        # 2x cost difference triggers insight
+    min_usage_dominance_percentage: 70.0   # 70% usage triggers insight
+    min_error_rate_for_alert: 5.0         # 5% error rate triggers alert
+    
+    # Recommendation priorities
+    high_priority_conditions:
+      - cost_ratio_over: 3.0
+      - error_rate_over: 10.0
+      - daily_cost_over: 200.0
+    
+    medium_priority_conditions:
+      - cost_ratio_over: 2.0
+      - error_rate_over: 5.0
+      - usage_dominance_over: 70.0
+
+# Reporting configuration  
+reporting:
+  # Default export formats
+  formats:
+    - json
+    - csv
+    - excel
+  
+  # Report sections to include
+  sections:
+    - project_summary
+    - cost_analysis
+    - performance_metrics
+    - cross_project_insights
+    - resource_utilization
+    - recommendations
+  
+  # Automated report schedule (if desired)
+  schedule:
+    daily_summary: "08:00"      # UTC time
+    weekly_report: "monday_09:00"
+    monthly_report: "first_day_10:00" 

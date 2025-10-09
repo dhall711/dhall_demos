@@ -1,0 +1,399 @@
+name: nbcu_competitive_analytics
+description: NBCUniversal competitive overview analytics for ad revenue tracking and competitor performance monitoring across television, streaming, and digital platforms
+tables:
+  - name: competitor_profiles
+    base_table:
+      database: STRATEGY_CLIENT
+      schema: DEV
+      table: COMPETITOR_PROFILES
+    dimensions:
+      - name: competitor_id
+        data_type: TEXT
+        expr: COMPETITOR_ID
+        description: Unique competitor identifier
+        unique: true
+      - name: competitor_name
+        data_type: TEXT
+        expr: COMPETITOR_NAME
+        description: Name of the competitor company
+      - name: company_type
+        data_type: TEXT
+        expr: COMPANY_TYPE
+        description: Type of media company (broadcast, cable, streaming, etc.)
+      - name: market_segment
+        data_type: TEXT
+        expr: MARKET_SEGMENT
+        description: Primary market segment focus
+      - name: parent_company
+        data_type: TEXT
+        expr: PARENT_COMPANY
+        description: Parent company or ownership group
+      - name: headquarters_region
+        data_type: TEXT
+        expr: HEADQUARTERS_REGION
+        description: Geographic headquarters region
+      - name: market_cap_billions
+        data_type: NUMBER
+        expr: MARKET_CAP_BILLIONS
+        description: Market capitalization in billions
+      - name: employee_count
+        data_type: NUMBER
+        expr: EMPLOYEE_COUNT
+        description: Number of employees
+    facts:
+      - name: market_cap_billions
+        data_type: NUMBER
+        expr: AVG(MARKET_CAP_BILLIONS)
+        description: Average market capitalization in billions
+      - name: employee_count
+        data_type: NUMBER
+        expr: AVG(EMPLOYEE_COUNT)
+        description: Average number of employees
+    description: ''
+    synonyms: ['competitors', 'media companies', 'entertainment companies', 'broadcasters', 'streaming services', 'company profiles']
+    primary_key:
+      columns:
+        - COMPETITOR_ID
+  - name: advertising_revenue
+    base_table:
+      database: STRATEGY_CLIENT
+      schema: DEV
+      table: MI_MICROSTRATEGY_FACT
+    dimensions:
+      - name: revenue_id
+        data_type: TEXT
+        expr: REVENUE_ID
+        description: Unique revenue record identifier
+        unique: true
+      - name: competitor_id
+        data_type: TEXT
+        expr: COMPETITOR_ID
+        description: Competitor associated with revenue
+      - name: revenue_quarter
+        data_type: TEXT
+        expr: REVENUE_QUARTER
+        description: Revenue reporting quarter (Q1, Q2, Q3, Q4)
+      - name: revenue_year
+        data_type: INTEGER
+        expr: REVENUE_YEAR
+        description: Revenue reporting year
+      - name: platform_type
+        data_type: TEXT
+        expr: PLATFORM_TYPE
+        description: Advertising platform type
+      - name: ad_format
+        data_type: TEXT
+        expr: AD_FORMAT
+        description: Type of advertising format
+      - name: audience_demographic
+        data_type: TEXT
+        expr: AUDIENCE_DEMOGRAPHIC
+        description: Target audience demographic
+      - name: content_category
+        data_type: TEXT
+        expr: CONTENT_CATEGORY
+        description: Content category for advertising
+      - name: ad_revenue_millions
+        data_type: NUMBER
+        expr: AD_REVENUE_MILLIONS
+        description: Advertising revenue in millions
+      - name: qoq_growth_percent
+        data_type: NUMBER
+        expr: QOQ_GROWTH_PERCENT
+        description: Quarter over quarter growth percentage
+      - name: yoy_growth_percent
+        data_type: NUMBER
+        expr: YOY_GROWTH_PERCENT
+        description: Year over year growth percentage
+      - name: market_share_percent
+        data_type: NUMBER
+        expr: MARKET_SHARE_PERCENT
+        description: Market share percentage
+      - name: average_cpm
+        data_type: NUMBER
+        expr: AVERAGE_CPM
+        description: Average cost per mille (CPM)
+    time_dimensions:
+      - name: revenue_date
+        data_type: DATE
+        expr: CONCAT(REVENUE_YEAR, '-', 
+          CASE REVENUE_QUARTER 
+            WHEN 'Q1' THEN '03-31'
+            WHEN 'Q2' THEN '06-30' 
+            WHEN 'Q3' THEN '09-30'
+            WHEN 'Q4' THEN '12-31'
+          END)::DATE
+        description: Revenue reporting period end date
+    facts:
+      - name: total_ad_revenue
+        data_type: NUMBER
+        expr: SUM(AD_REVENUE_MILLIONS)
+        description: Total advertising revenue in millions (platform-level)
+      - name: quarter_over_quarter_growth
+        data_type: NUMBER
+        expr: AVG(QOQ_GROWTH_PERCENT)
+        description: Quarter over quarter growth percentage
+      - name: year_over_year_growth
+        data_type: NUMBER
+        expr: AVG(YOY_GROWTH_PERCENT)
+        description: Year over year growth percentage
+      - name: market_share_percent
+        data_type: NUMBER
+        expr: AVG(MARKET_SHARE_PERCENT)
+        description: Market share percentage
+      - name: average_cpm
+        data_type: NUMBER
+        expr: AVG(AVERAGE_CPM)
+        description: Average cost per mille (CPM)
+      - name: platform_revenue_share
+        data_type: NUMBER
+        expr: AD_REVENUE_MILLIONS / NULLIF(SUM(AD_REVENUE_MILLIONS) OVER (PARTITION BY COMPETITOR_ID, REVENUE_QUARTER, REVENUE_YEAR), 0) * 100
+        description: Platform revenue as percentage of competitor total for the quarter
+    description: ''
+    synonyms: ['ad revenue', 'advertising sales', 'revenue data', 'sales performance', 'quarterly results', 'financial metrics']
+    primary_key:
+      columns:
+        - REVENUE_ID
+
+  - name: market_intelligence
+    base_table:
+      database: STRATEGY_CLIENT
+      schema: DEV
+      table: MARKET_INTELLIGENCE
+    dimensions:
+      - name: intelligence_id
+        data_type: TEXT
+        expr: INTELLIGENCE_ID
+        description: Unique market intelligence record identifier
+        unique: true
+      - name: competitor_id
+        data_type: TEXT
+        expr: COMPETITOR_ID
+        description: Competitor being analyzed
+      - name: analysis_quarter
+        data_type: TEXT
+        expr: ANALYSIS_QUARTER
+        description: Analysis quarter period
+      - name: analysis_year
+        data_type: INTEGER
+        expr: ANALYSIS_YEAR
+        description: Analysis year
+      - name: data_source
+        data_type: TEXT
+        expr: DATA_SOURCE
+        description: Source of market intelligence data
+      - name: content_investment_category
+        data_type: TEXT
+        expr: CONTENT_INVESTMENT_CATEGORY
+        description: Category of content investment
+      - name: content_investment_millions
+        data_type: NUMBER
+        expr: CONTENT_INVESTMENT_MILLIONS
+        description: Content investment in millions
+      - name: subscriber_count_millions
+        data_type: NUMBER
+        expr: SUBSCRIBER_COUNT_MILLIONS
+        description: Subscriber count in millions
+      - name: streaming_hours_billions
+        data_type: NUMBER
+        expr: STREAMING_HOURS_BILLIONS
+        description: Streaming hours in billions
+      - name: ad_inventory_available
+        data_type: NUMBER
+        expr: AD_INVENTORY_AVAILABLE
+        description: Advertising inventory available
+      - name: pricing_premium_index
+        data_type: NUMBER
+        expr: PRICING_PREMIUM_INDEX
+        description: Pricing premium index compared to market average
+    time_dimensions:
+      - name: analysis_date
+        data_type: DATE
+        expr: CONCAT(ANALYSIS_YEAR, '-', 
+          CASE ANALYSIS_QUARTER 
+            WHEN 'Q1' THEN '03-31'
+            WHEN 'Q2' THEN '06-30' 
+            WHEN 'Q3' THEN '09-30'
+            WHEN 'Q4' THEN '12-31'
+          END)::DATE
+        description: Analysis period end date
+    facts:
+      - name: content_investment_millions
+        data_type: NUMBER
+        expr: SUM(CONTENT_INVESTMENT_MILLIONS)
+        description: Total content investment in millions
+      - name: subscriber_count_millions
+        data_type: NUMBER
+        expr: AVG(SUBSCRIBER_COUNT_MILLIONS)
+        description: Average subscriber count in millions
+      - name: streaming_hours_billions
+        data_type: NUMBER
+        expr: SUM(STREAMING_HOURS_BILLIONS)
+        description: Total streaming hours in billions
+      - name: ad_inventory_available
+        data_type: NUMBER
+        expr: SUM(AD_INVENTORY_AVAILABLE)
+        description: Total advertising inventory available
+      - name: pricing_premium_index
+        data_type: NUMBER
+        expr: AVG(PRICING_PREMIUM_INDEX)
+        description: Pricing premium index compared to market average
+    description: ''
+    synonyms: ['market data', 'competitive intelligence', 'industry analysis', 'content spend', 'subscriber metrics', 'streaming data']
+    primary_key:
+      columns:
+        - INTELLIGENCE_ID
+  - name: performance_metrics
+    base_table:
+      database: STRATEGY_CLIENT
+      schema: DEV
+      table: PERFORMANCE_METRICS
+    dimensions:
+      - name: metric_id
+        data_type: TEXT
+        expr: METRIC_ID
+        description: Unique performance metric identifier
+        unique: true
+      - name: competitor_id
+        data_type: TEXT
+        expr: COMPETITOR_ID
+        description: Competitor being measured
+      - name: metric_quarter
+        data_type: TEXT
+        expr: METRIC_QUARTER
+        description: Performance metric quarter
+      - name: metric_year
+        data_type: INTEGER
+        expr: METRIC_YEAR
+        description: Performance metric year
+      - name: metric_category
+        data_type: TEXT
+        expr: METRIC_CATEGORY
+        description: Category of performance metric
+      - name: measurement_type
+        data_type: TEXT
+        expr: MEASUREMENT_TYPE
+        description: Type of measurement being tracked
+      - name: viewership_millions
+        data_type: NUMBER
+        expr: VIEWERSHIP_MILLIONS
+        description: Viewership in millions
+      - name: engagement_rate_percent
+        data_type: NUMBER
+        expr: ENGAGEMENT_RATE_PERCENT
+        description: Engagement rate percentage
+      - name: retention_rate_percent
+        data_type: NUMBER
+        expr: RETENTION_RATE_PERCENT
+        description: Retention rate percentage
+      - name: brand_sentiment_score
+        data_type: NUMBER
+        expr: BRAND_SENTIMENT_SCORE
+        description: Brand sentiment score
+      - name: social_media_mentions
+        data_type: NUMBER
+        expr: SOCIAL_MEDIA_MENTIONS
+        description: Social media mentions count
+    time_dimensions:
+      - name: metric_date
+        data_type: DATE
+        expr: CONCAT(METRIC_YEAR, '-', 
+          CASE METRIC_QUARTER 
+            WHEN 'Q1' THEN '03-31'
+            WHEN 'Q2' THEN '06-30' 
+            WHEN 'Q3' THEN '09-30'
+            WHEN 'Q4' THEN '12-31'
+          END)::DATE
+        description: Performance metric period end date
+    facts:
+      - name: viewership_millions
+        data_type: NUMBER
+        expr: SUM(VIEWERSHIP_MILLIONS)
+        description: Total viewership in millions
+      - name: engagement_rate
+        data_type: NUMBER
+        expr: AVG(ENGAGEMENT_RATE_PERCENT)
+        description: Average engagement rate percentage
+      - name: retention_rate
+        data_type: NUMBER
+        expr: AVG(RETENTION_RATE_PERCENT)
+        description: Average retention rate percentage
+      - name: brand_sentiment_score
+        data_type: NUMBER
+        expr: AVG(BRAND_SENTIMENT_SCORE)
+        description: Average brand sentiment score
+      - name: social_media_mentions
+        data_type: NUMBER
+        expr: SUM(SOCIAL_MEDIA_MENTIONS)
+        description: Total social media mentions
+    description: ''
+    synonyms: ['performance data', 'audience metrics', 'engagement analytics', 'brand metrics', 'social media data', 'viewership stats']
+    primary_key:
+      columns:
+        - METRIC_ID
+
+relationships:
+  - name: competitor_revenue
+    left_table: competitor_profiles
+    right_table: advertising_revenue
+    expr: competitor_profiles.competitor_id = advertising_revenue.competitor_id
+
+  - name: competitor_intelligence
+    left_table: competitor_profiles
+    right_table: market_intelligence
+    expr: competitor_profiles.competitor_id = market_intelligence.competitor_id
+  - name: competitor_performance
+    left_table: competitor_profiles
+    right_table: performance_metrics
+    expr: competitor_profiles.competitor_id = performance_metrics.competitor_id
+  - name: revenue_intelligence_correlation
+    left_table: advertising_revenue
+    right_table: market_intelligence
+    expr: advertising_revenue.competitor_id = market_intelligence.competitor_id AND advertising_revenue.revenue_quarter = market_intelligence.analysis_quarter AND advertising_revenue.revenue_year = market_intelligence.analysis_year
+  - name: performance_revenue_correlation
+    left_table: performance_metrics
+    right_table: advertising_revenue
+    expr: performance_metrics.competitor_id = advertising_revenue.competitor_id AND performance_metrics.metric_quarter = advertising_revenue.revenue_quarter AND performance_metrics.metric_year = advertising_revenue.revenue_year
+
+verified_queries:
+  - name: disney_q1_performance
+    question: How did Disney pace in Q1 for advertising revenue and market share?
+    sql: SELECT cp.COMPETITOR_NAME, ar.REVENUE_QUARTER, ar.REVENUE_YEAR, SUM(ar.AD_REVENUE_MILLIONS) as total_ad_revenue, AVG(ar.MARKET_SHARE_PERCENT) as avg_market_share, AVG(ar.QOQ_GROWTH_PERCENT) as qoq_growth, AVG(ar.YOY_GROWTH_PERCENT) as yoy_growth FROM STRATEGY_CLIENT.DEV.COMPETITOR_PROFILES cp JOIN STRATEGY_CLIENT.DEV.MI_MICROSTRATEGY_FACT ar ON cp.COMPETITOR_ID = ar.COMPETITOR_ID WHERE cp.COMPETITOR_NAME = 'Disney' AND ar.REVENUE_QUARTER = 'Q1' GROUP BY cp.COMPETITOR_NAME, ar.REVENUE_QUARTER, ar.REVENUE_YEAR ORDER BY ar.REVENUE_YEAR DESC
+  - name: nbcu_vs_telemundo_market_share
+    question: Did NBCU grow market share against TelevisaUnivision in 2023?
+    sql: SELECT cp.COMPETITOR_NAME, ar.REVENUE_YEAR, AVG(ar.MARKET_SHARE_PERCENT) as avg_market_share, SUM(ar.AD_REVENUE_MILLIONS) as total_revenue, AVG(ar.YOY_GROWTH_PERCENT) as yoy_growth FROM STRATEGY_CLIENT.DEV.COMPETITOR_PROFILES cp JOIN STRATEGY_CLIENT.DEV.MI_MICROSTRATEGY_FACT ar ON cp.COMPETITOR_ID = ar.COMPETITOR_ID WHERE cp.COMPETITOR_NAME IN ('NBCUniversal', 'TelevisaUnivision') AND ar.REVENUE_YEAR = 2023 GROUP BY cp.COMPETITOR_NAME, ar.REVENUE_YEAR ORDER BY avg_market_share DESC
+  - name: competitor_revenue_growth_5_quarters
+    question: Revenue growth breakdown across competitors for the last 5 quarters
+    sql: SELECT cp.COMPETITOR_NAME, CONCAT(ar.REVENUE_YEAR, '-', ar.REVENUE_QUARTER) as quarter_year, SUM(ar.AD_REVENUE_MILLIONS) as total_revenue, AVG(ar.QOQ_GROWTH_PERCENT) as qoq_growth, AVG(ar.YOY_GROWTH_PERCENT) as yoy_growth, AVG(ar.MARKET_SHARE_PERCENT) as market_share FROM STRATEGY_CLIENT.DEV.COMPETITOR_PROFILES cp JOIN STRATEGY_CLIENT.DEV.MI_MICROSTRATEGY_FACT ar ON cp.COMPETITOR_ID = ar.COMPETITOR_ID WHERE (ar.REVENUE_YEAR = 2024 AND ar.REVENUE_QUARTER IN ('Q1', 'Q2', 'Q3')) OR (ar.REVENUE_YEAR = 2023 AND ar.REVENUE_QUARTER IN ('Q3', 'Q4')) GROUP BY cp.COMPETITOR_NAME, ar.REVENUE_YEAR, ar.REVENUE_QUARTER ORDER BY ar.REVENUE_YEAR DESC, ar.REVENUE_QUARTER DESC, total_revenue DESC
+  - name: streaming_vs_traditional_revenue_analysis
+    question: How are streaming platforms performing against traditional broadcasters in ad revenue?
+    sql: SELECT cp.COMPANY_TYPE, ar.REVENUE_YEAR, ar.REVENUE_QUARTER, COUNT(DISTINCT cp.COMPETITOR_ID) as competitor_count, SUM(ar.AD_REVENUE_MILLIONS) as total_revenue, AVG(ar.QOQ_GROWTH_PERCENT) as avg_qoq_growth, AVG(ar.YOY_GROWTH_PERCENT) as avg_yoy_growth, SUM(ar.MARKET_SHARE_PERCENT) as combined_market_share FROM STRATEGY_CLIENT.DEV.COMPETITOR_PROFILES cp JOIN STRATEGY_CLIENT.DEV.MI_MICROSTRATEGY_FACT ar ON cp.COMPETITOR_ID = ar.COMPETITOR_ID GROUP BY cp.COMPANY_TYPE, ar.REVENUE_YEAR, ar.REVENUE_QUARTER ORDER BY ar.REVENUE_YEAR DESC, ar.REVENUE_QUARTER DESC, total_revenue DESC
+  - name: content_investment_roi_analysis
+    question: Which competitors are getting the best ROI on content investment relative to ad revenue?
+    sql: SELECT cp.COMPETITOR_NAME, mi.ANALYSIS_YEAR, SUM(mi.CONTENT_INVESTMENT_MILLIONS) as content_investment, SUM(ar.AD_REVENUE_MILLIONS) as ad_revenue, (SUM(ar.AD_REVENUE_MILLIONS) / NULLIF(SUM(mi.CONTENT_INVESTMENT_MILLIONS), 0)) as revenue_per_content_dollar, AVG(mi.SUBSCRIBER_COUNT_MILLIONS) as avg_subscribers FROM STRATEGY_CLIENT.DEV.COMPETITOR_PROFILES cp JOIN STRATEGY_CLIENT.DEV.MARKET_INTELLIGENCE mi ON cp.COMPETITOR_ID = mi.COMPETITOR_ID JOIN STRATEGY_CLIENT.DEV.MI_MICROSTRATEGY_FACT ar ON cp.COMPETITOR_ID = ar.COMPETITOR_ID AND mi.ANALYSIS_YEAR = ar.REVENUE_YEAR GROUP BY cp.COMPETITOR_NAME, mi.ANALYSIS_YEAR HAVING SUM(mi.CONTENT_INVESTMENT_MILLIONS) > 0 ORDER BY revenue_per_content_dollar DESC
+  - name: quarterly_competitive_kpis
+    question: What are our key competitive performance indicators this quarter?
+    sql: SELECT cp.COMPETITOR_NAME, cqs.REVENUE_QUARTER, cqs.REVENUE_YEAR, cqs.TOTAL_REVENUE_MILLIONS as total_revenue, cqs.AVG_MARKET_SHARE_PERCENT as market_share, cqs.AVG_QOQ_GROWTH_PERCENT as qoq_growth, cqs.AVG_YOY_GROWTH_PERCENT as yoy_growth, cqs.AVG_CPM as avg_cpm, cqs.PLATFORM_COUNT as platforms_active FROM STRATEGY_CLIENT.DEV.COMPETITOR_PROFILES cp JOIN (SELECT COMPETITOR_ID, REVENUE_QUARTER, REVENUE_YEAR, SUM(AD_REVENUE_MILLIONS) as TOTAL_REVENUE_MILLIONS, AVG(MARKET_SHARE_PERCENT) as AVG_MARKET_SHARE_PERCENT, AVG(QOQ_GROWTH_PERCENT) as AVG_QOQ_GROWTH_PERCENT, AVG(YOY_GROWTH_PERCENT) as AVG_YOY_GROWTH_PERCENT, AVG(AVERAGE_CPM) as AVG_CPM, COUNT(DISTINCT PLATFORM_TYPE) as PLATFORM_COUNT FROM STRATEGY_CLIENT.DEV.MI_MICROSTRATEGY_FACT GROUP BY COMPETITOR_ID, REVENUE_QUARTER, REVENUE_YEAR) cqs ON cp.COMPETITOR_ID = cqs.COMPETITOR_ID WHERE cqs.REVENUE_QUARTER = 'Q3' AND cqs.REVENUE_YEAR = 2024 ORDER BY cqs.TOTAL_REVENUE_MILLIONS DESC
+
+custom_instructions: |
+  Business context:
+  - NBCUniversal is a leading media and entertainment conglomerate with broadcast television, cable networks, streaming services, and film studios
+  - Key competitors include Disney, Warner Bros Discovery, Fox Corporation, Paramount Global, TelevisaUnivision, and major streaming platforms
+  - Advertising revenue is a critical performance indicator across all platform types (broadcast, cable, streaming, digital)
+  - Market share analysis is essential for understanding competitive positioning and growth opportunities
+  - Quarter-over-quarter and year-over-year growth metrics provide insights into momentum and market trends
+  - Content investment and subscriber metrics for streaming platforms directly impact advertising revenue potential
+  - Cross-platform advertising strategies require understanding of competitor performance across different media types
+  - Executive reporting focuses on actionable insights for strategic decision-making and revenue optimization
+  - Seasonal advertising patterns and upfront commitments significantly impact quarterly revenue comparisons
+  - Demographic targeting and premium content partnerships drive advertising pricing and market positioning
+  - Regulatory changes and cord-cutting trends affect traditional broadcast and cable advertising revenue streams
+  - Streaming ad-supported tiers are becoming increasingly important revenue drivers requiring competitive monitoring
+  
+  Query Guidelines:
+  - Always include COMPETITOR_ID, REVENUE_QUARTER, REVENUE_YEAR in GROUP BY when aggregating revenue data to prevent double counting
+  - For competitor-level KPIs, use SUM(AD_REVENUE_MILLIONS) with proper GROUP BY COMPETITOR_ID, REVENUE_QUARTER, REVENUE_YEAR
+  - For platform-specific analysis, include PLATFORM_TYPE in GROUP BY clauses
+  - Use AVG() for metrics like market share, growth percentages, and CPM when aggregating across platforms
+  - When joining multiple tables, ensure aggregation happens at the correct grain to avoid inflated totals
+  - Each competitor has multiple platform records per quarter, so aggregation is essential for clean comparisons

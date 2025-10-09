@@ -1,0 +1,289 @@
+name: ude_hotel_accommodation
+description: Universal Destinations & Experiences hotel and accommodation analytics for guest stays, occupancy management, and hospitality revenue optimization
+tables:
+  - name: hotel_properties
+    base_table:
+      database: UNIVERSAL_DATA_PLATFORM
+      schema: HOTEL_ACCOMMODATION
+      table: HOTEL_PROPERTIES
+    dimensions:
+      - name: property_id
+        data_type: TEXT
+        expr: PROPERTY_ID
+        description: Unique hotel property identifier
+        unique: true
+      - name: property_name
+        data_type: TEXT
+        expr: PROPERTY_NAME
+        description: Name of the hotel property
+      - name: property_type
+        data_type: TEXT
+        expr: PROPERTY_TYPE
+        description: Type of accommodation (Resort Hotel, Value Hotel, Vacation Rental, Suites)
+      - name: park_location
+        data_type: TEXT
+        expr: PARK_LOCATION
+        description: Associated Universal park location
+      - name: theme_level
+        data_type: TEXT
+        expr: THEME_LEVEL
+        description: Level of theme park theming (Premium Themed, Standard Themed, Non-Themed)
+      - name: star_rating
+        data_type: NUMBER
+        expr: STAR_RATING
+        description: Hotel star rating (1-5)
+      - name: total_rooms
+        data_type: NUMBER
+        expr: TOTAL_ROOMS
+        description: Total number of guest rooms
+      - name: amenities_level
+        data_type: TEXT
+        expr: AMENITIES_LEVEL
+        description: Amenities package level (Basic, Standard, Premium, Luxury)
+      - name: early_park_admission
+        data_type: BOOLEAN
+        expr: HAS_EARLY_PARK_ADMISSION
+        description: Whether property includes early park admission benefit
+      - name: express_pass_included
+        data_type: BOOLEAN
+        expr: INCLUDES_EXPRESS_PASS
+        description: Whether Express Pass is included with stay
+    time_dimensions:
+      - name: opening_date
+        data_type: DATE
+        expr: OPENING_DATE
+        description: Date hotel property opened
+      - name: last_renovation_date
+        data_type: DATE
+        expr: LAST_RENOVATION_DATE
+        description: Date of most recent major renovation
+    facts:
+      - name: average_daily_rate
+        data_type: NUMBER
+        expr: AVG(AVERAGE_DAILY_RATE)
+        description: Average daily room rate across all room types
+      - name: occupancy_rate
+        data_type: NUMBER
+        expr: AVG(OCCUPANCY_RATE)
+        description: Average occupancy rate percentage
+      - name: revenue_per_available_room
+        data_type: NUMBER
+        expr: AVG(AVERAGE_DAILY_RATE * OCCUPANCY_RATE / 100)
+        description: Revenue per available room (RevPAR)
+      - name: guest_satisfaction_rating
+        data_type: NUMBER
+        expr: AVG(GUEST_SATISFACTION_RATING)
+        description: Average guest satisfaction rating (1-10)
+      - name: property_count
+        data_type: NUMBER
+        expr: COUNT(DISTINCT PROPERTY_ID)
+        description: Number of hotel properties
+    description: ''
+    synonyms: []
+    primary_key:
+      columns:
+        - PROPERTY_ID
+  - name: room_reservations
+    base_table:
+      database: UNIVERSAL_DATA_PLATFORM
+      schema: HOTEL_ACCOMMODATION
+      table: ROOM_RESERVATIONS
+    dimensions:
+      - name: reservation_id
+        data_type: TEXT
+        expr: RESERVATION_ID
+        description: Unique reservation identifier
+        unique: true
+      - name: guest_id
+        data_type: TEXT
+        expr: GUEST_ID
+        description: Guest who made the reservation
+      - name: property_id
+        data_type: TEXT
+        expr: PROPERTY_ID
+        description: Hotel property for reservation
+      - name: room_type
+        data_type: TEXT
+        expr: ROOM_TYPE
+        description: Type of room reserved (Standard, Deluxe, Suite, Villa)
+      - name: room_view
+        data_type: TEXT
+        expr: ROOM_VIEW
+        description: Room view type (Park View, Pool View, City View, Standard)
+      - name: booking_channel
+        data_type: TEXT
+        expr: BOOKING_CHANNEL
+        description: How reservation was made (Direct, Online, Travel Agent, Phone)
+      - name: guest_type
+        data_type: TEXT
+        expr: GUEST_TYPE
+        description: Type of guest (Leisure, Business, Group, VIP)
+      - name: package_type
+        data_type: TEXT
+        expr: PACKAGE_TYPE
+        description: Package booked (Room Only, Park Package, Dining Package, Experience Package)
+      - name: cancellation_policy
+        data_type: TEXT
+        expr: CANCELLATION_POLICY
+        description: Cancellation policy tier (Flexible, Standard, Strict)
+      - name: special_requests
+        data_type: TEXT
+        expr: SPECIAL_REQUESTS
+        description: Any special requests or accommodations
+    time_dimensions:
+      - name: booking_date
+        data_type: TIMESTAMP
+        expr: BOOKING_TIMESTAMP
+        description: When reservation was made
+      - name: check_in_date
+        data_type: DATE
+        expr: CHECK_IN_DATE
+        description: Scheduled check-in date
+      - name: check_out_date
+        data_type: DATE
+        expr: CHECK_OUT_DATE
+        description: Scheduled check-out date
+      - name: actual_check_in
+        data_type: TIMESTAMP
+        expr: ACTUAL_CHECK_IN_TIME
+        description: Actual check-in time
+      - name: actual_check_out
+        data_type: TIMESTAMP
+        expr: ACTUAL_CHECK_OUT_TIME
+        description: Actual check-out time
+    facts:
+      - name: length_of_stay
+        data_type: NUMBER
+        expr: AVG(DATEDIFF('day', CHECK_IN_DATE, CHECK_OUT_DATE))
+        description: Average length of stay in days
+      - name: advance_booking_days
+        data_type: NUMBER
+        expr: AVG(DATEDIFF('day', BOOKING_TIMESTAMP, CHECK_IN_DATE))
+        description: Average days booked in advance
+      - name: room_revenue
+        data_type: NUMBER
+        expr: SUM(ROOM_RATE * DATEDIFF('day', CHECK_IN_DATE, CHECK_OUT_DATE))
+        description: Total room revenue
+      - name: total_reservation_value
+        data_type: NUMBER
+        expr: SUM(TOTAL_RESERVATION_AMOUNT)
+        description: Total reservation value including packages
+      - name: average_room_rate
+        data_type: NUMBER
+        expr: AVG(ROOM_RATE)
+        description: Average room rate per night
+      - name: occupancy_count
+        data_type: NUMBER
+        expr: COUNT(RESERVATION_ID)
+        description: Number of reservations/occupied rooms
+      - name: guest_satisfaction_score
+        data_type: NUMBER
+        expr: AVG(GUEST_SATISFACTION_RATING)
+        description: Average guest satisfaction rating for stay
+    description: ''
+    synonyms: []
+    primary_key:
+      columns:
+        - RESERVATION_ID
+  - name: hotel_amenities_usage
+    base_table:
+      database: UNIVERSAL_DATA_PLATFORM
+      schema: HOTEL_ACCOMMODATION
+      table: AMENITIES_USAGE
+    dimensions:
+      - name: usage_id
+        data_type: TEXT
+        expr: USAGE_ID
+        description: Unique amenity usage record identifier
+        unique: true
+      - name: reservation_id
+        data_type: TEXT
+        expr: RESERVATION_ID
+        description: Reservation associated with usage
+      - name: amenity_type
+        data_type: TEXT
+        expr: AMENITY_TYPE
+        description: Type of amenity (Pool, Spa, Fitness, Restaurant, Room Service, Concierge)
+      - name: amenity_name
+        data_type: TEXT
+        expr: AMENITY_NAME
+        description: Specific amenity name
+      - name: usage_category
+        data_type: TEXT
+        expr: USAGE_CATEGORY
+        description: Usage category (Complimentary, Premium, Paid Service)
+      - name: service_location
+        data_type: TEXT
+        expr: SERVICE_LOCATION
+        description: Where service was provided
+    time_dimensions:
+      - name: usage_timestamp
+        data_type: TIMESTAMP
+        expr: USAGE_TIMESTAMP
+        description: When amenity was used
+    facts:
+      - name: usage_duration_hours
+        data_type: NUMBER
+        expr: AVG(USAGE_DURATION_HOURS)
+        description: Average usage duration in hours
+      - name: service_charge
+        data_type: NUMBER
+        expr: SUM(SERVICE_CHARGE)
+        description: Total charges for amenity usage
+      - name: guest_rating
+        data_type: NUMBER
+        expr: AVG(GUEST_RATING)
+        description: Guest rating for amenity experience
+      - name: usage_count
+        data_type: NUMBER
+        expr: COUNT(USAGE_ID)
+        description: Number of amenity usage instances
+      - name: utilization_rate
+        data_type: NUMBER
+        expr: COUNT(DISTINCT RESERVATION_ID) / COUNT(DISTINCT DATE(USAGE_TIMESTAMP)) * 100
+        description: Amenity utilization rate percentage
+    description: ''
+    synonyms: []
+    primary_key:
+      columns:
+        - USAGE_ID
+relationships:
+  - name: property_reservations
+    left_table: hotel_properties
+    right_table: room_reservations
+    expr: hotel_properties.property_id = room_reservations.property_id
+  - name: reservation_amenities
+    left_table: room_reservations
+    right_table: hotel_amenities_usage
+    expr: room_reservations.reservation_id = hotel_amenities_usage.reservation_id
+
+verified_queries:
+  - name: hotel_occupancy_and_revenue
+    question: What are the occupancy rates and revenue performance by hotel property?
+    sql: SELECT p.PROPERTY_NAME, p.PROPERTY_TYPE, AVG(p.OCCUPANCY_RATE) as avg_occupancy, AVG(p.AVERAGE_DAILY_RATE) as avg_daily_rate, AVG(p.AVERAGE_DAILY_RATE * p.OCCUPANCY_RATE / 100) as revpar FROM UNIVERSAL_DATA_PLATFORM.HOTEL_ACCOMMODATION.HOTEL_PROPERTIES p GROUP BY p.PROPERTY_NAME, p.PROPERTY_TYPE ORDER BY revpar DESC
+  - name: guest_stay_patterns_analysis
+    question: How do guest stay patterns vary by property type and package?
+    sql: SELECT r.PACKAGE_TYPE, p.PROPERTY_TYPE, AVG(DATEDIFF('day', r.CHECK_IN_DATE, r.CHECK_OUT_DATE)) as avg_length_of_stay, AVG(DATEDIFF('day', r.BOOKING_TIMESTAMP, r.CHECK_IN_DATE)) as avg_advance_booking, AVG(r.TOTAL_RESERVATION_AMOUNT) as avg_reservation_value FROM UNIVERSAL_DATA_PLATFORM.HOTEL_ACCOMMODATION.ROOM_RESERVATIONS r JOIN UNIVERSAL_DATA_PLATFORM.HOTEL_ACCOMMODATION.HOTEL_PROPERTIES p ON r.PROPERTY_ID = p.PROPERTY_ID GROUP BY r.PACKAGE_TYPE, p.PROPERTY_TYPE ORDER BY avg_reservation_value DESC
+  - name: amenity_utilization_revenue
+    question: Which hotel amenities generate the most revenue and highest guest satisfaction?
+    sql: SELECT a.AMENITY_TYPE, a.USAGE_CATEGORY, SUM(a.SERVICE_CHARGE) as total_revenue, AVG(a.GUEST_RATING) as avg_guest_rating, COUNT(DISTINCT a.RESERVATION_ID) as unique_users FROM UNIVERSAL_DATA_PLATFORM.HOTEL_ACCOMMODATION.AMENITIES_USAGE a GROUP BY a.AMENITY_TYPE, a.USAGE_CATEGORY ORDER BY total_revenue DESC, avg_guest_rating DESC
+  - name: seasonal_hotel_performance
+    question: How does hotel performance vary by season and special events?
+    sql: SELECT EXTRACT(MONTH FROM r.CHECK_IN_DATE) as month, p.PROPERTY_TYPE, COUNT(DISTINCT r.RESERVATION_ID) as total_reservations, AVG(r.ROOM_RATE) as avg_room_rate, AVG(r.GUEST_SATISFACTION_RATING) as avg_guest_satisfaction FROM UNIVERSAL_DATA_PLATFORM.HOTEL_ACCOMMODATION.ROOM_RESERVATIONS r JOIN UNIVERSAL_DATA_PLATFORM.HOTEL_ACCOMMODATION.HOTEL_PROPERTIES p ON r.PROPERTY_ID = p.PROPERTY_ID GROUP BY EXTRACT(MONTH FROM r.CHECK_IN_DATE), p.PROPERTY_TYPE ORDER BY month, avg_room_rate DESC
+  - name: guest_loyalty_hotel_preference
+    question: How do repeat guests prefer different hotel properties and amenities?
+    sql: SELECT p.PROPERTY_NAME, p.THEME_LEVEL, guest_stays.repeat_guest_count, AVG(r.GUEST_SATISFACTION_RATING) as avg_satisfaction, AVG(r.TOTAL_RESERVATION_AMOUNT) as avg_spend FROM UNIVERSAL_DATA_PLATFORM.HOTEL_ACCOMMODATION.HOTEL_PROPERTIES p JOIN UNIVERSAL_DATA_PLATFORM.HOTEL_ACCOMMODATION.ROOM_RESERVATIONS r ON p.PROPERTY_ID = r.PROPERTY_ID JOIN (SELECT GUEST_ID, COUNT(DISTINCT RESERVATION_ID) as repeat_guest_count FROM UNIVERSAL_DATA_PLATFORM.HOTEL_ACCOMMODATION.ROOM_RESERVATIONS GROUP BY GUEST_ID HAVING COUNT(DISTINCT RESERVATION_ID) > 1) guest_stays ON r.GUEST_ID = guest_stays.GUEST_ID GROUP BY p.PROPERTY_NAME, p.THEME_LEVEL, guest_stays.repeat_guest_count ORDER BY avg_satisfaction DESC, avg_spend DESC
+custom_instructions: |
+  Business context:
+  - Universal Destinations & Experiences operates themed resort hotels that provide immersive experiences tied to park attractions
+  - Hotel properties range from value accommodations to luxury themed resorts with premium amenities
+  - Guest stays are often part of multi-day park vacation packages including tickets, dining, and experiences
+  - Early park admission and Express Pass benefits are key differentiators for on-property hotel guests
+  - Hotel amenities include themed pools, spas, character dining, and exclusive experiences
+  - Revenue optimization includes room rates, package upselling, and amenity monetization
+  - Guest satisfaction directly impacts repeat visits and overall Universal experience ratings
+  - Seasonal demand varies significantly with school holidays, special events, and weather patterns
+  - Hotel occupancy management affects overall park capacity and guest experience quality
+  - Cross-selling opportunities exist between hotel stays, park tickets, dining, and merchandise
+  - Guest loyalty programs integrate hotel stays with park visits and franchise experiences
+  - Property theming levels (Harry Potter, Nintendo, Jurassic themes) command premium pricing and higher satisfaction

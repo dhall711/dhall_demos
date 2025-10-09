@@ -1,0 +1,331 @@
+name: ude_unified_analytics
+description: Universal Destinations & Experiences unified analytics combining guest data, park operations, revenue, and staff management for comprehensive business intelligence
+tables:
+  - name: guest_profiles
+    base_table:
+      database: UNIVERSAL_DATA_PLATFORM
+      schema: GUEST_ANALYTICS
+      table: GUEST_PROFILES
+    dimensions:
+      - name: guest_id
+        data_type: TEXT
+        expr: GUEST_ID
+        description: Unique guest identifier
+        unique: true
+      - name: first_name
+        data_type: TEXT
+        expr: FIRST_NAME
+        description: Guest first name
+      - name: last_name
+        data_type: TEXT
+        expr: LAST_NAME
+        description: Guest last name
+      - name: membership_tier
+        data_type: TEXT
+        expr: MEMBERSHIP_TIER
+        description: Annual Pass tier level
+      - name: preferred_park
+        data_type: TEXT
+        expr: PREFERRED_PARK
+        description: Guest's preferred Universal park location
+    facts:
+      - name: lifetime_value
+        data_type: NUMBER
+        expr: SUM(TOTAL_SPEND_AMOUNT) + SUM(MEMBERSHIP_VALUE)
+        description: Total lifetime value
+    description: ''
+    synonyms: []
+    primary_key:
+      columns:
+        - GUEST_ID
+  - name: attractions
+    base_table:
+      database: UNIVERSAL_DATA_PLATFORM
+      schema: PARK_OPERATIONS
+      table: ATTRACTIONS
+    dimensions:
+      - name: attraction_id
+        data_type: TEXT
+        expr: ATTRACTION_ID
+        description: Unique attraction identifier
+        unique: true
+      - name: attraction_name
+        data_type: TEXT
+        expr: ATTRACTION_NAME
+        description: Name of the attraction
+      - name: park_location
+        data_type: TEXT
+        expr: PARK_LOCATION
+        description: Universal park location
+      - name: themed_area
+        data_type: TEXT
+        expr: THEMED_AREA
+        description: Themed area within the park
+      - name: franchise
+        data_type: TEXT
+        expr: FRANCHISE
+        description: Intellectual property franchise
+      - name: attraction_type
+        data_type: TEXT
+        expr: ATTRACTION_TYPE
+        description: Type of attraction
+    facts:
+      - name: daily_ridership
+        data_type: NUMBER
+        expr: SUM(DAILY_GUEST_COUNT)
+        description: Total daily ridership
+      - name: average_wait_time
+        data_type: NUMBER
+        expr: AVG(WAIT_TIME_MINUTES)
+        description: Average wait time in minutes
+      - name: guest_satisfaction_score
+        data_type: NUMBER
+        expr: AVG(GUEST_SATISFACTION_RATING)
+        description: Average guest satisfaction rating
+    description: ''
+    synonyms: []
+    primary_key:
+      columns:
+        - ATTRACTION_ID
+  - name: ticket_sales
+    base_table:
+      database: UNIVERSAL_DATA_PLATFORM
+      schema: REVENUE_ANALYTICS
+      table: TICKET_SALES
+    dimensions:
+      - name: ticket_sale_id
+        data_type: TEXT
+        expr: TICKET_SALE_ID
+        description: Unique ticket sale transaction identifier
+        unique: true
+      - name: guest_id
+        data_type: TEXT
+        expr: GUEST_ID
+        description: Guest who purchased the ticket
+      - name: park_location
+        data_type: TEXT
+        expr: PARK_LOCATION
+        description: Universal park location for ticket
+      - name: ticket_type
+        data_type: TEXT
+        expr: TICKET_TYPE
+        description: Type of ticket
+      - name: purchase_channel
+        data_type: TEXT
+        expr: PURCHASE_CHANNEL
+        description: Where ticket was purchased
+      - name: pricing_tier
+        data_type: TEXT
+        expr: PRICING_TIER
+        description: Dynamic pricing tier
+      - name: guest_segment
+        data_type: TEXT
+        expr: GUEST_SEGMENT
+        description: Guest market segment
+    facts:
+      - name: net_revenue
+        data_type: NUMBER
+        expr: SUM(TICKET_PRICE - DISCOUNT_AMOUNT)
+        description: Net ticket revenue after discounts
+      - name: tickets_sold
+        data_type: NUMBER
+        expr: COUNT(TICKET_SALE_ID)
+        description: Number of tickets sold
+      - name: average_ticket_price
+        data_type: NUMBER
+        expr: AVG(TICKET_PRICE)
+        description: Average ticket price
+    description: ''
+    synonyms: []
+    primary_key:
+      columns:
+        - TICKET_SALE_ID
+  - name: merchandise_sales
+    base_table:
+      database: UNIVERSAL_DATA_PLATFORM
+      schema: REVENUE_ANALYTICS
+      table: MERCHANDISE_SALES
+    dimensions:
+      - name: merchandise_sale_id
+        data_type: TEXT
+        expr: MERCHANDISE_SALE_ID
+        description: Unique merchandise transaction identifier
+        unique: true
+      - name: guest_id
+        data_type: TEXT
+        expr: GUEST_ID
+        description: Guest who made the purchase
+      - name: store_type
+        data_type: TEXT
+        expr: STORE_TYPE
+        description: Type of retail location
+      - name: product_category
+        data_type: TEXT
+        expr: PRODUCT_CATEGORY
+        description: Category of merchandise
+      - name: franchise
+        data_type: TEXT
+        expr: FRANCHISE
+        description: Product franchise
+    facts:
+      - name: total_revenue
+        data_type: NUMBER
+        expr: SUM(UNIT_PRICE * QUANTITY)
+        description: Total merchandise revenue
+      - name: quantity_sold
+        data_type: NUMBER
+        expr: SUM(QUANTITY)
+        description: Total quantity sold
+      - name: profit_margin
+        data_type: NUMBER
+        expr: AVG((UNIT_PRICE - COST_OF_GOODS) / UNIT_PRICE) * 100
+        description: Average profit margin percentage
+    description: ''
+    synonyms: []
+    primary_key:
+      columns:
+        - MERCHANDISE_SALE_ID
+  - name: employee_profiles
+    base_table:
+      database: UNIVERSAL_DATA_PLATFORM
+      schema: STAFF_MANAGEMENT
+      table: EMPLOYEE_PROFILES
+    dimensions:
+      - name: employee_id
+        data_type: TEXT
+        expr: EMPLOYEE_ID
+        description: Unique employee identifier
+        unique: true
+      - name: park_location
+        data_type: TEXT
+        expr: PARK_LOCATION
+        description: Primary park location assignment
+      - name: department
+        data_type: TEXT
+        expr: DEPARTMENT
+        description: Employee department
+      - name: employment_type
+        data_type: TEXT
+        expr: EMPLOYMENT_TYPE
+        description: Type of employment
+      - name: certification_level
+        data_type: TEXT
+        expr: CERTIFICATION_LEVEL
+        description: Training certification level
+    facts:
+      - name: employee_count
+        data_type: NUMBER
+        expr: COUNT(DISTINCT EMPLOYEE_ID)
+        description: Number of employees
+      - name: average_hourly_wage
+        data_type: NUMBER
+        expr: AVG(HOURLY_WAGE)
+        description: Average hourly wage
+      - name: performance_rating
+        data_type: NUMBER
+        expr: AVG(CURRENT_PERFORMANCE_RATING)
+        description: Average performance rating
+    description: ''
+    synonyms: []
+    primary_key:
+      columns:
+        - EMPLOYEE_ID
+  - name: visit_sessions
+    base_table:
+      database: UNIVERSAL_DATA_PLATFORM
+      schema: GUEST_ANALYTICS
+      table: VISIT_SESSIONS
+    dimensions:
+      - name: visit_id
+        data_type: TEXT
+        expr: VISIT_ID
+        description: Unique visit session identifier
+        unique: true
+      - name: guest_id
+        data_type: TEXT
+        expr: GUEST_ID
+        description: Guest associated with visit
+      - name: park_location
+        data_type: TEXT
+        expr: PARK_LOCATION
+        description: Universal park location
+      - name: visit_date
+        data_type: DATE
+        expr: VISIT_DATE
+        description: Date of park visit
+      - name: crowd_level
+        data_type: TEXT
+        expr: CROWD_LEVEL
+        description: Park crowd level during visit
+    facts:
+      - name: visit_duration_hours
+        data_type: NUMBER
+        expr: AVG(DATEDIFF('hour', ENTRY_TIME, EXIT_TIME))
+        description: Average visit duration in hours
+      - name: attractions_visited
+        data_type: NUMBER
+        expr: COUNT(DISTINCT ATTRACTION_ID)
+        description: Number of attractions visited
+      - name: total_spend
+        data_type: NUMBER
+        expr: SUM(SPEND_AMOUNT)
+        description: Total amount spent during visit
+    description: ''
+    synonyms: []
+    primary_key:
+      columns:
+        - VISIT_ID
+
+relationships:
+  - name: guest_visits
+    left_table: guest_profiles
+    right_table: visit_sessions
+    expr: guest_profiles.guest_id = visit_sessions.guest_id
+  - name: guest_ticket_purchases
+    left_table: guest_profiles
+    right_table: ticket_sales
+    expr: guest_profiles.guest_id = ticket_sales.guest_id
+  - name: guest_merchandise_purchases
+    left_table: guest_profiles
+    right_table: merchandise_sales
+    expr: guest_profiles.guest_id = merchandise_sales.guest_id
+  - name: park_attractions
+    left_table: attractions
+    right_table: employee_profiles
+    expr: attractions.park_location = employee_profiles.park_location
+  - name: visit_ticket_correlation
+    left_table: visit_sessions
+    right_table: ticket_sales
+    expr: visit_sessions.guest_id = ticket_sales.guest_id AND visit_sessions.park_location = ticket_sales.park_location
+
+verified_queries:
+  - name: park_performance_dashboard
+    question: What is the overall performance dashboard for each park location?
+    sql: SELECT a.PARK_LOCATION, COUNT(DISTINCT a.ATTRACTION_ID) as total_attractions, AVG(a.GUEST_SATISFACTION_RATING) as avg_satisfaction, SUM(ts.TICKET_PRICE - ts.DISCOUNT_AMOUNT) as ticket_revenue, COUNT(DISTINCT vs.GUEST_ID) as unique_visitors, COUNT(DISTINCT e.EMPLOYEE_ID) as total_employees FROM UNIVERSAL_DATA_PLATFORM.PARK_OPERATIONS.ATTRACTIONS a LEFT JOIN UNIVERSAL_DATA_PLATFORM.REVENUE_ANALYTICS.TICKET_SALES ts ON a.PARK_LOCATION = ts.PARK_LOCATION LEFT JOIN UNIVERSAL_DATA_PLATFORM.GUEST_ANALYTICS.VISIT_SESSIONS vs ON a.PARK_LOCATION = vs.PARK_LOCATION LEFT JOIN UNIVERSAL_DATA_PLATFORM.STAFF_MANAGEMENT.EMPLOYEE_PROFILES e ON a.PARK_LOCATION = e.PARK_LOCATION GROUP BY a.PARK_LOCATION ORDER BY ticket_revenue DESC
+  - name: guest_lifetime_value_analysis
+    question: Which guest segments have the highest lifetime value and how do they behave?
+    sql: SELECT g.MEMBERSHIP_TIER, ts.GUEST_SEGMENT, COUNT(DISTINCT g.GUEST_ID) as guest_count, AVG(g.TOTAL_SPEND_AMOUNT + g.MEMBERSHIP_VALUE) as avg_lifetime_value, AVG(DATEDIFF('hour', vs.ENTRY_TIME, vs.EXIT_TIME)) as avg_visit_duration, SUM((ts.TICKET_PRICE - ts.DISCOUNT_AMOUNT) + COALESCE(ms.UNIT_PRICE * ms.QUANTITY, 0)) as total_revenue FROM UNIVERSAL_DATA_PLATFORM.GUEST_ANALYTICS.GUEST_PROFILES g LEFT JOIN UNIVERSAL_DATA_PLATFORM.GUEST_ANALYTICS.VISIT_SESSIONS vs ON g.GUEST_ID = vs.GUEST_ID LEFT JOIN UNIVERSAL_DATA_PLATFORM.REVENUE_ANALYTICS.TICKET_SALES ts ON g.GUEST_ID = ts.GUEST_ID LEFT JOIN UNIVERSAL_DATA_PLATFORM.REVENUE_ANALYTICS.MERCHANDISE_SALES ms ON g.GUEST_ID = ms.GUEST_ID GROUP BY g.MEMBERSHIP_TIER, ts.GUEST_SEGMENT ORDER BY avg_lifetime_value DESC
+  - name: franchise_performance_across_parks
+    question: How do different franchises perform across park locations in terms of attractions and merchandise?
+    sql: SELECT a.FRANCHISE, a.PARK_LOCATION, COUNT(DISTINCT a.ATTRACTION_ID) as attraction_count, AVG(a.GUEST_SATISFACTION_RATING) as avg_attraction_satisfaction, SUM(ms.UNIT_PRICE * ms.QUANTITY) as merchandise_revenue, AVG((ms.UNIT_PRICE - ms.COST_OF_GOODS) / ms.UNIT_PRICE * 100) as avg_margin FROM UNIVERSAL_DATA_PLATFORM.PARK_OPERATIONS.ATTRACTIONS a LEFT JOIN UNIVERSAL_DATA_PLATFORM.REVENUE_ANALYTICS.MERCHANDISE_SALES ms ON a.FRANCHISE = ms.FRANCHISE GROUP BY a.FRANCHISE, a.PARK_LOCATION ORDER BY merchandise_revenue DESC
+  - name: operational_efficiency_by_staffing
+    question: How does staffing levels correlate with operational efficiency and guest satisfaction?
+    sql: SELECT e.PARK_LOCATION, e.DEPARTMENT, COUNT(DISTINCT e.EMPLOYEE_ID) as staff_count, AVG(e.CURRENT_PERFORMANCE_RATING) as avg_staff_performance, AVG(a.GUEST_SATISFACTION_RATING) as avg_guest_satisfaction, AVG(a.WAIT_TIME_MINUTES) as avg_wait_time FROM UNIVERSAL_DATA_PLATFORM.STAFF_MANAGEMENT.EMPLOYEE_PROFILES e JOIN UNIVERSAL_DATA_PLATFORM.PARK_OPERATIONS.ATTRACTIONS a ON e.PARK_LOCATION = a.PARK_LOCATION GROUP BY e.PARK_LOCATION, e.DEPARTMENT ORDER BY avg_guest_satisfaction DESC, avg_wait_time ASC
+  - name: revenue_optimization_opportunities
+    question: What are the top revenue optimization opportunities across all business units?
+    sql: SELECT ts.PARK_LOCATION, ts.PRICING_TIER, COUNT(DISTINCT ts.GUEST_ID) as unique_guests, SUM(ts.TICKET_PRICE - ts.DISCOUNT_AMOUNT) as ticket_revenue, SUM(ms.UNIT_PRICE * ms.QUANTITY) as merchandise_revenue, AVG(DATEDIFF('hour', vs.ENTRY_TIME, vs.EXIT_TIME)) as avg_visit_duration, (SUM(ts.TICKET_PRICE - ts.DISCOUNT_AMOUNT) + SUM(ms.UNIT_PRICE * ms.QUANTITY)) / COUNT(DISTINCT ts.GUEST_ID) as revenue_per_guest FROM UNIVERSAL_DATA_PLATFORM.REVENUE_ANALYTICS.TICKET_SALES ts LEFT JOIN UNIVERSAL_DATA_PLATFORM.REVENUE_ANALYTICS.MERCHANDISE_SALES ms ON ts.GUEST_ID = ms.GUEST_ID LEFT JOIN UNIVERSAL_DATA_PLATFORM.GUEST_ANALYTICS.VISIT_SESSIONS vs ON ts.GUEST_ID = vs.GUEST_ID AND ts.PARK_LOCATION = vs.PARK_LOCATION GROUP BY ts.PARK_LOCATION, ts.PRICING_TIER ORDER BY revenue_per_guest DESC
+
+custom_instructions: |
+  Business context:
+  - Universal Destinations & Experiences is a leading themed entertainment company operating world-class theme parks globally
+  - Key performance indicators include guest satisfaction, revenue per guest, operational efficiency, and employee performance
+  - The business operates multiple revenue streams: ticket sales, merchandise, food & beverage, and experiences
+  - Guest experience is paramount, driving repeat visits and positive word-of-mouth marketing
+  - Operational efficiency directly impacts both guest satisfaction and profitability
+  - Franchise partnerships (Harry Potter, Nintendo, etc.) are critical intellectual property assets that drive premium pricing
+  - Seasonal variations and special events significantly impact operations, staffing, and revenue
+  - Cross-selling opportunities exist between different business units (attractions, retail, dining)
+  - Employee performance and guest satisfaction are directly correlated
+  - Data-driven decision making optimizes park operations, pricing strategies, and capacity management
+  - International guest segments require specialized marketing and operational considerations
+  - Safety and regulatory compliance are non-negotiable operational requirements

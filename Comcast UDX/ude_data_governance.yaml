@@ -1,0 +1,569 @@
+name: ude_data_governance
+description: Semantic model for confidence-based PII detection, ontology/domain classification, human-in-the-loop workflow, dynamic masking policy application, and privacy request tracking at Universal Destinations & Experiences (UDE)
+tables:
+  - name: assets
+    base_table:
+      database: UNIVERSAL_DATA_PLATFORM
+      schema: GOVERNANCE
+      table: DG_ASSETS
+    dimensions:
+      - name: asset_id
+        data_type: TEXT
+        expr: ASSET_ID
+        description: Unique asset identifier
+        unique: true
+      - name: asset_name
+        data_type: TEXT
+        expr: ASSET_NAME
+        description: Fully qualified name (DATABASE.SCHEMA.OBJECT)
+      - name: asset_type
+        data_type: TEXT
+        expr: ASSET_TYPE
+        description: Asset type (TABLE, VIEW)
+      - name: database_name
+        data_type: TEXT
+        expr: DATABASE_NAME
+        description: Database name
+      - name: schema_name
+        data_type: TEXT
+        expr: SCHEMA_NAME
+        description: Schema name
+      - name: domain
+        data_type: TEXT
+        expr: DOMAIN
+        description: Business domain (Guest Analytics, Park Operations, Revenue, HR)
+      - name: subject_type
+        data_type: TEXT
+        expr: SUBJECT_TYPE
+        description: Subject type context (consumer, team_member, vendor)
+      - name: sensitivity_tier
+        data_type: INTEGER
+        expr: SENSITIVITY_TIER
+        description: Sensitivity tier 1-4
+      - name: owner
+        data_type: TEXT
+        expr: OWNER
+        description: Asset owner
+      - name: is_active
+        data_type: BOOLEAN
+        expr: IS_ACTIVE
+        description: Whether asset is active
+    time_dimensions:
+      - name: created_at
+        data_type: TIMESTAMP_NTZ
+        expr: CREATED_AT
+        description: Asset creation timestamp
+      - name: updated_at
+        data_type: TIMESTAMP_NTZ
+        expr: UPDATED_AT
+        description: Asset last update timestamp
+    facts:
+      - name: is_tier4
+        data_type: NUMBER
+        expr: IFF(SENSITIVITY_TIER = 4, 1, 0)
+        description: Indicator for tier-4 assets
+    synonyms: ['data assets', 'tables', 'views', 'datasets', 'objects', 'domains', 'subject types', 'sensitivity']
+    primary_key:
+      columns:
+        - ASSET_ID
+
+  - name: scan_runs
+    base_table:
+      database: UNIVERSAL_DATA_PLATFORM
+      schema: GOVERNANCE
+      table: DG_SCAN_RUNS
+    dimensions:
+      - name: run_id
+        data_type: TEXT
+        expr: RUN_ID
+        unique: true
+        description: Unique scan run identifier
+      - name: scanner_version
+        data_type: TEXT
+        expr: SCANNER_VERSION
+        description: Scanner or ruleset version
+      - name: source
+        data_type: TEXT
+        expr: SOURCE
+        description: Trigger source (scheduled, event, manual)
+      - name: status
+        data_type: TEXT
+        expr: STATUS
+        description: Run status (completed, failed, partial)
+      - name: assets_scanned
+        data_type: NUMBER
+        expr: ASSETS_SCANNED
+        description: Number of assets scanned
+      - name: rows_scanned
+        data_type: NUMBER
+        expr: ROWS_SCANNED
+        description: Total rows scanned (sampled or full)
+    time_dimensions:
+      - name: started_at
+        data_type: TIMESTAMP_NTZ
+        expr: STARTED_AT
+        description: Scan start time
+      - name: finished_at
+        data_type: TIMESTAMP_NTZ
+        expr: FINISHED_AT
+        description: Scan end time
+    facts:
+      - name: tokens_used
+        data_type: NUMBER
+        expr: TOKENS_USED
+        description: Tokens used for LLM calls
+      - name: run_cost_usd
+        data_type: NUMBER
+        expr: RUN_COST_USD
+        description: Estimated cost in USD
+    synonyms: ['scans', 'runs', 'jobs', 'scanner usage', 'costs', 'tokens']
+    primary_key:
+      columns:
+        - RUN_ID
+
+  - name: findings
+    base_table:
+      database: UNIVERSAL_DATA_PLATFORM
+      schema: GOVERNANCE
+      table: DG_FINDINGS
+    dimensions:
+      - name: finding_id
+        data_type: TEXT
+        expr: FINDING_ID
+        unique: true
+        description: Unique finding identifier
+      - name: asset_id
+        data_type: TEXT
+        expr: ASSET_ID
+        description: Related asset identifier
+      - name: column_name
+        data_type: TEXT
+        expr: COLUMN_NAME
+        description: Column detected
+      - name: detected_type
+        data_type: TEXT
+        expr: DETECTED_TYPE
+        description: Detected classification (EMAIL, PHONE, SSN, SSO, ADDRESS, PCI, HIPAA, etc.)
+      - name: model_version
+        data_type: TEXT
+        expr: MODEL_VERSION
+        description: Model/ruleset version
+      - name: run_id
+        data_type: TEXT
+        expr: RUN_ID
+        description: Producing scan run
+      - name: domain
+        data_type: TEXT
+        expr: DOMAIN
+        description: Derived domain context
+      - name: subject_type
+        data_type: TEXT
+        expr: SUBJECT_TYPE
+        description: Derived subject context (consumer, team_member)
+      - name: rationale
+        data_type: TEXT
+        expr: RATIONALE
+        description: Short rationale/explanation
+    time_dimensions:
+      - name: created_at
+        data_type: TIMESTAMP_NTZ
+        expr: CREATED_AT
+        description: Finding creation time
+    facts:
+      - name: confidence_score
+        data_type: NUMBER
+        expr: CONFIDENCE_SCORE
+        description: 0-100 confidence score
+      - name: is_high_confidence
+        data_type: NUMBER
+        expr: IFF(CONFIDENCE_SCORE >= 98, 1, 0)
+        description: Indicator for auto-apply threshold
+    synonyms: ['detections', 'pii findings', 'classifications', 'confidence', 'rationale']
+    primary_key:
+      columns:
+        - FINDING_ID
+
+  - name: decisions
+    base_table:
+      database: UNIVERSAL_DATA_PLATFORM
+      schema: GOVERNANCE
+      table: DG_DECISIONS
+    dimensions:
+      - name: decision_id
+        data_type: TEXT
+        expr: DECISION_ID
+        unique: true
+        description: Unique decision identifier
+      - name: finding_id
+        data_type: TEXT
+        expr: FINDING_ID
+        description: Finding decided upon
+      - name: decision
+        data_type: TEXT
+        expr: DECISION
+        description: accept, reject, correct
+      - name: corrected_tag
+        data_type: TEXT
+        expr: CORRECTED_TAG
+        description: Corrected classification/tag when applicable
+      - name: reviewer
+        data_type: TEXT
+        expr: REVIEWER
+        description: Reviewer identity
+      - name: reason
+        data_type: TEXT
+        expr: REASON
+        description: Reviewer rationale
+      - name: applied_by
+        data_type: TEXT
+        expr: APPLIED_BY
+        description: Who applied the change
+      - name: reverted_flag
+        data_type: BOOLEAN
+        expr: REVERTED_FLAG
+        description: Whether action was reverted
+    time_dimensions:
+      - name: decided_at
+        data_type: TIMESTAMP_NTZ
+        expr: DECIDED_AT
+        description: Decision timestamp
+      - name: applied_at
+        data_type: TIMESTAMP_NTZ
+        expr: APPLIED_AT
+        description: Application timestamp
+    facts:
+      - name: is_accepted
+        data_type: NUMBER
+        expr: IFF(DECISION = 'accept', 1, 0)
+        description: Indicator for accepted findings
+      - name: is_rejected
+        data_type: NUMBER
+        expr: IFF(DECISION = 'reject', 1, 0)
+        description: Indicator for rejected findings
+      - name: is_corrected
+        data_type: NUMBER
+        expr: IFF(DECISION = 'correct', 1, 0)
+        description: Indicator for corrected findings
+    synonyms: ['review decisions', 'approvals', 'rejections', 'corrections', 'human-in-the-loop']
+    primary_key:
+      columns:
+        - DECISION_ID
+
+  - name: policies
+    base_table:
+      database: UNIVERSAL_DATA_PLATFORM
+      schema: GOVERNANCE
+      table: DG_POLICIES
+    dimensions:
+      - name: policy_id
+        data_type: TEXT
+        expr: POLICY_ID
+        unique: true
+        description: Policy identifier
+      - name: policy_name
+        data_type: TEXT
+        expr: POLICY_NAME
+        description: Name
+      - name: policy_type
+        data_type: TEXT
+        expr: POLICY_TYPE
+        description: MASKING or ROW_ACCESS
+      - name: policy_sql
+        data_type: TEXT
+        expr: POLICY_SQL
+        description: Policy SQL definition (reference)
+      - name: version
+        data_type: TEXT
+        expr: VERSION
+        description: Version of policy
+    time_dimensions:
+      - name: created_at
+        data_type: TIMESTAMP_NTZ
+        expr: CREATED_AT
+        description: Creation time
+    facts: []
+    synonyms: ['masking policies', 'row access policies', 'policy definitions']
+    primary_key:
+      columns:
+        - POLICY_ID
+
+  - name: policy_bindings
+    base_table:
+      database: UNIVERSAL_DATA_PLATFORM
+      schema: GOVERNANCE
+      table: DG_POLICY_BINDINGS
+    dimensions:
+      - name: binding_id
+        data_type: TEXT
+        expr: BINDING_ID
+        unique: true
+        description: Binding identifier
+      - name: asset_id
+        data_type: TEXT
+        expr: ASSET_ID
+        description: Target asset
+      - name: column_name
+        data_type: TEXT
+        expr: COLUMN_NAME
+        description: Target column (nullable for table-level)
+      - name: policy_id
+        data_type: TEXT
+        expr: POLICY_ID
+        description: Applied policy
+      - name: status
+        data_type: TEXT
+        expr: STATUS
+        description: applied, pending, failed
+    time_dimensions:
+      - name: bound_at
+        data_type: TIMESTAMP_NTZ
+        expr: BOUND_AT
+        description: Binding time
+    facts:
+      - name: is_applied
+        data_type: NUMBER
+        expr: IFF(STATUS='applied', 1, 0)
+        description: Indicator for applied bindings
+    synonyms: ['policy applications', 'bindings', 'masking applied', 'row access applied']
+    primary_key:
+      columns:
+        - BINDING_ID
+
+  - name: subjects
+    base_table:
+      database: UNIVERSAL_DATA_PLATFORM
+      schema: GOVERNANCE
+      table: DG_SUBJECTS
+    dimensions:
+      - name: subject_id
+        data_type: TEXT
+        expr: SUBJECT_ID
+        unique: true
+        description: Unique subject identifier
+      - name: subject_type
+        data_type: TEXT
+        expr: SUBJECT_TYPE
+        description: consumer, team_member, vendor
+      - name: email
+        data_type: TEXT
+        expr: EMAIL
+        description: Email address (if known)
+      - name: sso
+        data_type: TEXT
+        expr: SSO
+        description: Corporate SSO/ID (team members)
+      - name: full_name
+        data_type: TEXT
+        expr: FULL_NAME
+        description: Full name
+    time_dimensions:
+      - name: created_at
+        data_type: TIMESTAMP_NTZ
+        expr: CREATED_AT
+        description: Creation time
+    facts: []
+    synonyms: ['data subjects', 'consumers', 'team members', 'identities']
+    primary_key:
+      columns:
+        - SUBJECT_ID
+
+  - name: privacy_requests
+    base_table:
+      database: UNIVERSAL_DATA_PLATFORM
+      schema: GOVERNANCE
+      table: DG_PRIVACY_REQUESTS
+    dimensions:
+      - name: request_id
+        data_type: TEXT
+        expr: REQUEST_ID
+        unique: true
+        description: Request identifier
+      - name: subject_id
+        data_type: TEXT
+        expr: SUBJECT_ID
+        description: Linked subject
+      - name: request_type
+        data_type: TEXT
+        expr: REQUEST_TYPE
+        description: access, delete, opt_out
+      - name: status
+        data_type: TEXT
+        expr: STATUS
+        description: open, in_progress, completed, rejected
+      - name: scope
+        data_type: TEXT
+        expr: SCOPE
+        description: consumer vs team_member scope
+      - name: notes
+        data_type: TEXT
+        expr: NOTES
+        description: Notes or disposition
+    time_dimensions:
+      - name: submitted_at
+        data_type: TIMESTAMP_NTZ
+        expr: SUBMITTED_AT
+        description: Submission time
+      - name: completed_at
+        data_type: TIMESTAMP_NTZ
+        expr: COMPLETED_AT
+        description: Completion time
+    facts:
+      - name: is_completed
+        data_type: NUMBER
+        expr: IFF(STATUS='completed', 1, 0)
+        description: Completed indicator
+      - name: sla_hours
+        data_type: NUMBER
+        expr: DATEDIFF('hour', SUBMITTED_AT, COALESCE(COMPLETED_AT, CURRENT_TIMESTAMP()))
+        description: Turnaround time in hours
+    synonyms: ['gdpr requests', 'ccpa requests', 'privacy tickets', 'subject access']
+    primary_key:
+      columns:
+        - REQUEST_ID
+
+  - name: usage_metrics
+    base_table:
+      database: UNIVERSAL_DATA_PLATFORM
+      schema: GOVERNANCE
+      table: DG_USAGE_METRICS
+    dimensions:
+      - name: event_id
+        data_type: TEXT
+        expr: EVENT_ID
+        unique: true
+        description: Event identifier
+      - name: user_name
+        data_type: TEXT
+        expr: USER_NAME
+        description: Actor
+      - name: function_name
+        data_type: TEXT
+        expr: FUNCTION_NAME
+        description: Function or feature (CLASSIFY, COMPLETE, VECTOR_SEARCH)
+      - name: context
+        data_type: TEXT
+        expr: CONTEXT
+        description: Context payload summary
+      - name: run_id
+        data_type: TEXT
+        expr: RUN_ID
+        description: Related scan run (if any)
+    time_dimensions:
+      - name: event_time
+        data_type: TIMESTAMP_NTZ
+        expr: EVENT_TIME
+        description: Event timestamp
+    facts:
+      - name: tokens
+        data_type: NUMBER
+        expr: TOKENS
+        description: Tokens used
+      - name: cost_usd
+        data_type: NUMBER
+        expr: COST_USD
+        description: Estimated cost in USD
+    synonyms: ['observability', 'usage', 'costs', 'tokens', 'monitoring']
+    primary_key:
+      columns:
+        - EVENT_ID
+
+relationships:
+  - name: asset_to_finding
+    left_table: assets
+    right_table: findings
+    expr: assets.asset_id = findings.asset_id
+
+  - name: run_to_finding
+    left_table: scan_runs
+    right_table: findings
+    expr: scan_runs.run_id = findings.run_id
+
+  - name: finding_to_decision
+    left_table: findings
+    right_table: decisions
+    expr: findings.finding_id = decisions.finding_id
+
+  - name: binding_to_asset
+    left_table: assets
+    right_table: policy_bindings
+    expr: assets.asset_id = policy_bindings.asset_id
+
+  - name: binding_to_policy
+    left_table: policy_bindings
+    right_table: policies
+    expr: policy_bindings.policy_id = policies.policy_id
+
+  - name: subject_to_privacy_request
+    left_table: subjects
+    right_table: privacy_requests
+    expr: subjects.subject_id = privacy_requests.subject_id
+
+verified_queries:
+  - name: high_confidence_pii_by_asset_week
+    question: Which assets have the most high-confidence PII findings this week?
+    sql: |
+      SELECT a.ASSET_NAME,
+             COUNT(*) AS high_conf_count
+      FROM UNIVERSAL_DATA_PLATFORM.GOVERNANCE.DG_FINDINGS f
+      JOIN UNIVERSAL_DATA_PLATFORM.GOVERNANCE.DG_ASSETS a ON a.ASSET_ID = f.ASSET_ID
+      WHERE f.CONFIDENCE_SCORE >= 98
+        AND DATE_TRUNC('week', f.CREATED_AT) = DATE_TRUNC('week', CURRENT_DATE())
+      GROUP BY a.ASSET_NAME
+      ORDER BY high_conf_count DESC
+
+  - name: auto_apply_vs_review
+    question: How many findings were auto-applied versus sent to manual review last month?
+    sql: |
+      WITH flags AS (
+        SELECT FINDING_ID,
+               IFF(CONFIDENCE_SCORE >= 98, 'auto_apply', 'manual_review') AS route
+        FROM UNIVERSAL_DATA_PLATFORM.GOVERNANCE.DG_FINDINGS
+        WHERE DATE_TRUNC('month', CREATED_AT) = DATE_TRUNC('month', DATEADD('month', -1, CURRENT_DATE()))
+      )
+      SELECT route, COUNT(*) AS cnt
+      FROM flags
+      GROUP BY route
+      ORDER BY cnt DESC
+
+  - name: average_confidence_by_type_domain
+    question: What is the average confidence by detected type and domain?
+    sql: |
+      SELECT DETECTED_TYPE, DOMAIN, AVG(CONFIDENCE_SCORE) AS avg_confidence
+      FROM UNIVERSAL_DATA_PLATFORM.GOVERNANCE.DG_FINDINGS
+      GROUP BY DETECTED_TYPE, DOMAIN
+      ORDER BY avg_confidence DESC
+
+  - name: privacy_request_sla
+    question: What percentage of privacy requests met a 72-hour SLA in the last quarter?
+    sql: |
+      WITH period AS (
+        SELECT *
+        FROM UNIVERSAL_DATA_PLATFORM.GOVERNANCE.DG_PRIVACY_REQUESTS
+        WHERE DATE_TRUNC('quarter', SUBMITTED_AT) = DATE_TRUNC('quarter', DATEADD('quarter', -1, CURRENT_DATE()))
+      )
+      SELECT ROUND(100 * AVG(IFF(DATEDIFF('hour', SUBMITTED_AT, COMPLETED_AT) <= 72, 1, 0)), 2) AS pct_within_sla
+      FROM period
+      WHERE STATUS = 'completed'
+
+  - name: applied_policies_by_type
+    question: How many policies have been applied by type this month?
+    sql: |
+      SELECT p.POLICY_TYPE, COUNT(*) AS applied_count
+      FROM UNIVERSAL_DATA_PLATFORM.GOVERNANCE.DG_POLICY_BINDINGS b
+      JOIN UNIVERSAL_DATA_PLATFORM.GOVERNANCE.DG_POLICIES p ON p.POLICY_ID = b.POLICY_ID
+      WHERE b.STATUS = 'applied'
+        AND DATE_TRUNC('month', b.BOUND_AT) = DATE_TRUNC('month', CURRENT_DATE())
+      GROUP BY p.POLICY_TYPE
+      ORDER BY applied_count DESC
+
+custom_instructions: |
+  Query Guidelines:
+  - Join using IDs defined in relationships (e.g., ASSET_ID, RUN_ID, FINDING_ID).
+  - Use time_dimensions for period filters to keep scans fast (e.g., DATE_TRUNC on CREATED_AT).
+  - Treat CONFIDENCE_SCORE >= 98 as default auto-apply threshold; 60–97 requires review.
+  - For counts over findings, always consider deduping by FINDING_ID.
+  - Domain and subject_type contextualize tagging; include them when summarizing sensitivity.
+  - Aggregate at the correct grain to avoid double counting (e.g., one row per finding or per decision).
+  - Prefer WHERE filters on selective columns (STATUS, DETECTED_TYPE, DOMAIN) to reduce scan ranges.
+
+

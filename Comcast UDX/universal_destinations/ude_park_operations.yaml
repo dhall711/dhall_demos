@@ -1,0 +1,245 @@
+name: ude_park_operations
+description: Universal Destinations & Experiences park operations analytics for attraction performance, capacity management, and operational efficiency
+tables:
+  - name: attractions
+    base_table:
+      database: UNIVERSAL_DATA_PLATFORM
+      schema: PARK_OPERATIONS
+      table: ATTRACTIONS
+    dimensions:
+      - name: attraction_id
+        data_type: TEXT
+        expr: ATTRACTION_ID
+        description: Unique attraction identifier
+        unique: true
+      - name: attraction_name
+        data_type: TEXT
+        expr: ATTRACTION_NAME
+        description: Name of the attraction
+      - name: park_location
+        data_type: TEXT
+        expr: PARK_LOCATION
+        description: Universal park location
+      - name: themed_area
+        data_type: TEXT
+        expr: THEMED_AREA
+        description: Themed area within the park (Wizarding World, Super Nintendo World, etc.)
+      - name: attraction_type
+        data_type: TEXT
+        expr: ATTRACTION_TYPE
+        description: Type of attraction (Thrill Ride, Family Ride, Show, Experience, Dining)
+      - name: franchise
+        data_type: TEXT
+        expr: FRANCHISE
+        description: Intellectual property franchise (Harry Potter, Nintendo, Jurassic, etc.)
+      - name: height_requirement
+        data_type: NUMBER
+        expr: HEIGHT_REQUIREMENT_INCHES
+        description: Height requirement in inches
+      - name: capacity_per_hour
+        data_type: NUMBER
+        expr: THEORETICAL_HOURLY_CAPACITY
+        description: Theoretical maximum guests per hour
+      - name: ride_duration_minutes
+        data_type: NUMBER
+        expr: RIDE_DURATION_MINUTES
+        description: Duration of attraction experience in minutes
+      - name: accessibility_features
+        data_type: TEXT
+        expr: ACCESSIBILITY_FEATURES
+        description: Available accessibility accommodations
+      - name: status
+        data_type: TEXT
+        expr: OPERATIONAL_STATUS
+        description: Current operational status (Open, Closed, Maintenance, Seasonal)
+    time_dimensions:
+      - name: opening_date
+        data_type: DATE
+        expr: OPENING_DATE
+        description: Date attraction first opened
+      - name: last_maintenance_date
+        data_type: DATE
+        expr: LAST_MAJOR_MAINTENANCE_DATE
+        description: Date of last major maintenance
+    facts:
+      - name: daily_ridership
+        data_type: NUMBER
+        expr: SUM(DAILY_GUEST_COUNT)
+        description: Total daily ridership across all attractions
+      - name: average_wait_time
+        data_type: NUMBER
+        expr: AVG(WAIT_TIME_MINUTES)
+        description: Average wait time in minutes
+      - name: operational_efficiency
+        data_type: NUMBER
+        expr: AVG(ACTUAL_HOURLY_CAPACITY / THEORETICAL_HOURLY_CAPACITY) * 100
+        description: Operational efficiency percentage
+      - name: guest_satisfaction_score
+        data_type: NUMBER
+        expr: AVG(GUEST_SATISFACTION_RATING)
+        description: Average guest satisfaction rating (1-10)
+      - name: attraction_count
+        data_type: NUMBER
+        expr: COUNT(DISTINCT ATTRACTION_ID)
+        description: Number of attractions
+    description: ''
+    synonyms: []
+    primary_key:
+      columns:
+        - ATTRACTION_ID
+  - name: wait_times
+    base_table:
+      database: UNIVERSAL_DATA_PLATFORM
+      schema: PARK_OPERATIONS
+      table: WAIT_TIMES
+    dimensions:
+      - name: wait_time_id
+        data_type: TEXT
+        expr: WAIT_TIME_ID
+        description: Unique wait time record identifier
+        unique: true
+      - name: attraction_id
+        data_type: TEXT
+        expr: ATTRACTION_ID
+        description: Attraction with recorded wait time
+      - name: timestamp
+        data_type: TIMESTAMP
+        expr: RECORDED_TIMESTAMP
+        description: When wait time was recorded
+      - name: day_of_week
+        data_type: TEXT
+        expr: DAYNAME(RECORDED_TIMESTAMP)
+        description: Day of week for pattern analysis
+      - name: hour_of_day
+        data_type: NUMBER
+        expr: EXTRACT(HOUR FROM RECORDED_TIMESTAMP)
+        description: Hour of day (0-23)
+      - name: weather_condition
+        data_type: TEXT
+        expr: WEATHER_CONDITION
+        description: Weather condition during measurement
+      - name: special_event
+        data_type: TEXT
+        expr: SPECIAL_EVENT
+        description: Any special events occurring (Halloween Horror Nights, etc.)
+      - name: crowd_level
+        data_type: TEXT
+        expr: CROWD_LEVEL
+        description: Overall park crowd level
+    facts:
+      - name: wait_time_minutes
+        data_type: NUMBER
+        expr: AVG(WAIT_TIME_MINUTES)
+        description: Average wait time in minutes
+      - name: posted_wait_time
+        data_type: NUMBER
+        expr: AVG(POSTED_WAIT_TIME_MINUTES)
+        description: Average posted wait time in minutes
+      - name: actual_vs_posted_variance
+        data_type: NUMBER
+        expr: AVG(WAIT_TIME_MINUTES - POSTED_WAIT_TIME_MINUTES)
+        description: Variance between actual and posted wait times
+      - name: peak_wait_time
+        data_type: NUMBER
+        expr: MAX(WAIT_TIME_MINUTES)
+        description: Peak wait time recorded
+      - name: wait_time_records
+        data_type: NUMBER
+        expr: COUNT(WAIT_TIME_ID)
+        description: Number of wait time measurements
+    description: ''
+    synonyms: []
+    primary_key:
+      columns:
+        - WAIT_TIME_ID
+  - name: capacity_utilization
+    base_table:
+      database: UNIVERSAL_DATA_PLATFORM
+      schema: PARK_OPERATIONS
+      table: HOURLY_CAPACITY
+    dimensions:
+      - name: capacity_record_id
+        data_type: TEXT
+        expr: CAPACITY_RECORD_ID
+        description: Unique capacity utilization record
+        unique: true
+      - name: attraction_id
+        data_type: TEXT
+        expr: ATTRACTION_ID
+        description: Attraction with capacity data
+      - name: operating_date
+        data_type: DATE
+        expr: OPERATING_DATE
+        description: Date of capacity measurement
+      - name: operating_hour
+        data_type: NUMBER
+        expr: OPERATING_HOUR
+        description: Hour of operation (park opening = 0)
+      - name: weather_impact
+        data_type: TEXT
+        expr: WEATHER_IMPACT
+        description: Weather impact level (None, Low, Medium, High)
+      - name: staff_level
+        data_type: TEXT
+        expr: STAFFING_LEVEL
+        description: Staffing level (Full, Reduced, Minimal)
+    facts:
+      - name: actual_throughput
+        data_type: NUMBER
+        expr: SUM(GUESTS_PER_HOUR)
+        description: Actual guest throughput per hour
+      - name: capacity_utilization_percent
+        data_type: NUMBER
+        expr: AVG(GUESTS_PER_HOUR / THEORETICAL_CAPACITY) * 100
+        description: Capacity utilization percentage
+      - name: downtime_minutes
+        data_type: NUMBER
+        expr: SUM(DOWNTIME_MINUTES)
+        description: Total downtime in minutes
+      - name: efficiency_rating
+        data_type: NUMBER
+        expr: AVG(OPERATIONAL_EFFICIENCY_SCORE)
+        description: Overall operational efficiency rating
+    description: ''
+    synonyms: []
+    primary_key:
+      columns:
+        - CAPACITY_RECORD_ID
+relationships:
+  - name: attraction_wait_times
+    left_table: attractions
+    right_table: wait_times
+    expr: attractions.attraction_id = wait_times.attraction_id
+  - name: attraction_capacity
+    left_table: attractions
+    right_table: capacity_utilization
+    expr: attractions.attraction_id = capacity_utilization.attraction_id
+verified_queries:
+  - name: highest_wait_time_attractions
+    question: Which attractions have the highest average wait times?
+    sql: SELECT a.ATTRACTION_NAME, a.PARK_LOCATION, AVG(w.WAIT_TIME_MINUTES) as avg_wait_time FROM UNIVERSAL_DATA_PLATFORM.PARK_OPERATIONS.ATTRACTIONS a JOIN UNIVERSAL_DATA_PLATFORM.PARK_OPERATIONS.WAIT_TIMES w ON a.ATTRACTION_ID = w.ATTRACTION_ID GROUP BY a.ATTRACTION_NAME, a.PARK_LOCATION ORDER BY avg_wait_time DESC LIMIT 15
+  - name: capacity_efficiency_by_park
+    question: How does capacity efficiency compare across different parks?
+    sql: SELECT a.PARK_LOCATION, AVG(c.GUESTS_PER_HOUR / c.THEORETICAL_CAPACITY) * 100 as avg_capacity_utilization, AVG(c.OPERATIONAL_EFFICIENCY_SCORE) as avg_efficiency FROM UNIVERSAL_DATA_PLATFORM.PARK_OPERATIONS.ATTRACTIONS a JOIN UNIVERSAL_DATA_PLATFORM.PARK_OPERATIONS.HOURLY_CAPACITY c ON a.ATTRACTION_ID = c.ATTRACTION_ID GROUP BY a.PARK_LOCATION ORDER BY avg_capacity_utilization DESC
+  - name: peak_hours_analysis
+    question: What are the peak operating hours across all attractions?
+    sql: SELECT EXTRACT(HOUR FROM w.RECORDED_TIMESTAMP) as hour_of_day, AVG(w.WAIT_TIME_MINUTES) as avg_wait_time, COUNT(DISTINCT w.ATTRACTION_ID) as active_attractions FROM UNIVERSAL_DATA_PLATFORM.PARK_OPERATIONS.WAIT_TIMES w GROUP BY EXTRACT(HOUR FROM w.RECORDED_TIMESTAMP) ORDER BY hour_of_day
+  - name: weather_impact_on_operations
+    question: How does weather impact attraction capacity and wait times?
+    sql: SELECT w.WEATHER_CONDITION, AVG(w.WAIT_TIME_MINUTES) as avg_wait_time, AVG(c.GUESTS_PER_HOUR / c.THEORETICAL_CAPACITY) * 100 as avg_capacity_util FROM UNIVERSAL_DATA_PLATFORM.PARK_OPERATIONS.WAIT_TIMES w JOIN UNIVERSAL_DATA_PLATFORM.PARK_OPERATIONS.HOURLY_CAPACITY c ON w.ATTRACTION_ID = c.ATTRACTION_ID AND DATE(w.RECORDED_TIMESTAMP) = c.OPERATING_DATE GROUP BY w.WEATHER_CONDITION ORDER BY avg_wait_time DESC
+  - name: franchise_performance_analysis
+    question: Which franchise areas perform best in terms of guest satisfaction and efficiency?
+    sql: SELECT a.FRANCHISE, a.THEMED_AREA, AVG(a.GUEST_SATISFACTION_RATING) as avg_satisfaction, AVG(c.GUESTS_PER_HOUR / c.THEORETICAL_CAPACITY) * 100 as avg_utilization, COUNT(DISTINCT a.ATTRACTION_ID) as attraction_count FROM UNIVERSAL_DATA_PLATFORM.PARK_OPERATIONS.ATTRACTIONS a JOIN UNIVERSAL_DATA_PLATFORM.PARK_OPERATIONS.HOURLY_CAPACITY c ON a.ATTRACTION_ID = c.ATTRACTION_ID GROUP BY a.FRANCHISE, a.THEMED_AREA ORDER BY avg_satisfaction DESC, avg_utilization DESC
+custom_instructions: |
+  Business context:
+  - Universal Destinations & Experiences operates immersive theme parks with world-class attractions based on popular franchises
+  - Themed areas include Wizarding World of Harry Potter, Super Nintendo World, Jurassic Park, and more
+  - Wait time management is critical for guest satisfaction and operational efficiency
+  - Capacity utilization directly impacts revenue and guest experience quality
+  - Weather conditions significantly affect outdoor attraction operations and guest flow
+  - Special events like Halloween Horror Nights create unique operational challenges and opportunities
+  - Height requirements and accessibility features ensure guest safety and inclusivity
+  - Operational efficiency metrics help optimize staffing and maintenance schedules
+  - Guest satisfaction ratings inform attraction improvements and investment decisions
+  - Franchise performance analysis guides future intellectual property licensing decisions
+  - Real-time operational data enables dynamic crowd management and resource allocation

@@ -1,0 +1,300 @@
+name: ude_staff_management
+description: Universal Destinations & Experiences staff management analytics for employee performance, scheduling, training, and operational workforce optimization
+tables:
+  - name: employee_profiles
+    base_table:
+      database: UNIVERSAL_DATA_PLATFORM
+      schema: STAFF_MANAGEMENT
+      table: EMPLOYEE_PROFILES
+    dimensions:
+      - name: employee_id
+        data_type: TEXT
+        expr: EMPLOYEE_ID
+        description: Unique employee identifier
+        unique: true
+      - name: first_name
+        data_type: TEXT
+        expr: FIRST_NAME
+        description: Employee first name
+      - name: last_name
+        data_type: TEXT
+        expr: LAST_NAME
+        description: Employee last name
+      - name: employee_email
+        data_type: TEXT
+        expr: EMPLOYEE_EMAIL
+        description: Employee work email address
+      - name: phone_number
+        data_type: TEXT
+        expr: PHONE_NUMBER
+        description: Employee contact phone number
+      - name: park_location
+        data_type: TEXT
+        expr: PARK_LOCATION
+        description: Primary park location assignment
+      - name: department
+        data_type: TEXT
+        expr: DEPARTMENT
+        description: Employee department (Operations, Food Service, Merchandise, Entertainment, Maintenance)
+      - name: job_title
+        data_type: TEXT
+        expr: JOB_TITLE
+        description: Specific job title or role
+      - name: employment_type
+        data_type: TEXT
+        expr: EMPLOYMENT_TYPE
+        description: Type of employment (Full-Time, Part-Time, Seasonal, Intern)
+      - name: shift_preference
+        data_type: TEXT
+        expr: SHIFT_PREFERENCE
+        description: Preferred shift type (Opening, Mid-Day, Closing, Overnight)
+      - name: certification_level
+        data_type: TEXT
+        expr: CERTIFICATION_LEVEL
+        description: Training certification level (Entry, Intermediate, Advanced, Trainer)
+      - name: language_skills
+        data_type: TEXT
+        expr: LANGUAGE_SKILLS
+        description: Additional languages spoken
+      - name: emergency_contact_name
+        data_type: TEXT
+        expr: EMERGENCY_CONTACT_NAME
+        description: Emergency contact person name
+      - name: emergency_contact_phone
+        data_type: TEXT
+        expr: EMERGENCY_CONTACT_PHONE
+        description: Emergency contact phone number
+    time_dimensions:
+      - name: hire_date
+        data_type: DATE
+        expr: HIRE_DATE
+        description: Date employee was hired
+      - name: last_promotion_date
+        data_type: DATE
+        expr: LAST_PROMOTION_DATE
+        description: Date of most recent promotion
+    facts:
+      - name: hourly_wage
+        data_type: NUMBER
+        expr: AVG(HOURLY_WAGE)
+        description: Average hourly wage
+      - name: annual_salary
+        data_type: NUMBER
+        expr: AVG(ANNUAL_SALARY)
+        description: Average annual salary for salaried employees
+      - name: years_of_service
+        data_type: NUMBER
+        expr: AVG(DATEDIFF('year', HIRE_DATE, CURRENT_DATE()))
+        description: Average years of service
+      - name: performance_rating
+        data_type: NUMBER
+        expr: AVG(CURRENT_PERFORMANCE_RATING)
+        description: Average current performance rating (1-10)
+      - name: employee_count
+        data_type: NUMBER
+        expr: COUNT(DISTINCT EMPLOYEE_ID)
+        description: Number of employees
+    description: ''
+    synonyms: []
+    primary_key:
+      columns:
+        - EMPLOYEE_ID
+  - name: work_schedules
+    base_table:
+      database: UNIVERSAL_DATA_PLATFORM
+      schema: STAFF_MANAGEMENT
+      table: WORK_SCHEDULES
+    dimensions:
+      - name: schedule_id
+        data_type: TEXT
+        expr: SCHEDULE_ID
+        description: Unique schedule record identifier
+        unique: true
+      - name: employee_id
+        data_type: TEXT
+        expr: EMPLOYEE_ID
+        description: Employee assigned to schedule
+      - name: work_date
+        data_type: DATE
+        expr: WORK_DATE
+        description: Date of scheduled work
+      - name: shift_type
+        data_type: TEXT
+        expr: SHIFT_TYPE
+        description: Type of shift (Opening, Mid, Closing, Special Event)
+      - name: location_assignment
+        data_type: TEXT
+        expr: LOCATION_ASSIGNMENT
+        description: Specific work location within park
+      - name: role_assignment
+        data_type: TEXT
+        expr: ROLE_ASSIGNMENT
+        description: Specific role for the shift
+      - name: schedule_status
+        data_type: TEXT
+        expr: SCHEDULE_STATUS
+        description: Status of schedule (Scheduled, Confirmed, Called-In-Sick, No-Show)
+      - name: overtime_eligible
+        data_type: BOOLEAN
+        expr: IS_OVERTIME_ELIGIBLE
+        description: Whether shift qualifies for overtime pay
+      - name: special_event
+        data_type: TEXT
+        expr: SPECIAL_EVENT
+        description: Special event if applicable (Halloween Horror Nights, Holiday Events)
+    time_dimensions:
+      - name: shift_start_time
+        data_type: TIMESTAMP
+        expr: SHIFT_START_TIME
+        description: Scheduled shift start time
+      - name: shift_end_time
+        data_type: TIMESTAMP
+        expr: SHIFT_END_TIME
+        description: Scheduled shift end time
+      - name: actual_clock_in
+        data_type: TIMESTAMP
+        expr: ACTUAL_CLOCK_IN_TIME
+        description: Actual time employee clocked in
+      - name: actual_clock_out
+        data_type: TIMESTAMP
+        expr: ACTUAL_CLOCK_OUT_TIME
+        description: Actual time employee clocked out
+    facts:
+      - name: scheduled_hours
+        data_type: NUMBER
+        expr: SUM(DATEDIFF('hour', SHIFT_START_TIME, SHIFT_END_TIME))
+        description: Total scheduled work hours
+      - name: actual_hours_worked
+        data_type: NUMBER
+        expr: SUM(DATEDIFF('hour', ACTUAL_CLOCK_IN_TIME, ACTUAL_CLOCK_OUT_TIME))
+        description: Total actual hours worked
+      - name: overtime_hours
+        data_type: NUMBER
+        expr: SUM(CASE WHEN HOURS_WORKED > 8 THEN HOURS_WORKED - 8 ELSE 0 END)
+        description: Total overtime hours
+      - name: attendance_rate
+        data_type: NUMBER
+        expr: AVG(CASE WHEN SCHEDULE_STATUS IN ('Confirmed', 'Scheduled') THEN 1 ELSE 0 END) * 100
+        description: Employee attendance rate percentage
+      - name: punctuality_score
+        data_type: NUMBER
+        expr: AVG(CASE WHEN ACTUAL_CLOCK_IN_TIME <= SHIFT_START_TIME THEN 1 ELSE 0 END) * 100
+        description: On-time arrival percentage
+    description: ''
+    synonyms: []
+    primary_key:
+      columns:
+        - SCHEDULE_ID
+  - name: training_records
+    base_table:
+      database: UNIVERSAL_DATA_PLATFORM
+      schema: STAFF_MANAGEMENT
+      table: TRAINING_RECORDS
+    dimensions:
+      - name: training_record_id
+        data_type: TEXT
+        expr: TRAINING_RECORD_ID
+        description: Unique training record identifier
+        unique: true
+      - name: employee_id
+        data_type: TEXT
+        expr: EMPLOYEE_ID
+        description: Employee who completed training
+      - name: training_module
+        data_type: TEXT
+        expr: TRAINING_MODULE
+        description: Name of training module completed
+      - name: training_category
+        data_type: TEXT
+        expr: TRAINING_CATEGORY
+        description: Category of training (Safety, Customer Service, Technical, Leadership)
+      - name: training_type
+        data_type: TEXT
+        expr: TRAINING_TYPE
+        description: Type of training delivery (Online, Classroom, On-the-Job, Simulation)
+      - name: certification_required
+        data_type: BOOLEAN
+        expr: IS_CERTIFICATION_REQUIRED
+        description: Whether training requires certification
+      - name: trainer_name
+        data_type: TEXT
+        expr: TRAINER_NAME
+        description: Name of trainer or instructor
+      - name: training_status
+        data_type: TEXT
+        expr: TRAINING_STATUS
+        description: Status of training (Completed, In Progress, Failed, Expired)
+    time_dimensions:
+      - name: training_date
+        data_type: DATE
+        expr: TRAINING_COMPLETION_DATE
+        description: Date training was completed
+      - name: certification_expiry
+        data_type: DATE
+        expr: CERTIFICATION_EXPIRY_DATE
+        description: Date certification expires (if applicable)
+    facts:
+      - name: training_score
+        data_type: NUMBER
+        expr: AVG(TRAINING_SCORE)
+        description: Average training completion score (0-100)
+      - name: training_duration_hours
+        data_type: NUMBER
+        expr: SUM(TRAINING_DURATION_HOURS)
+        description: Total training hours completed
+      - name: completion_rate
+        data_type: NUMBER
+        expr: AVG(CASE WHEN TRAINING_STATUS = 'Completed' THEN 1 ELSE 0 END) * 100
+        description: Training completion rate percentage
+      - name: first_attempt_pass_rate
+        data_type: NUMBER
+        expr: AVG(CASE WHEN TRAINING_STATUS = 'Completed' AND ATTEMPT_NUMBER = 1 THEN 1 ELSE 0 END) * 100
+        description: First attempt pass rate percentage
+    description: ''
+    synonyms: []
+    primary_key:
+      columns:
+        - TRAINING_RECORD_ID
+relationships:
+  - name: employee_schedules
+    left_table: employee_profiles
+    right_table: work_schedules
+    expr: employee_profiles.employee_id = work_schedules.employee_id
+  - name: employee_training
+    left_table: employee_profiles
+    right_table: training_records
+    expr: employee_profiles.employee_id = training_records.employee_id
+  - name: schedule_training_correlation
+    left_table: work_schedules
+    right_table: training_records
+    expr: work_schedules.employee_id = training_records.employee_id
+verified_queries:
+  - name: department_staffing_levels
+    question: What are the current staffing levels by department and park location?
+    sql: SELECT PARK_LOCATION, DEPARTMENT, EMPLOYMENT_TYPE, COUNT(DISTINCT EMPLOYEE_ID) as employee_count, AVG(CURRENT_PERFORMANCE_RATING) as avg_performance FROM UNIVERSAL_DATA_PLATFORM.STAFF_MANAGEMENT.EMPLOYEE_PROFILES GROUP BY PARK_LOCATION, DEPARTMENT, EMPLOYMENT_TYPE ORDER BY PARK_LOCATION, DEPARTMENT, employee_count DESC
+  - name: attendance_and_punctuality_analysis
+    question: Which departments have the best attendance and punctuality rates?
+    sql: SELECT e.DEPARTMENT, e.PARK_LOCATION, AVG(CASE WHEN s.SCHEDULE_STATUS IN ('Confirmed', 'Scheduled') THEN 1 ELSE 0 END) * 100 as avg_attendance, AVG(CASE WHEN s.ACTUAL_CLOCK_IN_TIME <= s.SHIFT_START_TIME THEN 1 ELSE 0 END) * 100 as avg_punctuality, COUNT(DISTINCT e.EMPLOYEE_ID) as employee_count FROM UNIVERSAL_DATA_PLATFORM.STAFF_MANAGEMENT.EMPLOYEE_PROFILES e JOIN UNIVERSAL_DATA_PLATFORM.STAFF_MANAGEMENT.WORK_SCHEDULES s ON e.EMPLOYEE_ID = s.EMPLOYEE_ID GROUP BY e.DEPARTMENT, e.PARK_LOCATION ORDER BY avg_attendance DESC, avg_punctuality DESC
+  - name: training_completion_by_category
+    question: What are the training completion rates by category and department?
+    sql: SELECT e.DEPARTMENT, t.TRAINING_CATEGORY, COUNT(DISTINCT t.EMPLOYEE_ID) as employees_trained, AVG(CASE WHEN t.TRAINING_STATUS = 'Completed' THEN 1 ELSE 0 END) * 100 as completion_rate, AVG(t.TRAINING_SCORE) as avg_score FROM UNIVERSAL_DATA_PLATFORM.STAFF_MANAGEMENT.EMPLOYEE_PROFILES e JOIN UNIVERSAL_DATA_PLATFORM.STAFF_MANAGEMENT.TRAINING_RECORDS t ON e.EMPLOYEE_ID = t.EMPLOYEE_ID GROUP BY e.DEPARTMENT, t.TRAINING_CATEGORY ORDER BY completion_rate DESC
+  - name: overtime_analysis_by_department
+    question: Which departments have the highest overtime usage and costs?
+    sql: SELECT e.DEPARTMENT, e.PARK_LOCATION, SUM(CASE WHEN s.HOURS_WORKED > 8 THEN s.HOURS_WORKED - 8 ELSE 0 END) as total_overtime_hours, AVG(e.HOURLY_WAGE * 1.5) as avg_overtime_rate, SUM((CASE WHEN s.HOURS_WORKED > 8 THEN s.HOURS_WORKED - 8 ELSE 0 END) * e.HOURLY_WAGE * 1.5) as estimated_overtime_cost FROM UNIVERSAL_DATA_PLATFORM.STAFF_MANAGEMENT.EMPLOYEE_PROFILES e JOIN UNIVERSAL_DATA_PLATFORM.STAFF_MANAGEMENT.WORK_SCHEDULES s ON e.EMPLOYEE_ID = s.EMPLOYEE_ID GROUP BY e.DEPARTMENT, e.PARK_LOCATION ORDER BY total_overtime_hours DESC
+  - name: employee_performance_and_tenure
+    question: How does employee performance correlate with tenure and training?
+    sql: SELECT DATEDIFF('year', e.HIRE_DATE, CURRENT_DATE()) as years_of_service, e.CERTIFICATION_LEVEL, AVG(e.CURRENT_PERFORMANCE_RATING) as avg_performance, COUNT(DISTINCT t.TRAINING_RECORD_ID) as total_training_completed, AVG(t.TRAINING_SCORE) as avg_training_score FROM UNIVERSAL_DATA_PLATFORM.STAFF_MANAGEMENT.EMPLOYEE_PROFILES e LEFT JOIN UNIVERSAL_DATA_PLATFORM.STAFF_MANAGEMENT.TRAINING_RECORDS t ON e.EMPLOYEE_ID = t.EMPLOYEE_ID GROUP BY DATEDIFF('year', e.HIRE_DATE, CURRENT_DATE()), e.CERTIFICATION_LEVEL ORDER BY avg_performance DESC
+custom_instructions: |
+  Business context:
+  - Universal Destinations & Experiences employs thousands of team members across multiple global park locations
+  - Staff departments include Operations (attractions), Food Service, Merchandise, Entertainment, Maintenance, and Guest Services
+  - Employment types vary from full-time and part-time to seasonal workers during peak periods
+  - Training and certification requirements ensure guest safety and exceptional service standards
+  - Shift scheduling must accommodate park operating hours, special events, and varying crowd levels
+  - Performance ratings drive promotion opportunities and compensation adjustments
+  - Overtime management is critical for labor cost control while maintaining service levels
+  - Language skills are valuable for serving diverse international guest populations
+  - Special events like Halloween Horror Nights require additional staffing and specialized training
+  - Employee attendance and punctuality directly impact guest experience quality
+  - Cross-training enables flexible staffing and career development opportunities
+  - Safety certifications are mandatory for many operational roles and require regular renewal
