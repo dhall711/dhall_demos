@@ -1,0 +1,209 @@
+================================================================================
+PRIORITY VIEW LIST - 165 VIEWS REFERENCED BY CUBE
+================================================================================
+
+These are the ONLY views the cube actually uses.
+Migrate these 165 views FIRST before considering the other 50 views.
+
+Source: Agent_Performance_MDM.xmla cube definition
+Date: October 9, 2025
+
+================================================================================
+
+DIMENSION VIEWS (DIM_*): 35
+--------------------------------------------------------------------------------
+  1. DIM_AUDIT_TRAIL_CHARACTERISTICS
+  2. DIM_MDM_ACCOUNT_PROMOTION_MONTHLY_SUMMARY_V
+  3. DIM_MDM_AGENT_CHAT_CHARACTERISRICS_V
+  4. DIM_MDM_AUX_CODE_PHONE_ACTIVITY_V
+  5. DIM_MDM_BEG_END_XSR_SPEED_TIER_V
+  6. DIM_MDM_COACH_CALENDAR_CHOICE_V
+  7. DIM_MDM_COACH_COMPETENCIES_V
+  8. DIM_MDM_COACH_PERSON_DETAILS_V
+  9. DIM_MDM_COACH_SESSION_CHARACTERISTICS_V
+ 10. DIM_MDM_CRM_LOG_V
+ 11. DIM_MDM_DASHBOARD_INDEX_INFO_V
+ 12. DIM_MDM_DIGITAL_ATTRIBUTES_V
+ 13. DIM_MDM_DISCONNECT_REASONS_V
+ 14. DIM_MDM_DateTime_V
+ 15. DIM_MDM_ECM_CASE_V
+ 16. DIM_MDM_ECM_INTERACTION_V
+ 17. DIM_MDM_EDIP_TRANSACTION_HISTORY_ATTRIBUTES_V
+ 18. DIM_MDM_EWFM_SEGMENT_CODES_V
+ 19. DIM_MDM_LAT_FORECAST_ATTRIBUTES_V
+ 20. DIM_MDM_METRIC_SOURCE
+ 21. DIM_MDM_MOVE_INCOME_CONSTRAINED_V
+ 22. DIM_MDM_NCOE_SHORT_CALL_V
+ 23. DIM_MDM_NCOE_TICKETS_ESL_V
+ 24. DIM_MDM_NI_BUY_FLOW_TYPE_V
+ 25. DIM_MDM_SPRINKLR_MESSAGES_V
+ 26. DIM_MDM_TICKET_PROBLEM_V
+ 27. DIM_MDM_TICKET_QUEUE_V
+ 28. DIM_MDM_TICKET_STATUS_V
+ 29. DIM_MDM_TICKET_SUPPORT_AREA_V
+ 30. DIM_MDM_TRANSFER_DESTINATION_V
+ 31. DIM_MDM_UNIT_OF_WORK_V
+ 32. DIM_MDM_UOW_RULE_REF_V
+ 33. DIM_MDM_WORKLIST_FALLOUT_CHARACTERISTIC_V
+ 34. DIM_MDM_WORKLIST_TASK_CHARACTERISTIC_V
+ 35. DIM_MDM_WORKLIST_TASK_PARTICIPANT_V
+
+
+FACT VIEWS (FACT_*): 42
+--------------------------------------------------------------------------------
+  1. FACT_MDM_AGENT_CHATS_V
+  2. FACT_MDM_AGENT_PERNR_IACT_COUNT_V
+  3. FACT_MDM_AGENT_PERNR_ORDER_TYPE_DISTINCT_COUNT_V
+  4. FACT_MDM_AGENT_TRAINING_REF_NewHire_V
+  5. FACT_MDM_CRM_TICKETS_LOG_V
+  6. FACT_MDM_DEVICE_SWAP_BOM_ORDER_V
+  7. FACT_MDM_DIGITAL_DETAILS_V
+  8. FACT_MDM_EBB_ACP_V
+  9. FACT_MDM_ECM_CASE_V
+ 10. FACT_MDM_ECM_INTERACTION_V
+ 11. FACT_MDM_EDIP_TRANSACTION_HISTORY_V
+ 12. FACT_MDM_ESL_TICKET_EVALUATION_V
+ 13. FACT_MDM_EWFM_AGENT_SEGMENT_RPT_V
+ 14. FACT_MDM_I3_INTERACTION_QUERY_PIVOT_V
+ 15. FACT_MDM_LAT_FORECASTINTERVALS_V
+ 16. FACT_MDM_MYPERFORMANCE_DISTINCT_AGENT_V
+ 17. FACT_MDM_MYPERFORMANCE_SESSIONS_V
+ 18. FACT_MDM_NAT_ADHERENCE_V
+ 19. FACT_MDM_NCOE_TICKETS_CALLS_ECR_V
+ 20. FACT_MDM_NCOE_TICKETS_CR_V
+ 21. FACT_MDM_NCOE_TICKETS_ESL_V
+ 22. FACT_MDM_NRDP_ADJUST_V
+ 23. FACT_MDM_NRD_SPRINKLR_MESSAGES_V
+ 24. FACT_MDM_NUANCE_CHAT_ABANDONED_V
+ 25. FACT_MDM_OUTBOUND_CALLS_V
+ 26. FACT_MDM_PHONE_LOG_ACTIVITY_AGENT_V
+ 27. FACT_MDM_SALESCOMP_V
+ 28. FACT_MDM_SOCIAL_EMAIL_DETAIL_V
+ 29. FACT_MDM_SPRINKLR_AGENT_PERFORMANCEINTERVAL_V
+ 30. FACT_MDM_TECH_FLEX_V
+ 31. FACT_MDM_TICKET_AUDIT_TRAIL_V
+ 32. FACT_MDM_UNIT_OF_WORK_V
+ 33. FACT_MDM_UNIT_OF_WORK_X2_V
+ 34. FACT_MDM_WORKLIST_FALLOUT_V
+ 35. FACT_MDM_WORKLIST_TASK_V
+ 36. FACT_MDM_X2_COE_RATES_V
+ 37. FACT_MDM_XI_INTERACTIONS_ORDERS_V
+ 38. FACT_MDM_XMC_DETAIL_V
+ 39. FACT_MDM_XM_ADDS_V
+ 40. FACT_MDM_XM_ORDER_TIMELINE_DETAILS_V
+ 41. FACT_MDM_XSR_COMPONENTS_DISTINCT_PERNR
+ 42. FACT_MDM_XSR_GSR_XM_MULTILINES_V
+
+
+NETQUOTE VIEWS (nq_*, NQ_*): 87
+--------------------------------------------------------------------------------
+  1. NQ_CUSTOMER_ACCOUNT_DIM
+  2. NQ_ORDERS_WIDE
+  3. nq_AICR
+  4. nq_Agent_Training_Status
+  5. nq_Agent_eShrink
+  6. nq_Autopay
+  7. nq_BIW_Engagement_pernr
+  8. nq_COE_Rates
+  9. nq_Call_Attributes
+ 10. nq_Calls
+ 11. nq_Chats
+ 12. nq_Clv
+ 13. nq_Collection
+ 14. nq_Cust_Map_interaction_dim
+ 15. nq_Dim_Agent_Person_Details
+ 16. nq_Dim_Agent_Supervisor
+ 17. nq_Dim_Agent_Tenure
+ 18. nq_Dim_Customer_Account_Demo
+ 19. nq_Dim_Fiscal_Period_Time_Series
+ 20. nq_Dim_Payment_Attributes
+ 21. nq_Dim_Speech_Query_Group1
+ 22. nq_Dim_Speech_Query_Group2
+ 23. nq_Dim_tNPS
+ 24. nq_Distinct_Pernrs
+ 25. nq_Einstein_Action
+ 26. nq_Einstein_Chats
+ 27. nq_Einstein_ITG_Agg
+ 28. nq_Einstein_Troubleshoot_Dim
+ 29. nq_Fiscal_Calendar
+ 30. nq_Flex_Device_Activation
+ 31. nq_Flex_Device_Activation_All
+ 32. nq_IACT_Begin_Counts
+ 33. nq_Intrahour_Agent
+ 34. nq_LTR_30_Order_TSR30
+ 35. nq_LTR_60
+ 36. nq_LTR_90
+ 37. nq_LTR_Beg
+ 38. nq_LTR_IND
+ 39. nq_NBX_Bridge
+ 40. nq_NBX_Count
+ 41. nq_NBX_Unique
+ 42. nq_NBX_dim
+ 43. nq_NUANCE_LAT
+ 44. nq_OneTimeCredits
+ 45. nq_Order_Type_Dim
+ 46. nq_Orders
+ 47. nq_Orders_Cancelled
+ 48. nq_Orders_Pending
+ 49. nq_Orders_ProdCat_57_to_116
+ 50. nq_Orders_XAP
+ 51. nq_Pending_Pernr_Day_Count
+ 52. nq_Pitchs
+ 53. nq_Pre_XAP_Exit
+ 54. nq_Prodcat_EBB_Dim
+ 55. nq_Product_Attributes
+ 56. nq_Product_Category_Dim
+ 57. nq_Product_Order_Type
+ 58. nq_RunRate
+ 59. nq_S4X
+ 60. nq_Sentiment_Level_Dim
+ 61. nq_Thru_Date
+ 62. nq_Trans_Origin_Agent
+ 63. nq_Trans_Origin_IACT
+ 64. nq_Transfer_Metrics
+ 65. nq_Truck_Roll
+ 66. nq_XAP_Exit
+ 67. nq_XMLinePending_Pernr_Day_Count
+ 68. nq_XMLines_Pending
+ 69. nq_XM_Activation
+ 70. nq_XM_Contribution
+ 71. nq_XM_Line_detail
+ 72. nq_XM_Line_detail_Dim
+ 73. nq_XSR
+ 74. nq_agent_day_count
+ 75. nq_agentdaycount_nuance_lat
+ 76. nq_biw_distinct_pernrs
+ 77. nq_biw_engagement
+ 78. nq_biw_engagement_dim
+ 79. nq_biw_xchange
+ 80. nq_dim_xsr_components
+ 81. nq_enps
+ 82. nq_enps_dim
+ 83. nq_parameters
+ 84. nq_sales_track
+ 85. nq_tNPS
+ 86. nq_tNPS_Restate
+ 87. nq_tenure
+
+
+NDW VIEWS (NDW_*): 1
+--------------------------------------------------------------------------------
+  1. NDW_NRDP_VIEWS_NRDP_AGENT_FISCAL_PERIOD_MOST_DIM
+
+
+================================================================================
+TOTAL CUBE-REFERENCED VIEWS: 165
+================================================================================
+
+MIGRATION PRIORITY:
+--------------------------------------------------------------------------------
+1. Migrate all base tables (160 tables) - IN PROGRESS
+2. Migrate DIM_* views first (dimension views)
+3. Migrate FACT_* views (fact tables)
+4. Migrate nq_*/NQ_* views (business logic views)
+5. Test cube connectivity
+
+The other 50 views (215 total - 165 cube-used = 50) can be:
+  - Migrated later if needed for other reports
+  - Skipped if they're legacy/unused
+  - Evaluated on a case-by-case basis

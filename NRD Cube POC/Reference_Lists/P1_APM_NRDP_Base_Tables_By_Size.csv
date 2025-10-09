@@ -1,0 +1,162 @@
+Rank,Table_Name,Table_Type,Row_Count,Total_Size_MB,Used_Size_MB,Business_Area,Notes
+1,FACT_CALL_DETAIL,FACT,958551068,107655.07,106562.75,Customer Interactions,PRIMARY CALL SOURCE - Largest table
+2,LKP_DIM_VALUES_INTERACTIONS,LKP,940947329,63926.80,61476.32,Customer Interactions,Interaction dimension values lookup
+3,FACT_NBX_COUNT,FACT,1041275853,51409.33,51157.16,Products,NBX counts - over 1 billion rows
+4,FACT_LTR_90,FACT,534002339,39947.52,39380.09,Retention,90-day long-term retention
+5,FACT_LTR_30,FACT,456563528,37917.19,37457.47,Retention,30-day long-term retention
+6,FACT_LTR_60,FACT,501060547,37472.09,36943.41,Retention,60-day long-term retention
+7,FACT_OUTOUND_CALLS_RPT,FACT,820348389,31876.34,30825.64,Outbound Operations,Outbound calls report - 820M rows
+8,FACT_ORDERS,FACT,153096805,28954.27,28807.26,Orders & Sales,PRIMARY ORDER SOURCE
+9,FACT_CHAT_DETAIL,FACT,168624850,26212.71,25980.04,Customer Interactions,PRIMARY CHAT SOURCE
+10,FACT_TRANSFER_METRICS,FACT,395548652,25148.61,24678.23,Customer Interactions,Transfer metrics - 395M rows
+11,LKP_DIM_VALUES_ORDERS,LKP,452231586,25054.52,23907.13,Orders & Sales,Order dimension values lookup
+12,FACT_EINSTEIN_ITG,FACT,414235684,24479.91,23995.88,Einstein AI,Einstein integration - 414M rows
+13,FACT_EBB_ACP,FACT,282706983,24111.23,23264.00,Financial,EBB/ACP facts - 282M rows
+14,FACT_AUTOPAY,FACT,381327317,22123.76,21788.07,Financial,Autopay facts - 381M rows
+15,FACT_EINSTEIN_ACTION,FACT,314704705,16467.70,16083.75,Einstein AI,Einstein actions - 314M rows
+16,FACT_ADJ,FACT,430834326,15846.06,15064.19,Financial,Adjustments - 430M rows
+17,FACT_TICKET_AUDIT_TRAIL,FACT,447053138,15669.15,15157.91,Tickets & Support,Ticket audit trail - 447M rows
+18,FACT_XI_INTERACTIONS_ORDERS,FACT,169060175,12353.80,11913.03,Customer Interactions,XI interactions orders
+19,DIM_ACCOUNT_PROMOTION_MONTHLY_SUMMARY,DIM,960081169,11837.61,11422.03,Customer Metrics,Account promotion summary - 960M rows!
+20,FACT_PHONE_LOG_ACTIVITY_AGENT,FACT,322177797,10756.51,10322.69,Outbound Operations,Phone log activity by agent
+21,FACT_XMLINES_PENDING,FACT,181934100,10310.23,10166.57,Products,XM lines pending
+22,FACT_CALL_DRIVER_SPEECH_QUERY_REF,FACT,393954280,9395.38,8924.37,Customer Interactions,Call driver speech query - 393M rows
+23,FACT_I3_INTERACTION_QUERY_PIVOT,FACT,53971511,9287.71,8534.91,Customer Interactions,I3 interaction query pivot
+24,FACT_AICR_60_90,FACT,128176936,8972.48,8636.57,Retention,AICR 60-90 day
+25,FACT_DISCONNECT_REASONS,FACT,672809990,8550.81,8142.64,Customer Interactions,Disconnect reasons - 672M rows
+26,FACT_ORDERS_PEND_CANCEL,FACT,160180389,6574.47,6472.75,Orders & Sales,Pending/cancelled orders
+27,DIM_AGENT_FISCAL_PERIOD_EOM,DIM,6553016,5990.56,5973.24,Agent & Workforce,Agent period-end metrics - Most referenced DIM
+28,FACT_NCOE_TICKETS_CR,FACT,264536825,5844.03,5630.71,Tickets & Support,NCOE tickets CR
+29,FACT_XSR_GSR_COMPONENTS,FACT,111658640,5574.58,5547.52,Orders & Sales,XSR GSR components
+30,FACT_EBB_BULK_REF,FACT,169115562,4745.55,4429.06,Financial,EBB bulk reference
+31,FACT_EDIP_TRANSACTION_HISTORY,FACT,106165610,3996.03,3784.13,Transaction History,EDIP transaction history
+32,FACT_TNPS_RESTATE,FACT,44024279,3927.22,3913.42,Customer Metrics,TNPS restated
+33,FACT_TRANSFER_METRICS_W_EWT,FACT,171042039,3425.60,3233.91,Customer Interactions,Transfer metrics with EWT
+34,FACT_NRDP_ADJUST,FACT,209782816,3230.95,3106.52,Metrics & Analytics,NRDP adjustments
+35,FACT_AGENT_TRAINING_REF,FACT,94390292,2956.77,2818.36,Agent & Workforce,Agent training reference
+36,FACT_PITCHES_MOVES,FACT,49044000,2702.77,2640.19,Orders & Sales,Pitches and moves
+37,FACT_TECH_FLEX,FACT,44059223,2406.64,2316.80,Field Operations,Tech flex
+38,FACT_ECM_CASE,FACT,5699712,2306.25,2220.16,Tickets & Support,ECM case facts
+39,FACT_XSR_ALL,FACT,43316658,1957.66,1930.22,Orders & Sales,XSR all
+40,FACT_TRUCK_ROLL,FACT,39915985,1928.08,1896.03,Field Operations,Truck roll
+41,FACT_EINSTEIN_CHATS,FACT,42010292,1881.99,1778.77,Einstein AI,Einstein chats
+42,FACT_AGENT_ESHRINK,FACT,35234235,1845.92,1813.99,Agent & Workforce,Agent shrinkage
+43,FACT_COLLECTION,FACT,23285945,1783.63,1760.24,Financial,Collections
+44,Dim_Agent_Chat_characteristics,DIM,15583664,1731.66,1647.66,Agent & Workforce,Agent chat characteristics
+45,FACT_ECM_INTERACTION,FACT,4207978,1702.52,1631.45,Customer Interactions,ECM interaction facts
+46,FACT_AGENT_CHATS,FACT,22846761,1483.28,1340.09,Agent & Workforce,Agent chats
+47,FACT_NRD_SPRINKLR_MESSAGES,FACT,107199212,1465.73,1397.57,Social & Digital,NRD Sprinklr messages
+48,FACT_BIW_XCHANGE,FACT,20572991,1408.97,1369.49,Agent & Workforce,BIW xchange
+49,FACT_XSR,FACT,38172294,1400.91,1368.29,Orders & Sales,XSR (cross-sell rate)
+50,FACT_XM_LINE_DETAIL,FACT,20161095,1380.77,1324.89,Products,XM line detail - PRIMARY XM SOURCE
+51,FACT_INTRAHOUR_AGENT,FACT,38345149,1339.36,1226.93,Agent & Workforce,Intrahour agent metrics
+52,FACT_LAT_FORECASTINTERVALS,FACT,8883038,1151.67,1123.21,Forecasting,LAT forecast intervals
+53,FACT_IACT_MONTHLY_PERNR,FACT,47947704,1054.70,1041.10,Agent & Workforce,Interaction monthly by personnel
+54,FACT_EWFM_AGENT_SEGMENT_RPT,FACT,27243216,957.20,908.90,Agent & Workforce,EWFM agent segment report
+55,FACT_COE_RATES,FACT,5745358,817.27,776.16,Metrics & Analytics,COE rates
+56,DIM_TABULAR_AGENT_SKILL_LOCATION_LKP,DIM,8305577,747.39,729.32,Agent & Workforce,MOST REFERENCED TABLE - 36 refs
+57,DIM_NBX_M2M,DIM,17244609,684.65,586.63,Products,NBX M2M
+58,FACT_XM_ACTIVATION,FACT,12019495,679.11,658.06,Products,XM activation
+59,FACT_DEVICE_ACTIVATION_DAYS,FACT,12953972,634.98,618.13,Field Operations,Device activation by days
+60,FACT_PRODCAT_EBB_REF,FACT,45253608,590.78,551.70,Financial,Product category EBB reference
+61,FACT_NUANCE_LAT,FACT,6649980,444.26,433.12,Forecasting,Nuance LAT
+62,DIM_TABULAR_PERSON_HIER,DIM,2610759,439.58,433.77,Agent & Workforce,Person hierarchy
+63,FACT_DEVICE_ACTIVATION_ALL,FACT,8390029,411.05,398.16,Field Operations,All device activations
+64,FACT_S4X,FACT,5332488,404.63,386.67,Products,S4X facts
+65,FACT_DEVICE_ACTIVATION,FACT,7306464,354.17,342.59,Field Operations,Device activation
+66,FACT_XM_CONTRIBUTION,FACT,7062341,354.10,338.14,Products,XM contribution
+67,FACT_TNPS,FACT,4856024,233.23,216.24,Customer Metrics,TNPS (Net Promoter Score)
+68,FACT_WORKLIST_TASK,FACT,8246100,226.05,205.01,Worklist Management,Worklist tasks
+69,FACT_PRE_XAP_EXIT,FACT,7824094,199.80,164.01,Orders & Sales,Pre-XAP exit
+70,FACT_SALESCOMP,FACT,235996,196.20,195.86,Financial,Sales compensation
+71,FACT_SOCIAL_EMAIL_BASE_DETAIL,FACT,3500755,192.55,183.95,Social & Digital,Social email base detail
+72,FACT_ORDERS_XAP,FACT,5740937,190.72,181.77,Orders & Sales,XAP orders
+73,DIM_TABULAR_AGENT_SKILL_LOCATION,DIM,243698,178.95,178.52,Agent & Workforce,Agent skill location
+74,FACT_DEVICE_SWAP_BOM_ORDER,FACT,4573199,177.26,169.60,Field Operations,Device swap BOM order
+75,FACT_X2_COE_RATES,FACT,1108860,160.45,152.77,Metrics & Analytics,X2 COE rates
+76,FACT_NUANCE_CHAT_ABANDONED,FACT,3938103,149.17,139.98,Customer Interactions,Nuance abandoned chats
+77,FACT_UNIT_OF_WORK_X2,FACT,1209028,145.48,138.73,Worklist Management,Unit of work X2
+78,FACT_DIGITAL_DETAILS,FACT,2557169,132.36,118.88,Tickets & Support,Digital detail facts
+79,FACT_UNIT_OF_WORK,FACT,2512256,129.40,116.77,Worklist Management,Unit of work facts
+80,FACT_XMC_DETAIL,FACT,1146785,129.07,118.07,Products,XMC detail
+81,FACT_XM_ADDS,FACT,1845171,119.50,116.09,Products,XM adds
+82,FACT_WORKLIST_FALLOUT,FACT,4952012,115.74,105.26,Worklist Management,Worklist fallout
+83,DIM_XAP_EXIT,DIM,760373,110.32,106.64,Orders & Sales,XAP exit dimension
+84,DIM_TABULAR_PERSON_HIER_LKP,DIM,6904151,103.45,95.17,Agent & Workforce,Person hierarchy lookup
+85,FACT_NCOE_TICKETS_ESL,FACT,1100350,97.86,86.83,Tickets & Support,NCOE tickets ESL
+86,DIM_TABULAR_PERSON_DETAILS,DIM,768681,97.20,96.40,Agent & Workforce,Person details
+87,DIM_ECM_CASE,DIM,569140,92.45,83.27,Tickets & Support,ECM case dimension
+88,DIM_TRANSFER_ORIGIN_AGENT,DIM,736625,90.45,86.81,Customer Interactions,Transfer origin - agent
+89,FACT_NAT_ADHERENCE,FACT,3369044,89.20,83.43,Agent & Workforce,NAT adherence
+90,FACT_LAT_REF,FACT,4016570,88.92,84.67,Forecasting,LAT reference
+91,FACT_SALES_TRACK,FACT,1397510,83.06,81.56,Orders & Sales,Sales track
+92,FACT_SPRINKLR_AGENT_PERFORMANCEINTERVAL,FACT,684724,82.52,73.12,Social & Digital,Sprinklr agent performance
+93,FACT_NCOE_COACH_SESSIONS,FACT,1690517,82.45,82.16,Quality & Coaching,NCOE coach sessions
+94,FACT_CRM_TICKETS_LOG,FACT,1537122,68.26,60.79,Tickets & Support,CRM ticket log
+95,FACT_SOCIAL_EMAIL_DETAIL,FACT,992810,56.11,54.88,Social & Digital,Social email detail
+96,dimDateTime,DIM,219216,34.20,33.35,Time Dimensions,DateTime dimension
+97,DIM_BASE_RGU_PROFILE,DIM,44151,24.51,24.40,Customer Metrics,Base RGU profile
+98,DIM_PRODCAT_XI_TIER,DIM,38303,10.38,10.06,Products,XI tier products
+99,DIM_PRODCAT_ALL_OTHERS,DIM,45530,9.82,9.44,Products,Product category - all others
+100,FACT_ESL_TICKET_EVALUATION,FACT,18962,7.24,1.63,Quality & Coaching,ESL ticket evaluation
+101,DIM_PRODCAT_XTV_PPAY,DIM,51637,7.01,6.58,Products,XTV prepay products
+102,FACT_BRIDGE_PRODUCT_ORDER_TYPE_V2,FACT,190297,5.57,5.37,Orders & Sales,Product order type bridge
+103,DIM_TRAINING_STATUS,DIM,47394,5.57,5.20,Agent & Workforce,Training status
+104,DIM_TABULAR_AGENT_TENURE,DIM,25141,5.07,5.00,Agent & Workforce,Agent tenure
+105,DIM_CUST_MAP_INTERACTION,DIM,27906,4.38,4.26,Customer Interactions,Customer interaction mapping
+106,DIM_CLV_ATTRIBUTE,DIM,28662,4.01,3.85,Customer Metrics,Customer lifetime value
+107,DIM_TICKET_ATTRIBUTES,DIM,24349,2.57,2.53,Tickets & Support,Ticket attributes
+108,DIM_DISCONNECT_REASONS,DIM,37463,2.33,2.30,Customer Interactions,Disconnect reasons
+109,DIM_BIW_ENGAGEMENT,DIM,13191,1.95,1.95,Agent & Workforce,BIW engagement dimension
+110,DIM_PRODCAT_XTV_DGTL,DIM,7549,1.38,1.33,Products,XTV digital products
+111,DIM_PRODCAT_XH_XTV_XV_TIER,DIM,8983,1.26,1.19,Products,XH/XTV/XV tier products
+112,DIM_PRODCAT_EBB_REF,DIM,16385,1.20,1.09,Products,EBB product category reference
+113,DIM_GENERIC,DIM,86402,1.13,1.09,General,Generic dimension
+114,DIM_ECM_INTERACTION,DIM,5280,1.01,0.88,Customer Interactions,ECM interaction dimension
+115,DIM_DATE,DIM,3653,0.66,0.53,Time Dimensions,Standard calendar
+116,DIM_NBX_UNIQUE,DIM,3657,0.63,0.55,Products,NBX unique
+117,DIM_DATE_CUSTOM_PERIODS,DIM,1838,0.57,0.50,Time Dimensions,Fiscal custom periods
+118,DIM_NCOE_COACH_SESSIONCHARACTERISTICS,DIM,2444,0.38,0.28,Quality & Coaching,Coach session characteristics
+119,DIM_UUI_CONTEXT_CODES,DIM,1062,0.32,0.18,Customer Interactions,UUI context codes
+120,FACT_ENPS,FACT,2436,0.32,0.27,Customer Metrics,Employee NPS
+121,DIM_PAYMENTS_ATTRIBUTES,DIM,1547,0.26,0.16,Financial,Payment attributes
+122,DIM_NCOE_COACH_COMPETENCIES,DIM,367,0.26,0.18,Quality & Coaching,Coach competencies
+123,DIM_MDM_DASHBOARD_INDEX_INFO,DIM,192,0.20,0.03,Metrics & Analytics,Dashboard index info
+124,DIM_DATE_VENDOR_REPORTING,DIM,2922,0.20,0.11,Time Dimensions,Vendor reporting calendar
+125,DIM_EINSTEIN_TROUBLESHOOT,DIM,569,0.20,0.08,Einstein AI,Einstein troubleshooting
+126,DIM_CRM_TICKETS_LOG,DIM,1638,0.20,0.15,Tickets & Support,CRM ticket log dimension
+127,DIM_AUDIT_TRAIL_CHARACTERISTICS,DIM,444,0.20,0.14,General,Audit trail characteristics
+128,DIM_TRANSFER_ORIGIN_IACT,DIM,1903,0.20,0.11,Customer Interactions,Transfer origin - interaction
+129,LKP_CUSTOMER_EBB_BULK,LKP,1461,0.20,0.07,Financial,Customer EBB bulk lookup
+130,DIM_LAT_FORECAST_ATTRIBUTES,DIM,921,0.13,0.10,Forecasting,LAT forecast attributes
+131,DIM_EWFM_SEGMENT_CODE,DIM,1036,0.13,0.08,Agent & Workforce,EWFM segment codes
+132,DIM_SENTIMENT_QA,DIM,768,0.13,0.07,Customer Interactions,Sentiment QA
+133,DIM_CUSTOMER_ACCOUNT_BULK,DIM,2049,0.13,0.08,Customer Metrics,Bulk customer accounts
+134,DIM_CALL_SKILL_NUM,DIM,425,0.13,0.05,Customer Interactions,Call skill numbers
+135,DIM_XM_LINE_DETAIL_ATTRIBUTE,DIM,1212,0.13,0.09,Products,XM line detail attributes
+136,DIM_TRANSFER_DESTINATION,DIM,1275,0.13,0.09,Customer Interactions,Transfer destination
+137,DIM_TABULAR_CUSTOMER_ACCOUNT_DEMO,DIM,52,0.07,0.02,Customer Metrics,Customer account demographics
+138,DIM_XSR_COMPONENT,DIM,15,0.07,0.02,Orders & Sales,XSR component
+139,DIM_WORKLIST_FALLOUT_CHARACTERISTIC,DIM,53,0.07,0.02,Worklist Management,Worklist fallout characteristics
+140,DIM_WORKLIST_TASK_CHARACTERISTICS,DIM,84,0.07,0.02,Worklist Management,Worklist task characteristics
+141,DIM_WORKLIST_TASK_PARTICIPANTS,DIM,47,0.07,0.02,Worklist Management,Worklist task participants
+142,DIM_UNIT_OF_WORK,DIM,16,0.07,0.02,Worklist Management,Unit of work dimension
+143,DIM_UOW_RULE_REF,DIM,11,0.07,0.02,Worklist Management,UOW rule reference
+144,DIM_CALL_SEGMENT_CODES,DIM,110,0.07,0.02,Customer Interactions,Call segment codes
+145,DIM_CUST_TENURE,DIM,10,0.07,0.02,Customer Metrics,Customer tenure
+146,DIM_CUSTOMER_ACCOUNT,DIM,92,0.07,0.02,Customer Metrics,Customer account master
+147,DIM_CURRENT_TODATE,DIM,48,0.07,0.02,Time Dimensions,Current to-date periods
+148,DIM_ACCOUNT_PROMOTION,DIM,22,0.07,0.02,Customer Metrics,Account promotions
+149,DIM_AICR_REPEAT_MATRIX,DIM,13,0.07,0.02,Retention,AICR repeat analysis
+150,DIM_SPRINKLR_MESSAGES,DIM,104,0.07,0.02,Social & Digital,Sprinklr messages
+151,DIM_PRODUCT_CATEGORY,DIM,111,0.07,0.02,Products,Product category master
+152,DIM_NCOE_SHORT_CALL,DIM,6,0.07,0.02,Customer Interactions,NCOE short call
+153,DIM_ORDER_TYPE,DIM,33,0.07,0.02,Orders & Sales,Order types
+154,DIM_PARAMETERS,DIM,8,0.07,0.02,General,Parameters dimension
+155,DIM_EDIP_TRANSACTION_HISTORY_ATTRIBUTES,DIM,36,0.07,0.02,Transaction History,EDIP transaction attributes
+156,DIM_MDM_NI_BUY_FLOW_TYPE,DIM,5,0.07,0.02,Orders & Sales,NI buy flow types
+157,DIM_METRIC_SOURCE,DIM,3,0.07,0.02,General,Metric source dimension
+158,DIM_MOVE_INCOME_CONSTRAINED,DIM,8,0.07,0.02,Financial,Move income constrained
+159,DIM_DIGITAL_ATTRIBUTES,DIM,222,0.07,0.03,Tickets & Support,Digital channel attributes
+160,DIM_DATE_LATEST_DAY_SNAPSHOT,DIM,1,0.07,0.02,Time Dimensions,Latest day snapshot
+

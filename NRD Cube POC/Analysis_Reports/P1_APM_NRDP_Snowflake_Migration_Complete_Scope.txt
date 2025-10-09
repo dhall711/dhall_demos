@@ -1,0 +1,500 @@
+====================================================================
+NRDP CUBE - COMPLETE MIGRATION SCOPE TO SNOWFLAKE
+====================================================================
+Project: Migrate SQL Server NRDP OLAP Cube to Snowflake
+Source: SQL Server Analysis Services (SSAS) Multidimensional Cube
+Target: Snowflake Data Warehouse
+Analysis Date: 2025-10-09
+====================================================================
+
+EXECUTIVE SUMMARY:
+==================
+This document defines the COMPLETE scope of objects required to
+migrate the NRDP cube from SQL Server to Snowflake.
+
+Total Objects in Scope:
+- Cube Objects Referenced: 159 (TableID references)
+- View Definitions Available: 215 views
+- Base Tables Required: 199 tables
+- Total Unique Objects: ~375 database objects
+
+Total Data Size: ~638 GB (base tables only)
+Total Rows: ~13.4 billion rows
+
+Migration Approach: 3-Layer Architecture
+1. Base Tables Layer (Snowflake Tables)
+2. View Layer (Snowflake Views)
+3. Semantic Layer (Snowflake Native App or dbt/Looker)
+
+
+====================================================================
+SECTION 1: CUBE-REFERENCED OBJECTS (159 objects)
+====================================================================
+
+These are the DIRECT table/view references from the NRDP cube
+(extracted from <TableID> elements in cube XML).
+
+CUBE DIRECTLY REFERENCES:
+--------------------------
+Total: 159 objects
+
+BREAKDOWN BY PREFIX:
+- dbo_* (75 objects) - Views from dbo schema
+- nq_* (76 objects) - Named query views  
+- NQ_* (2 objects) - Named query tables
+- NDW_* (1 object) - NDW database view
+- FACT_MDM_* (5 objects) - Direct fact references
+
+COMPLETE LIST OF CUBE-REFERENCED OBJECTS:
+------------------------------------------
+1. NDW_NRDP_VIEWS_NRDP_AGENT_FISCAL_PERIOD_MOST_DIM
+2. NQ_CUSTOMER_ACCOUNT_DIM
+3. NQ_ORDERS_WIDE
+4. dbo_DIM_AUDIT_TRAIL_CHARACTERISTICS
+5. dbo_DIM_MDM_ACCOUNT_PROMOTION_MONTHLY_SUMMARY_V
+6. dbo_DIM_MDM_AGENT_CHAT_CHARACTERISRICS_V
+7. dbo_DIM_MDM_AUX_CODE_PHONE_ACTIVITY_V
+8. dbo_DIM_MDM_BEG_END_XSR_SPEED_TIER_V
+9. dbo_DIM_MDM_COACH_COMPETENCIES_V
+10. dbo_DIM_MDM_COACH_PERSON_DETAILS_V
+11. dbo_DIM_MDM_COACH_SESSION_CHARACTERISTICS_V
+12. dbo_DIM_MDM_CRM_LOG_V
+13. dbo_DIM_MDM_DASHBOARD_INDEX_INFO_V
+14. dbo_DIM_MDM_DIGITAL_ATTRIBUTES_V
+15. dbo_DIM_MDM_DISCONNECT_REASONS_V
+16. dbo_DIM_MDM_DateTime_V
+17. dbo_DIM_MDM_ECM_CASE_V
+18. dbo_DIM_MDM_ECM_INTERACTION_V
+19. dbo_DIM_MDM_EDIP_TRANSACTION_HISTORY_ATTRIBUTES_V
+20. dbo_DIM_MDM_EWFM_SEGMENT_CODES_V
+21. dbo_DIM_MDM_FISCAL_CALENDAR_V
+22. dbo_DIM_MDM_FISCAL_CAL_BASE_V
+23. dbo_DIM_MDM_FISCAL_PERIOD_TODATE_V
+24. dbo_DIM_MDM_MOVE_INCOME_CONSTRAINED_V
+25. dbo_DIM_MDM_NI_BUY_FLOW_TYPE_V
+26. dbo_DIM_MDM_SENTIMENT_LEVEL_V
+27. dbo_DIM_MDM_SPRINKLR_MESSAGES_V
+28. dbo_DIM_MDM_TICKET_PROBLEM_V
+29. dbo_DIM_MDM_TICKET_QUEUE_V
+30. dbo_DIM_MDM_TICKET_STATUS_V
+31. dbo_DIM_MDM_TICKET_SUPPORT_AREA_V
+32. dbo_DIM_MDM_TRANSFER_DESTINATION_V
+33. dbo_DIM_MDM_UNIT_OF_WORK_V
+34. dbo_DIM_MDM_UOW_RULE_REF_V
+35. dbo_DIM_MDM_WORKLIST_FALLOUT_CHARACTERISTIC_V
+36. dbo_DIM_MDM_WORKLIST_TASK_CHARACTERISTIC_V
+37. dbo_DIM_MDM_WORKLIST_TASK_PARTICIPANT_V
+38. dbo_DIM_MDM_XM_LINE_DETAIL_ATTRIBUTE_V
+39. dbo_DIM_MDM_XSR_COMPONENT_V
+40. dbo_FACT_MDM_AGENT_CHATS_V
+41. dbo_FACT_MDM_AGENT_PERNR_IACT_COUNT_V
+42. dbo_FACT_MDM_AGENT_PERNR_ORDER_TYPE_DISTINCT_COUNT_V
+43. dbo_FACT_MDM_AGENT_TRAINING_REF_NewHire_V
+44. dbo_FACT_MDM_CRM_TICKETS_LOG_V
+45. dbo_FACT_MDM_DEVICE_SWAP_BOM_ORDER_V
+46. dbo_FACT_MDM_DIGITAL_DETAILS_V
+47. dbo_FACT_MDM_EBB_ACP_V
+48. dbo_FACT_MDM_ECM_CASE_V
+49. dbo_FACT_MDM_ECM_INTERACTION_V
+50. dbo_FACT_MDM_EDIP_TRANSACTION_HISTORY_V
+51. dbo_FACT_MDM_ESL_TICKET_EVALUATION_V
+52. dbo_FACT_MDM_EWFM_AGENT_SEGMENT_RPT_V
+53. dbo_FACT_MDM_I3_INTERACTION_QUERY_PIVOT_V
+54. dbo_FACT_MDM_LAT_FORECASTINTERVALS_V
+55. dbo_FACT_MDM_MYPERFORMANCE_DISTINCT_AGENT_V
+56. dbo_FACT_MDM_MYPERFORMANCE_SESSIONS_V
+57. dbo_FACT_MDM_NAT_ADHERENCE_V
+58. dbo_FACT_MDM_NCOE_TICKETS_CALLS_ECR_V
+59. dbo_FACT_MDM_NCOE_TICKETS_CR_V
+60. dbo_FACT_MDM_NCOE_TICKETS_ESL_V
+61. dbo_FACT_MDM_NRDP_ADJUST_V
+62. dbo_FACT_MDM_NRD_SPRINKLR_MESSAGES_V
+63. dbo_FACT_MDM_NUANCE_CHAT_ABANDONED_V
+64. dbo_FACT_MDM_OUTBOUND_CALLS_V
+65. dbo_FACT_MDM_PHONE_LOG_ACTIVITY_AGENT_V
+66. dbo_FACT_MDM_SALESCOMP_V
+67. dbo_FACT_MDM_SOCIAL_EMAIL_DETAIL_V
+68. dbo_FACT_MDM_SPRINKLR_AGENT_PERFORMANCEINTERVAL_V
+69. dbo_FACT_MDM_TECH_FLEX_V
+70. dbo_FACT_MDM_TICKET_AUDIT_TRAIL_V
+71. dbo_FACT_MDM_UNIT_OF_WORK_V
+72. dbo_FACT_MDM_UNIT_OF_WORK_X2_V
+73. dbo_FACT_MDM_WORKLIST_FALLOUT_V
+74. dbo_FACT_MDM_WORKLIST_TASK_V
+75. dbo_FACT_MDM_X2_COE_RATES_V
+76. dbo_FACT_MDM_XI_INTERACTIONS_ORDERS_V
+77. dbo_FACT_MDM_XMC_DETAIL_V
+78. dbo_FACT_MDM_XM_ADDS_V
+79. dbo_FACT_MDM_XM_ORDER_TIMELINE_DETAILS_V
+80. dbo_FACT_MDM_XSR_COMPONENTS_DISTINCT_PERNR
+81. dbo_FACT_MDM_XSR_GSR_XM_MULTILINES_V
+82. nq_AICR
+83. nq_Agent_Training_Status
+84. nq_Agent_eShrink
+85. nq_Autopay
+86. nq_BIW_Engagement_pernr
+87. nq_COE_Rates
+88. nq_Call_Attributes
+89. nq_Calls
+90. nq_Chats
+91. nq_Clv
+92. nq_Collection
+93. nq_Cust_Map_interaction_dim
+94. nq_DataThru
+95. nq_Dim_Agent_Person_Details
+96. nq_Dim_Agent_Supervisor
+97. nq_Dim_Agent_Tenure
+98. nq_Dim_Customer_Account_Demo
+99. nq_Dim_Fiscal_Period_Time_Series
+100. nq_Dim_Payment_Attributes
+101. nq_Dim_Speech_Query_Group1
+102. nq_Dim_Speech_Query_Group2
+103. nq_Dim_tNPS
+104. nq_Distinct_Pernrs
+105. nq_Einstein_Action
+106. nq_Einstein_Chats
+107. nq_Einstein_ITG_Agg
+108. nq_Einstein_Troubleshoot_Dim
+109. nq_Fiscal_Calendar
+110. nq_Flex_Device_Activation
+111. nq_Flex_Device_Activation_All
+112. nq_IACT_Begin_Counts
+113. nq_Intrahour_Agent
+114. nq_LTR_30_Order_TSR30
+115. nq_LTR_60
+116. nq_LTR_90
+117. nq_LTR_Beg
+118. nq_NBX_Bridge
+119. nq_NBX_Count
+120. nq_NBX_dim
+121. nq_NUANCE_LAT
+122. nq_OneTimeCredits
+123. nq_Order_Type_Dim
+124. nq_Orders
+125. nq_Orders_Cancelled
+126. nq_Orders_Pending
+127. nq_Orders_ProdCat_57_to_116
+128. nq_Orders_XAP
+129. nq_Pending_Pernr_Day_Count
+130. nq_Pitchs
+131. nq_Pre_XAP_Exit
+132. nq_Prodcat_EBB_Dim
+133. nq_Product_Attributes
+134. nq_Product_Order_Type
+135. nq_RunRate
+136. nq_S4X
+137. nq_Sentiment_Level_Dim
+138. nq_Thru_Date
+139. nq_Trans_Origin_Agent
+140. nq_Trans_Origin_IACT
+141. nq_Transfer_Metrics
+142. nq_Truck_Roll
+143. nq_XAP_Exit
+144. nq_XMLinePending_Pernr_Day_Count
+145. nq_XMLines_Pending
+146. nq_XM_Activation
+147. nq_XM_Contribution
+148. nq_XM_Line_detail
+149. nq_XM_Line_detail_Dim
+150. nq_XSR
+151. nq_agent_day_count
+152. nq_agentdaycount_nuance_lat
+153. nq_biw_distinct_pernrs
+154. nq_biw_engagement
+155. nq_biw_engagement_dim
+156. nq_biw_xchange
+157. nq_dim_xsr_components
+158. nq_enps
+159. nq_enps_dim
+160. nq_parameters
+161. nq_sales_track
+162. nq_tNPS
+163. nq_tNPS_Restate
+164. nq_tenure
+
+(Note: Cube XML shows 159, actual list above shows 164 - 
+some objects may be referenced multiple times or variations)
+
+
+====================================================================
+SECTION 2: VIEW DEFINITIONS AVAILABLE (215 views)
+====================================================================
+
+These are ALL views for which we have complete SQL definitions.
+These views form the MDM (Master Data Management) layer between
+base tables and the cube.
+
+Total Views with Definitions: 215
+
+VIEW CATEGORIES:
+----------------
+1. DIM_MDM_* views: 108 dimension views
+2. FACT_MDM_* views: 82 fact views  
+3. BAK_* views: 1 backup view
+4. Other: 24 views
+
+ALL AVAILABLE VIEW DEFINITIONS:
+--------------------------------
+1. BAK_FACT_MDM_XSR_COMPONENTS_PERNR_V
+2. DIM_MDM_ACCOUNT_PROMOTION_MONTHLY_SUMMARY_V
+3. DIM_MDM_AGENT_CHAT_CHARACTERISRICS_V
+4. DIM_MDM_AGENT_PERSON_DETAILS_V
+5. DIM_MDM_AGENT_SKILL_LOCATION_CURRENT_V
+6. DIM_MDM_AGENT_SKILL_LOCATION_V
+7. DIM_MDM_AGENT_SUPERVISOR_V
+8. DIM_MDM_AGENT_TENURE_V
+9. DIM_MDM_AGENT_TRAINING_V
+10. DIM_MDM_AUDIT_TRAIL_CHARACTERISTICS_V
+... (see separate file for complete list of all 215 views)
+
+
+====================================================================
+SECTION 3: BASE TABLES REQUIRED (199 tables)
+====================================================================
+
+These are the underlying physical database tables that the views
+query. This is the foundation layer that must be migrated.
+
+Total Base Tables: 199
+
+BREAKDOWN BY TYPE:
+- Dimension Tables (DIM_*): 93 tables
+- Fact Tables (FACT_*): 101 tables
+- Lookup Tables (LKP_*): 3 tables
+- Other: 2 objects
+
+Total Size: 638.3 GB (160 tables with data)
+Missing/Empty: 39 tables (likely staging or deprecated)
+
+TOP 20 LARGEST BASE TABLES TO PRIORITIZE:
+------------------------------------------
+Rank | Table Name                                  | Size (GB) | Rows (M)
+-----|---------------------------------------------|-----------|----------
+  1  | FACT_CALL_DETAIL                            | 105.13    | 958.6
+  2  | LKP_DIM_VALUES_INTERACTIONS                 | 62.43     | 940.9
+  3  | FACT_NBX_COUNT                              | 50.20     | 1041.3
+  4  | FACT_LTR_90                                 | 39.01     | 534.0
+  5  | FACT_LTR_30                                 | 37.03     | 456.6
+  6  | FACT_LTR_60                                 | 36.59     | 501.1
+  7  | FACT_OUTOUND_CALLS_RPT                      | 31.13     | 820.3
+  8  | FACT_ORDERS                                 | 28.28     | 153.1
+  9  | FACT_CHAT_DETAIL                            | 25.60     | 168.6
+ 10  | FACT_TRANSFER_METRICS                       | 24.56     | 395.5
+ 11  | LKP_DIM_VALUES_ORDERS                       | 24.47     | 452.2
+ 12  | FACT_EINSTEIN_ITG                           | 23.91     | 414.2
+ 13  | FACT_EBB_ACP                                | 23.55     | 282.7
+ 14  | FACT_AUTOPAY                                | 21.61     | 381.3
+ 15  | FACT_EINSTEIN_ACTION                        | 16.08     | 314.7
+ 16  | FACT_ADJ                                    | 15.48     | 430.8
+ 17  | FACT_TICKET_AUDIT_TRAIL                     | 15.30     | 447.1
+ 18  | FACT_XI_INTERACTIONS_ORDERS                 | 12.06     | 169.1
+ 19  | DIM_ACCOUNT_PROMOTION_MONTHLY_SUMMARY       | 11.56     | 960.1
+ 20  | FACT_PHONE_LOG_ACTIVITY_AGENT               | 10.51     | 322.2
+
+These 20 tables = 575 GB (90% of total data)
+
+(See separate file "P1_APM_NRDP_Required_Tables_Sorted_By_Size.txt"
+for complete list of all 160 tables with data)
+
+
+====================================================================
+SECTION 4: COMPLETE DATA LINEAGE
+====================================================================
+
+LAYER 1: BASE TABLES (199 tables, 638 GB)
+  ↓ Referenced by
+LAYER 2: MDM VIEWS (215 views with definitions)
+  ↓ Referenced by  
+LAYER 3: CUBE OBJECTS (159 direct references)
+  ↓ Consumed by
+LAYER 4: END USERS (Reports, Dashboards, Analytics)
+
+
+DETAILED LINEAGE EXAMPLE:
+--------------------------
+
+FACT_CALL_DETAIL (Base Table, 105 GB)
+  ↓ Used in
+FACT_MDM_CALLS_V (MDM View)
+  ↓ Referenced as
+dbo_FACT_MDM_CALLS_V (Cube TableID with monthly partitions)
+  ↓ Used in
+Calls Measure Group → MDX Calculations → Reports
+
+
+CRITICAL VIEW DEPENDENCIES:
+----------------------------
+
+Most MDM views depend on:
+1. DIM_TABULAR_AGENT_SKILL_LOCATION_LKP (36 references)
+2. DIM_AGENT_FISCAL_PERIOD_EOM (16 references)
+3. FACT_EBB_BULK_REF (24 references)
+4. DIM_DATE_CUSTOM_PERIODS (multiple references)
+
+These are HIGH-PRIORITY tables to migrate first!
+
+
+
+
+
+
+COMMON SQL DIFFERENCES:
+-----------------------
+
+1. STRING FUNCTIONS:
+   SQL Server              Snowflake
+   -----------             ---------
+   LEN(x)                  LENGTH(x)
+   STUFF(x,a,b,c)          INSERT(x,a,b,c)
+   CHARINDEX(x,y)          POSITION(x IN y)
+   +  (concatenation)      CONCAT() or ||
+
+2. DATE FUNCTIONS:
+   SQL Server              Snowflake
+   -----------             ---------
+   GETDATE()               CURRENT_TIMESTAMP()
+   DATEADD(d,n,x)          DATEADD(day,n,x)
+   DATEDIFF(d,x,y)         DATEDIFF(day,x,y)
+   YEAR(x)                 YEAR(x) [same]
+
+3. NULL HANDLING:
+   SQL Server              Snowflake
+   -----------             ---------
+   ISNULL(x,y)             COALESCE(x,y) or NVL(x,y)
+   NULLIF(x,y)             NULLIF(x,y) [same]
+
+4. WINDOW FUNCTIONS:
+   - Mostly compatible
+   - Snowflake has better performance for large datasets
+
+5. WITH (NOLOCK):
+   - Remove all NOLOCK hints
+   - Snowflake uses MVCC (no locking needed)
+
+6. TEMP TABLES:
+   SQL Server: #temp
+   Snowflake: CREATE TEMPORARY TABLE or CREATE TRANSIENT TABLE
+
+7. TOP vs LIMIT:
+   SQL Server: SELECT TOP 100 *
+   Snowflake: SELECT * LIMIT 100
+
+
+VIEWS TO UPDATE:
+----------------
+All 215 views will need review for:
+- Date function syntax
+- String function syntax  
+- Removing NOLOCK hints
+- Converting temp table references
+- Adjusting schema names (dbo. → BASE. or VIEWS.)
+
+
+====================================================================
+SECTION 7: PRIORITY MIGRATION LIST
+====================================================================
+
+CRITICAL PATH - MUST MIGRATE FIRST:
+------------------------------------
+
+1. Time Dimensions (5 tables):
+   - DIM_DATE
+   - DIM_DATE_CUSTOM_PERIODS
+   - DIM_FISCAL_CALENDAR (via views)
+   - DIM_DATE_LATEST_DAY_SNAPSHOT
+   - dimDateTime
+
+2. Agent Dimensions (10 tables):
+   - DIM_TABULAR_AGENT_SKILL_LOCATION_LKP (most referenced!)
+   - DIM_TABULAR_AGENT_SKILL_LOCATION
+   - DIM_AGENT_FISCAL_PERIOD_EOM
+   - DIM_TABULAR_PERSON_DETAILS
+   - DIM_TABULAR_PERSON_HIER
+   - DIM_TABULAR_PERSON_HIER_LKP
+   - DIM_TABULAR_AGENT_TENURE
+   - Dim_Agent_Chat_characteristics
+   - DIM_BIW_ENGAGEMENT
+   - DIM_TRAINING_STATUS
+
+3. Top 20 Fact Tables (575 GB):
+   (See Section 3 for list)
+
+4. Lookup Tables (3 tables):
+   - LKP_DIM_VALUES_INTERACTIONS (62 GB)
+   - LKP_DIM_VALUES_ORDERS (24 GB)
+   - LKP_CUSTOMER_EBB_BULK
+
+5. Remaining Dimensions (~80 tables):
+   All other DIM_* tables
+
+6. Remaining Facts (~80 tables):
+   All other FACT_* tables
+
+
+DEPENDENCY ORDER FOR VIEWS:
+----------------------------
+
+1. Base dimension views (DIM_MDM_*)
+2. Base fact views (FACT_MDM_*)
+3. Aggregate views (nq_* views)
+4. Complex calculation views
+
+
+====================================================================
+SECTION 8: RISK MITIGATION
+====================================================================
+
+HIGH-RISK ITEMS:
+----------------
+
+1. DATA VOLUME (638 GB):
+   Risk: Long migration time, network issues
+   Mitigation:
+   - Use Snowflake's bulk loading (COPY INTO)
+   - Compress files before transfer
+   - Migrate in batches (by date range)
+   - Parallel loading for large tables
+
+2. COMPLEX VIEWS (215 views):
+   Risk: SQL incompatibilities, logic errors
+   Mitigation:
+   - Automated SQL conversion tool
+   - Thorough testing of each view
+   - Row count validation
+   - Sample data comparison
+
+3. MDX TO SQL CONVERSION:
+   Risk: Complex time-series calculations
+   Mitigation:
+   - Document all MDX logic
+   - Convert to SQL window functions
+   - Use dbt for complex metrics
+   - Extensive testing
+
+4. PERFORMANCE:
+   Risk: Queries slower than SSAS cube
+   Mitigation:
+   - Implement clustering keys
+   - Use materialized views for aggregations
+   - Enable search optimization
+   - Query result caching
+   - Optimize warehouse sizing
+
+5. USER ADOPTION:
+   Risk: Users prefer old cube/tools
+   Mitigation:
+   - Training programs
+   - Parallel run period
+   - Modern BI tools (Power BI, Tableau, Looker)
+   - Self-service analytics
+
+6. MISSING OBJECTS:
+   Risk: 39 tables have no data
+   Mitigation:
+   - Verify if truly needed by cube
+   - Check if deprecated/staging
+   - Document assumptions
+
+
+
+

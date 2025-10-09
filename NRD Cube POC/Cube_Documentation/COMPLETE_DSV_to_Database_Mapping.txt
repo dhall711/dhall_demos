@@ -1,0 +1,313 @@
+COMPLETE DSV-TO-DATABASE TABLE MAPPING
+================================================================================
+Data Source View (DSV) Object Names → Actual SQL Server Database Tables/Views
+
+Generated: October 9, 2025
+Source: Agent_Performance_MDM.xmla
+Purpose: Snowflake Migration Reference
+
+ARCHITECTURE OVERVIEW:
+--------------------------------------------------------------------------------
+The Agent Performance MDM cube uses a three-layer architecture:
+
+1. CUBE LAYER: Dimension and Measure Group Names (user-facing)
+   Example: "Calls" measure group, "Fiscal Calendar" dimension
+
+2. DSV LAYER: Data Source View Object Names (logical abstraction)
+   Example: nq_Calls, nq_Fiscal_Calendar
+   These are referenced in cube bindings via <TableID> tags
+
+3. DATABASE LAYER: Physical SQL Server Tables/Views
+   Example: FACT_MDM_CALLS_V, DIM_MDM_FISCAL_CAL_V
+   These are the actual database objects to be migrated
+
+This document maps Layer 2 (DSV) to Layer 3 (Database).
+
+
+COMPLETE MAPPING (165 DSV Objects → 185 Database Tables):
+================================================================================
+
+DSV Object Name (TableID)                                  → Database Table/View Name
+----------------------------------------------------------------------------------
+
+NDW_NRDP_VIEWS_NRDP_AGENT_FISCAL_PERIOD_MOST_DIM          → DIM_MDM_AGENT_SKILL_LOCATION_V
+NQ_CUSTOMER_ACCOUNT_DIM                                    → DIM_MDM_CUSTOMER_ACCOUNT_V
+NQ_ORDERS_WIDE                                             → FACT_MDM_ORDERS_1_TO_56_V
+
+dbo_DIM_AUDIT_TRAIL_CHARACTERISTICS                        → DIM_MDM_AUDIT_TRAIL_CHARACTERISTICS_V
+dbo_DIM_MDM_ACCOUNT_PROMOTION_MONTHLY_SUMMARY_V            → DIM_MDM_ACCOUNT_PROMOTION_MONTHLY_SUMMARY_V
+dbo_DIM_MDM_AGENT_CHAT_CHARACTERISRICS_V                   → DIM_MDM_AGENT_CHAT_CHARACTERISRICS_V
+dbo_DIM_MDM_AUX_CODE_PHONE_ACTIVITY_V                      → DIM_MDM_AUX_CODE_PHONE_ACTIVITY_V
+dbo_DIM_MDM_BEG_END_XSR_SPEED_TIER_V                       → DIM_MDM_BEG_END_XSR_SPEED_TIER_V
+dbo_DIM_MDM_COACH_CALENDAR_CHOICE_V                        → DIM_MDM_COACH_CALENDAR_CHOICE_V
+dbo_DIM_MDM_COACH_COMPETENCIES_V                           → DIM_MDM_COACH_COMPETENCIES_V
+dbo_DIM_MDM_COACH_PERSON_DETAILS_V                         → DIM_MDM_COACH_PERSON_DETAILS_V
+dbo_DIM_MDM_COACH_SESSION_CHARACTERISTICS_V                → DIM_MDM_COACH_SESSION_CHARS_V
+dbo_DIM_MDM_COACH_SUPERVISOR_V                             → DIM_MDM_COACH_SUPERVISOR_V
+dbo_DIM_MDM_CRM_LOG_V                                      → DIM_MDM_CRM_LOG_V
+dbo_DIM_MDM_DASHBOARD_INDEX_INFO_V                         → DIM_MDM_DASHBOARD_INDEX_INFO_V
+dbo_DIM_MDM_DIGITAL_ATTRIBUTES_V                           → DIM_MDM_DIGITAL_ATTRIBUTES_V
+dbo_DIM_MDM_DISCONNECT_REASONS_V                           → DIM_MDM_DISCONNECT_REASONS_V
+dbo_DIM_MDM_DateTime_V                                     → DIM_MDM_DateTime_V
+dbo_DIM_MDM_EBI_XLR8_SCORE_V                               → DIM_MDM_EBI_XLR8_SCORE_V
+dbo_DIM_MDM_ECM_CASE_V                                     → DIM_MDM_ECM_CASE_V
+dbo_DIM_MDM_ECM_INTERACTION_V                              → DIM_MDM_ECM_INTERACTION_V
+dbo_DIM_MDM_EDIP_TRANSACTION_HISTORY_ATTRIBUTES_V          → DIM_MDM_EDIP_TRANSACTION_HISTORY_ATTRIBUTES_V
+dbo_DIM_MDM_EWFM_SEGMENT_CODES_V                           → DIM_MDM_EWFM_SEGMENT_CODES_V
+dbo_DIM_MDM_LAT_FORECAST_ATTRIBUTES_V                      → DIM_MDM_LAT_FORECAST_ATTRIBUTES_V
+dbo_DIM_MDM_METRIC_SOURCE                                  → DIM_MDM_METRIC_SOURCE
+dbo_DIM_MDM_MOVE_INCOME_CONSTRAINED_V                      → DIM_MDM_MOVE_INCOME_CONSTRAINED_V
+dbo_DIM_MDM_NCOE_SHORT_CALL_V                              → DIM_MDM_NCOE_SHORT_CALL_V
+dbo_DIM_MDM_NCOE_TICKETS_ESL_V                             → DIM_MDM_NCOE_TICKETS_ESL_V
+dbo_DIM_MDM_NI_BUY_FLOW_TYPE_V                             → DIM_MDM_NI_BUY_FLOW_TYPE_V
+dbo_DIM_MDM_SPRINKLR_MESSAGES_V                            → DIM_MDM_SPRINKLR_MESSAGES_V
+dbo_DIM_MDM_TICKET_PROBLEM_V                               → DIM_MDM_TICKET_PROBLEM_V
+dbo_DIM_MDM_TICKET_QUEUE_V                                 → DIM_MDM_TICKET_QUEUE_V
+dbo_DIM_MDM_TICKET_STATUS_V                                → DIM_MDM_TICKET_STATUS_V
+dbo_DIM_MDM_TICKET_SUPPORT_AREA_V                          → DIM_MDM_TICKET_SUPPORT_AREA_V
+dbo_DIM_MDM_TRANSFER_DESTINATION_V                         → DIM_MDM_TRANSFER_DESTINATION_V
+dbo_DIM_MDM_UNIT_OF_WORK_V                                 → DIM_MDM_UNIT_OF_WORK_V
+dbo_DIM_MDM_UOW_RULE_REF_V                                 → DIM_MDM_UOW_RULE_REF_V
+dbo_DIM_MDM_WORKLIST_FALLOUT_CHARACTERISTIC_V              → DIM_MDM_WORKLIST_FALLOUT_CHARACTERISTIC_V
+dbo_DIM_MDM_WORKLIST_TASK_CHARACTERISTIC_V                 → DIM_MDM_WORKLIST_TASK_CHARACTERISTIC_V
+dbo_DIM_MDM_WORKLIST_TASK_PARTICIPANT_V                    → DIM_MDM_WORKLIST_TASK_PARTICIPANT_V
+dbo_Dim_MDM_CALL_SEGMENT_CODES_V                           → Dim_MDM_CALL_SEGMENT_CODES_V
+dbo_Dim_MDM_UUI_CONTEXT_CODES_V                            → Dim_MDM_UUI_CONTEXT_CODES_V
+
+dbo_FACT_MDM_AGENT_CHATS_V                                 → FACT_MDM_AGENT_CHATS_V
+dbo_FACT_MDM_AGENT_PERNR_IACT_COUNT_V                      → FACT_MDM_AGENT_IACT_DISTINCTCOUNT_V
+dbo_FACT_MDM_AGENT_PERNR_ORDER_TYPE_DISTINCT_COUNT_V       → FACT_MDM_AGENT_ORDER_DISTINCTCOUNT_V
+dbo_FACT_MDM_AGENT_TRAINING_REF_NewHire_V                  → FACT_MDM_AGENT_TRAINING_REF_NewHire_V
+dbo_FACT_MDM_CRM_TICKETS_LOG_V                             → FACT_MDM_CRM_TICKETS_LOG_V
+dbo_FACT_MDM_DEVICE_SWAP_BOM_ORDER_V                       → FACT_MDM_DEVICE_SWAP_BOM_ORDER_V
+dbo_FACT_MDM_DIGITAL_DETAILS_V                             → FACT_MDM_DIGITAL_DETAILS_V
+dbo_FACT_MDM_EBB_ACP_V                                     → FACT_MDM_EBB_ACP_V
+dbo_FACT_MDM_ECM_CASE_V                                    → FACT_MDM_ECM_CASE_V
+dbo_FACT_MDM_ECM_INTERACTION_V                             → FACT_MDM_ECM_INTERACTION_V
+dbo_FACT_MDM_EDIP_TRANSACTION_HISTORY_V                    → FACT_MDM_EDIP_TRANSACTION_HISTORY_V
+dbo_FACT_MDM_ESL_TICKET_EVALUATION_V                       → FACT_MDM_ESL_TICKET_EVALUATION_V
+dbo_FACT_MDM_EWFM_AGENT_SEGMENT_RPT_V                      → FACT_MDM_EWFM_AGENT_SEGMENT_RPT_V
+dbo_FACT_MDM_I3_INTERACTION_QUERY_PIVOT_V                  → FACT_MDM_I3_INTERACTION_QUERY_PIVOT_V
+dbo_FACT_MDM_LAT_FORECASTINTERVALS_V                       → FACT_MDM_LAT_FORECASTINTERVALS_V
+dbo_FACT_MDM_MYPERFORMANCE_DISTINCT_AGENT_V                → FACT_MDM_MYPERFORMANCE_DISTINCT_AGENT_V
+dbo_FACT_MDM_MYPERFORMANCE_SESSIONS_V                      → FACT_MDM_MYPERFORMANCE_SESSIONS_V
+dbo_FACT_MDM_NAT_ADHERENCE_V                               → FACT_MDM_NAT_ADHERENCE_V
+dbo_FACT_MDM_NCOE_TICKETS_CALLS_ECR_V                      → FACT_MDM_NCOE_TICKETS_CALLS_ECR_V
+dbo_FACT_MDM_NCOE_TICKETS_CR_V                             → FACT_MDM_NCOE_TICKETS_CR_V
+dbo_FACT_MDM_NCOE_TICKETS_ESL_V                            → FACT_MDM_NCOE_TICKETS_ESL_V
+dbo_FACT_MDM_NRDP_ADJUST_V                                 → FACT_MDM_NRDP_ADJUST_V
+dbo_FACT_MDM_NRD_SPRINKLR_MESSAGES_V                       → FACT_MDM_NRD_SPRINKLR_MESSAGES_V
+dbo_FACT_MDM_NUANCE_CHAT_ABANDONED_V                       → FACT_MDM_NUANCE_CHAT_ABANDONED_V
+dbo_FACT_MDM_OUTBOUND_CALLS_V                              → FACT_MDM_OUTBOUND_CALLS_V
+dbo_FACT_MDM_PHONE_LOG_ACTIVITY_AGENT_V                    → FACT_MDM_PHONE_LOG_ACTIVITY_AGENT_V
+dbo_FACT_MDM_SALESCOMP_V                                   → FACT_MDM_SALESCOMP_V
+dbo_FACT_MDM_SOCIAL_EMAIL_DETAIL_V                         → FACT_MDM_SOCIAL_EMAIL_DETAIL_V
+dbo_FACT_MDM_SPRINKLR_AGENT_PERFORMANCEINTERVAL_V          → FACT_MDM_SPRINKLR_AGENT_PERFORMANCEINTERVAL_V
+dbo_FACT_MDM_TECH_FLEX_V                                   → FACT_MDM_TECH_FLEX_V
+dbo_FACT_MDM_TICKET_AUDIT_TRAIL_V                          → FACT_MDM_TICKET_AUDIT_TRAIL_V
+dbo_FACT_MDM_UNIT_OF_WORK_V                                → FACT_MDM_UNIT_OF_WORK_V
+dbo_FACT_MDM_UNIT_OF_WORK_X2_V                             → FACT_MDM_UNIT_OF_WORK_X2_V
+dbo_FACT_MDM_WORKLIST_FALLOUT_V                            → FACT_MDM_WORKLIST_FALLOUT_V
+dbo_FACT_MDM_WORKLIST_TASK_V                               → FACT_MDM_WORKLIST_TASK_V
+dbo_FACT_MDM_X2_COE_RATES_V                                → FACT_MDM_X2_COE_RATES_V
+dbo_FACT_MDM_XI_INTERACTIONS_ORDERS_V                      → FACT_MDM_XI_INTERACTIONS_ORDERS_V
+dbo_FACT_MDM_XMC_DETAIL_V                                  → FACT_MDM_XMC_DETAIL_V
+dbo_FACT_MDM_XM_ADDS_V                                     → FACT_MDM_XM_ADDS_V
+dbo_FACT_MDM_XM_ORDER_TIMELINE_DETAILS_V                   → FACT_MDM_XM_ORDER_TIMELINE_DETAILS_V
+dbo_FACT_MDM_XSR_COMPONENTS_DISTINCT_PERNR                 → FACT_MDM_XSR_PERNR_BY_COMPONENTS_V
+dbo_FACT_MDM_XSR_GSR_XM_MULTILINES_V                       → FACT_MDM_XSR_GSR_XM_MULTILINES_V
+
+nq_AICR                                                    → FACT_MDM_AICR_V
+nq_Agent_Training_Status                                   → DIM_MDM_TRAINING_STATUS_V
+nq_Agent_eShrink                                           → FACT_MDM_AGENT_ESHRINK_V
+nq_Autopay                                                 → FACT_MDM_AUTOPAY_V
+nq_BIW_Engagement_pernr                                    → FACT_MDM_BIW_ENGAGEMENT_PERNR
+nq_COE_Rates                                               → FACT_MDM_COE_RATES_V
+nq_Call_Attributes                                         → DIM_MDM_CALL_ATTRIBUTE_V
+nq_Calls                                                   → FACT_MDM_CALLS_V
+nq_Chats                                                   → FACT_MDM_CHATS_V
+nq_Clv                                                     → DIM_MDM_CLV_ATTRIBUTE_V
+nq_Collection                                              → FACT_MDM_COLLECTION_V
+nq_Cust_Map_interaction_dim                                → DIM_MDM_CUST_MAP_INTERACTON_V
+nq_Dim_Agent_Person_Details                                → DIM_MDM_AGENT_PERSON_DETAILS_V
+nq_Dim_Agent_Supervisor                                    → DIM_MDM_AGENT_SUPERVISOR_V
+nq_Dim_Agent_Tenure                                        → DIM_MDM_AGENT_TENURE_V
+nq_Dim_Customer_Account_Demo                               → DIM_MDM_CUSTOMER_ACCOUNT_DEMO_V
+nq_Dim_Fiscal_Period_Time_Series                           → DIM_MDM_TIME_SERIES_V
+nq_Dim_Payment_Attributes                                  → DIM_MDM_PAYMENTS_ATTRIBUTES_V
+nq_Dim_Speech_Query_Group1                                 → DIM_MDM_SPEECH_QUERY_GROUP1_V
+nq_Dim_Speech_Query_Group2                                 → DIM_MDM_SPEECH_QUERY_GROUP2_V
+nq_Dim_tNPS                                                → DIM_MDM_tNPs_SURVEY_TYPE_V
+nq_Distinct_Pernrs                                         → FACT_MDM_AGENT_COUNT_V
+nq_Einstein_Action                                         → FACT_MDM_EINSTEIN_ACTION_V
+nq_Einstein_Chats                                          → FACT_MDM_EINSTEIN_CHATS_V
+nq_Einstein_ITG_Agg                                        → FACT_MDM_EINSTEIN_ITG_V
+nq_Einstein_Troubleshoot_Dim                               → DIM_MDM_EINSTEIN_TROUBLESHOOT_V
+nq_Fiscal_Calendar                                         → DIM_MDM_FISCAL_CAL_V
+nq_Flex_Device_Activation                                  → FACT_MDM_DEVICE_ACTIVATION_V
+nq_Flex_Device_Activation_All                              → FACT_MDM_DEVICE_ACTIVATION_ALL_V
+nq_IACT_Begin_Counts                                       → FACT_MDM_IACT_BEG_COUNTS_V
+nq_Intrahour_Agent                                         → FACT_MDM_INTRAHOUR_AGENT_V
+nq_LTR_30_Order_TSR30                                      → FACT_MDM_LTR_30_ORDER_TSR_V
+nq_LTR_60                                                  → FACT_MDM_LTR_60_V
+nq_LTR_90                                                  → FACT_MDM_LTR_90_V
+nq_LTR_Beg                                                 → FACT_MDM_LTR_30_V
+nq_LTR_IND                                                 → DIM_MDM_LTR_IND_V
+nq_NBX_Bridge                                              → FACT_MDM_NBX_BRIDGE_V
+nq_NBX_Count                                               → FACT_MDM_NBX_COUNT_V
+nq_NBX_Unique                                              → DIM_MDM_NBX_M2M_V
+nq_NBX_dim                                                 → DIM_MDM_NBX_UNIQUE_v
+nq_NUANCE_LAT                                              → FACT_MDM_NUANCE_LAT_V
+nq_OneTimeCredits                                          → FACT_MDM_ADJ_V
+nq_Order_Type_Dim                                          → DIM_MDM_ORDER_TYPE_V
+nq_Orders                                                  → FACT_MDM_ORDERS_V
+nq_Orders_Cancelled                                        → FACT_MDM_ORDERS_CANCELLED_V
+nq_Orders_Pending                                          → FACT_MDM_ORDERS_PENDING_V
+nq_Orders_ProdCat_57_to_116                                → FACT_MDM_ORDERS_57_TO_116_V
+nq_Orders_XAP                                              → FACT_MDM_ORDERS_XAP_V
+nq_Pending_Pernr_Day_Count                                 → FACT_MDM_ORDERS_PENDING_AGENT_DAY_V
+nq_Pitchs                                                  → FACT_MDM_PITCHES_MOVES_V
+nq_Pre_XAP_Exit                                            → DIM_MDM_XAP_EXIT
+nq_Prodcat_EBB_Dim                                         → DIM_MDM_CUSTOMER_EBB_BULK_V
+nq_Product_Attributes                                      → DIM_MDM_BASE_RGU_V
+nq_Product_Category_Dim                                    → DIM_MDM_XM_PRODUCT_CATEGORY_V
+nq_Product_Order_Type                                      → FACT_MDM_BRIDGE_PRODUCT_ORDER_TYPE_V
+nq_RunRate                                                 → FACT_MDM_RUN_RATE_V
+nq_S4X                                                     → FACT_MDM_S4X_V
+nq_Sentiment_Level_Dim                                     → DIM_MDM_SENTIMENT_QA_V
+nq_Thru_Date                                               → FACT_MDM_THRU_DATE_V
+nq_Trans_Origin_Agent                                      → DIM_MDM_TRANSFER_ORIGIN_AGENT_V
+nq_Trans_Origin_IACT                                       → DIM_MDM_TRANSFER_ORIGIN_IACT_V
+nq_Transfer_Metrics                                        → FACT_MDM_TRANS_METRICS_V
+nq_Truck_Roll                                              → FACT_MDM_TRUCK_ROLL_V
+nq_XAP_Exit                                                → FACT_MDM_XAP_EXIT_V
+nq_XMLinePending_Pernr_Day_Count                           → FACT_MDM_XMLINES_PENDING_AGENT_DAY_V
+nq_XMLines_Pending                                         → FACT_MDM_XMLINES_PENDING_V
+nq_XM_Activation                                           → FACT_MDM_XM_ACTIVATION_V
+nq_XM_Contribution                                         → FACT_MDM_XM_CONTRIBUTION_V
+nq_XM_Line_detail                                          → FACT_MDM_XM_LINE_DETAIL_V
+nq_XM_Line_detail_Dim                                      → DIM_MDM_XM_LINE_DETAIL_ATTRIBUTE_V
+nq_XSR                                                     → FACT_MDM_XSR_GSR_V
+nq_agent_day_count                                         → FACT_MDM_AGENT_INTERACTION_DAY_COUNT_V
+nq_agentdaycount_nuance_lat                                → FACT_MDM_NUANCE_LAT_AgentCount_V
+nq_biw_distinct_pernrs                                     → FACT_MDM_BIW_XCHANGE_PERNR
+nq_biw_engagement                                          → FACT_MDM_BIW_ENGAGEMENT_V
+nq_biw_engagement_dim                                      → DIM_MDM_BIW_ENGAGEMENT_V
+nq_biw_xchange                                             → FACT_MDM_BIW_XCHANGE_V
+nq_dim_xsr_components                                      → DIM_MDM_XSR_COMPONENT_V
+nq_enps                                                    → FACT_MDM_ENPS_V
+nq_enps_dim                                                → DIM_MDM_ENPS_V
+nq_parameters                                              → DIM_MDM_PARAMETERS_V
+nq_sales_track                                             → FACT_MDM_SALES_TRACK_V
+nq_tNPS                                                    → FACT_MDM_TNPS_V
+nq_tNPS_Restate                                            → FACT_MDM_TNPS_RESTATE_V
+nq_tenure                                                  → DIM_MDM_CUST_TENURE_V
+
+
+NAMING PATTERN ANALYSIS:
+================================================================================
+
+DSV Prefix Patterns:
+--------------------
+dbo_*        : 80 objects (direct references to dbo schema tables)
+nq_*         : 82 objects (named query abstractions)
+NQ_*         : 2 objects (uppercase named queries)
+NDW_*        : 1 object (specific schema reference)
+Total: 165 DSV objects
+
+Database Object Types:
+----------------------
+DIM_MDM_*    : Dimension tables (67 objects)
+FACT_MDM_*   : Fact tables (117 objects)
+Dim_MDM_*    : Mixed-case dimensions (2 objects - legacy naming)
+Total: 185+ unique database objects
+
+Note: Some database tables are referenced by multiple DSV objects (e.g., 
+DIM_MDM_ENPS_V is referenced by both nq_enps and nq_enps_dim).
+
+
+KEY OBSERVATIONS:
+================================================================================
+
+1. NAME MISMATCHES:
+   Several DSV objects have significantly different database table names:
+   - nq_Dim_tNPS → DIM_MDM_tNPs_SURVEY_TYPE_V
+   - nq_Pre_XAP_Exit → DIM_MDM_XAP_EXIT
+   - dbo_DIM_MDM_COACH_SESSION_CHARACTERISTICS_V → DIM_MDM_COACH_SESSION_CHARS_V
+   - dbo_FACT_MDM_AGENT_PERNR_IACT_COUNT_V → FACT_MDM_AGENT_IACT_DISTINCTCOUNT_V
+
+2. CASE SENSITIVITY:
+   Two tables use mixed case: Dim_MDM_CALL_SEGMENT_CODES_V, Dim_MDM_UUI_CONTEXT_CODES_V
+   One table has lowercase suffix: DIM_MDM_NBX_UNIQUE_v
+   Snowflake migration must handle case sensitivity carefully.
+
+3. DSV ABSTRACTION VALUE:
+   The DSV layer provides cleaner naming:
+   - nq_Calls is more readable than FACT_MDM_CALLS_V
+   - nq_Fiscal_Calendar vs DIM_MDM_FISCAL_CAL_V
+   Consider preserving this layer in Snowflake via views.
+
+4. DUPLICATE MAPPINGS:
+   Some database tables serve multiple purposes in the DSV:
+   - DIM_MDM_ENPS_V referenced by both nq_enps and nq_enps_dim
+   - This indicates different usage patterns in the cube
+
+5. ORDERS TABLE FAMILY:
+   Multiple order-related tables with specific purposes:
+   - FACT_MDM_ORDERS_V (main)
+   - FACT_MDM_ORDERS_1_TO_56_V (wide format part 1)
+   - FACT_MDM_ORDERS_57_TO_116_V (wide format part 2)
+   - FACT_MDM_ORDERS_CANCELLED_V
+   - FACT_MDM_ORDERS_PENDING_V
+   - FACT_MDM_ORDERS_XAP_V
+   - FACT_MDM_ORDERS_PENDING_AGENT_DAY_V
+
+
+MIGRATION RECOMMENDATIONS:
+================================================================================
+
+1. PRESERVE DSV LAYER IN SNOWFLAKE:
+   Create views using the "nq_*" naming pattern that point to the underlying
+   DIM_MDM_* and FACT_MDM_* tables. This maintains compatibility if any external
+   processes reference DSV names.
+
+2. HANDLE CASE SENSITIVITY:
+   Snowflake is case-insensitive by default but preserves case in metadata.
+   Standardize on UPPERCASE for all object names to avoid confusion, except
+   where business requirements dictate otherwise.
+
+3. PARTITION STRATEGY:
+   The following tables are partitioned and may need special handling:
+   - FACT_MDM_CALLS_V (36 monthly partitions)
+   - FACT_MDM_I3_INTERACTION_QUERY_PIVOT_V (36 monthly partitions)
+   - FACT_MDM_ECM_CASE_V (24 monthly partitions)
+
+4. VIEW DEFINITIONS:
+   All "_V" suffix tables are likely views. Extract and migrate view logic,
+   translating T-SQL to Snowflake SQL syntax as needed.
+
+5. SCHEMA ORGANIZATION:
+   Consider Snowflake schema structure:
+   - Schema: DIM for all DIM_MDM_* tables
+   - Schema: FACT for all FACT_MDM_* tables
+   - Schema: DSV for nq_* abstraction views
+   - Schema: CUBE for cube-specific objects
+
+
+VALIDATION CHECKLIST:
+================================================================================
+
+[ ] Verify all 185 database tables exist in source SQL Server
+[ ] Extract DDL for all tables and views
+[ ] Document dependencies between tables (foreign keys, view references)
+[ ] Size each table for storage and performance planning
+[ ] Identify indexes, constraints, and triggers
+[ ] Test view SQL syntax conversion to Snowflake
+[ ] Validate data types compatibility (SQL Server → Snowflake)
+[ ] Plan for partitioned table migration strategy
+[ ] Create Snowflake schemas (DIM, FACT, DSV)
+[ ] Build DSV abstraction layer views in Snowflake
+[ ] Test cube connectivity to Snowflake after migration
+[ ] Validate query performance and adjust clustering keys
+[ ] Document any name transformations for future reference
+

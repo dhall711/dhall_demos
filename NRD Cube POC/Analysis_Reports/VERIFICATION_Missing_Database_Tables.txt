@@ -1,0 +1,286 @@
+CUBE SOURCE VERIFICATION REPORT - MISSING DATABASE TABLES
+================================================================================
+Generated: October 9, 2025
+Source: Agent_Performance_MDM.xmla Analysis
+
+EXECUTIVE SUMMARY:
+--------------------------------------------------------------------------------
+The original cube_source_bindings.txt documentation captured the Data Source View 
+(DSV) object names (TableIDs) used in cube dimensions and measure groups. However, 
+these DSV objects are ABSTRACTIONS that map to actual underlying database tables.
+
+CRITICAL FINDING: 99 additional underlying database tables/views were discovered 
+that are NOT in the original documented list. These are the ACTUAL SQL Server 
+database objects that must be migrated to Snowflake.
+
+ANALYSIS DETAILS:
+--------------------------------------------------------------------------------
+- DSV Object Names (TableIDs) Documented: 165
+- Actual Underlying Database Tables: 185
+- Missing from Documentation: 99
+- Some DSV objects map to the same database table
+
+KEY UNDERSTANDING:
+The cube uses a two-layer architecture:
+1. DSV Layer: Logical names used in cube bindings (e.g., "nq_Calls")
+2. Database Layer: Physical tables/views (e.g., "FACT_MDM_CALLS_V")
+
+The original documentation only captured Layer 1, but migration requires Layer 2.
+
+
+COMPLETE LIST OF MISSING UNDERLYING DATABASE TABLES:
+================================================================================
+
+DIMENSION TABLES (40):
+--------------------------------------------------------------------------------
+1.  DIM_MDM_AGENT_PERSON_DETAILS_V
+2.  DIM_MDM_AGENT_SKILL_LOCATION_V
+3.  DIM_MDM_AGENT_SUPERVISOR_V
+4.  DIM_MDM_AGENT_TENURE_V
+5.  DIM_MDM_AUDIT_TRAIL_CHARACTERISTICS_V
+6.  DIM_MDM_BASE_RGU_V
+7.  DIM_MDM_BIW_ENGAGEMENT_V
+8.  DIM_MDM_CALL_ATTRIBUTE_V
+9.  DIM_MDM_CLV_ATTRIBUTE_V
+10. DIM_MDM_COACH_SESSION_CHARS_V
+11. DIM_MDM_COACH_SUPERVISOR_V
+12. DIM_MDM_CUSTOMER_ACCOUNT_DEMO_V
+13. DIM_MDM_CUSTOMER_ACCOUNT_V
+14. DIM_MDM_CUSTOMER_EBB_BULK_V
+15. DIM_MDM_CUST_MAP_INTERACTON_V
+16. DIM_MDM_CUST_TENURE_V
+17. DIM_MDM_EBI_XLR8_SCORE_V
+18. DIM_MDM_EINSTEIN_TROUBLESHOOT_V
+19. DIM_MDM_ENPS_V
+20. DIM_MDM_FISCAL_CAL_V
+21. DIM_MDM_LTR_IND_V
+22. DIM_MDM_NBX_M2M_V
+23. DIM_MDM_NBX_UNIQUE_v
+24. DIM_MDM_ORDER_TYPE_V
+25. DIM_MDM_PARAMETERS_V
+26. DIM_MDM_PAYMENTS_ATTRIBUTES_V
+27. DIM_MDM_SENTIMENT_QA_V
+28. DIM_MDM_SPEECH_QUERY_GROUP1_V
+29. DIM_MDM_SPEECH_QUERY_GROUP2_V
+30. DIM_MDM_TIME_SERIES_V
+31. DIM_MDM_TRAINING_STATUS_V
+32. DIM_MDM_TRANSFER_ORIGIN_AGENT_V
+33. DIM_MDM_TRANSFER_ORIGIN_IACT_V
+34. DIM_MDM_XAP_EXIT
+35. DIM_MDM_XM_LINE_DETAIL_ATTRIBUTE_V
+36. DIM_MDM_XM_PRODUCT_CATEGORY_V
+37. DIM_MDM_XSR_COMPONENT_V
+38. DIM_MDM_tNPs_SURVEY_TYPE_V
+39. Dim_MDM_CALL_SEGMENT_CODES_V
+40. Dim_MDM_UUI_CONTEXT_CODES_V
+
+
+FACT TABLES (59):
+--------------------------------------------------------------------------------
+1.  FACT_MDM_ADJ_V
+2.  FACT_MDM_AGENT_COUNT_V
+3.  FACT_MDM_AGENT_ESHRINK_V
+4.  FACT_MDM_AGENT_IACT_DISTINCTCOUNT_V
+5.  FACT_MDM_AGENT_INTERACTION_DAY_COUNT_V
+6.  FACT_MDM_AGENT_ORDER_DISTINCTCOUNT_V
+7.  FACT_MDM_AICR_V
+8.  FACT_MDM_AUTOPAY_V
+9.  FACT_MDM_BIW_ENGAGEMENT_PERNR
+10. FACT_MDM_BIW_ENGAGEMENT_V
+11. FACT_MDM_BIW_XCHANGE_PERNR
+12. FACT_MDM_BIW_XCHANGE_V
+13. FACT_MDM_BRIDGE_PRODUCT_ORDER_TYPE_V
+14. FACT_MDM_CALLS_V
+15. FACT_MDM_CHATS_V
+16. FACT_MDM_COE_RATES_V
+17. FACT_MDM_COLLECTION_V
+18. FACT_MDM_DEVICE_ACTIVATION_ALL_V
+19. FACT_MDM_DEVICE_ACTIVATION_V
+20. FACT_MDM_EINSTEIN_ACTION_V
+21. FACT_MDM_EINSTEIN_CHATS_V
+22. FACT_MDM_EINSTEIN_ITG_V
+23. FACT_MDM_ENPS_V
+24. FACT_MDM_IACT_BEG_COUNTS_V
+25. FACT_MDM_INTRAHOUR_AGENT_V
+26. FACT_MDM_LTR_30_ORDER_TSR_V
+27. FACT_MDM_LTR_30_V
+28. FACT_MDM_LTR_60_V
+29. FACT_MDM_LTR_90_V
+30. FACT_MDM_NBX_BRIDGE_V
+31. FACT_MDM_NBX_COUNT_V
+32. FACT_MDM_NUANCE_LAT_AgentCount_V
+33. FACT_MDM_NUANCE_LAT_V
+34. FACT_MDM_ORDERS_1_TO_56_V
+35. FACT_MDM_ORDERS_57_TO_116_V
+36. FACT_MDM_ORDERS_CANCELLED_V
+37. FACT_MDM_ORDERS_PENDING_AGENT_DAY_V
+38. FACT_MDM_ORDERS_PENDING_V
+39. FACT_MDM_ORDERS_V
+40. FACT_MDM_ORDERS_XAP_V
+41. FACT_MDM_PITCHES_MOVES_V
+42. FACT_MDM_RUN_RATE_V
+43. FACT_MDM_S4X_V
+44. FACT_MDM_SALES_TRACK_ORDERCMPLTN_V
+45. FACT_MDM_SALES_TRACK_V
+46. FACT_MDM_THRU_DATE_V
+47. FACT_MDM_TNPS_RESTATE_V
+48. FACT_MDM_TNPS_V
+49. FACT_MDM_TRANS_METRICS_V
+50. FACT_MDM_TRUCK_ROLL_V
+51. FACT_MDM_XAP_EXIT_V
+52. FACT_MDM_XMLINES_PENDING_AGENT_DAY_V
+53. FACT_MDM_XMLINES_PENDING_V
+54. FACT_MDM_XM_ACTIVATION_V
+55. FACT_MDM_XM_CONTRIBUTION_V
+56. FACT_MDM_XM_LINE_DETAIL_V
+57. FACT_MDM_XSR_BY_COMPONENT_V
+58. FACT_MDM_XSR_GSR_V
+59. FACT_MDM_XSR_PERNR_BY_COMPONENTS_V
+
+
+EXAMPLE DSV-TO-DATABASE MAPPINGS:
+================================================================================
+Shows how DSV object names (used in cube bindings) map to actual database tables:
+
+DSV Object Name                    → Actual Database Table/View
+--------------------------------------------------------------------------------
+nq_Calls                           → FACT_MDM_CALLS_V
+nq_LTR_Beg                         → FACT_MDM_LTR_30_V
+nq_LTR_60                          → FACT_MDM_LTR_60_V
+nq_LTR_90                          → FACT_MDM_LTR_90_V
+nq_Chats                           → FACT_MDM_CHATS_V
+nq_COE_Rates                       → FACT_MDM_COE_RATES_V
+nq_Product_Attributes              → DIM_MDM_BASE_RGU_V
+nq_Order_Type_Dim                  → DIM_MDM_ORDER_TYPE_V
+nq_Product_Order_Type              → FACT_MDM_BRIDGE_PRODUCT_ORDER_TYPE_V
+nq_OneTimeCredits                  → FACT_MDM_ADJ_V
+nq_Distinct_Pernrs                 → FACT_MDM_AGENT_COUNT_V
+nq_Pitchs                          → FACT_MDM_PITCHES_MOVES_V
+NQ_CUSTOMER_ACCOUNT_DIM            → DIM_MDM_CUSTOMER_ACCOUNT_V
+nq_AICR                            → FACT_MDM_AICR_V
+nq_tenure                          → DIM_MDM_CUST_TENURE_V
+nq_parameters                      → DIM_MDM_PARAMETERS_V
+nq_Fiscal_Calendar                 → DIM_MDM_FISCAL_CAL_V
+nq_Clv                             → DIM_MDM_CLV_ATTRIBUTE_V
+nq_Call_Attributes                 → DIM_MDM_CALL_ATTRIBUTE_V
+nq_Orders                          → FACT_MDM_ORDERS_V
+NQ_ORDERS_WIDE                     → FACT_MDM_ORDERS_1_TO_56_V
+nq_Orders_ProdCat_57_to_116        → FACT_MDM_ORDERS_57_TO_116_V
+nq_Orders_Cancelled                → FACT_MDM_ORDERS_CANCELLED_V
+nq_Orders_Pending                  → FACT_MDM_ORDERS_PENDING_V
+nq_Orders_XAP                      → FACT_MDM_ORDERS_XAP_V
+NDW_NRDP_VIEWS_NRDP_AGENT...      → DIM_MDM_AGENT_SKILL_LOCATION_V
+
+
+PARTITIONED TABLES FOUND:
+================================================================================
+The cube uses partitioning for performance. Two tables are partitioned by 
+FISCAL_PERIOD_INT with separate SQL queries for each month:
+
+1. FACT_MDM_CALLS_V
+   - 36 partitions (Jan 2023 - Dec 2025)
+   - Filter: WHERE FISCAL_PERIOD_INT = [period]
+   - Periods: 202301-202512
+
+2. FACT_MDM_I3_INTERACTION_QUERY_PIVOT_V  
+   - 36 partitions (Jan 2023 - Dec 2025)
+   - Filter: WHERE FISCAL_PERIOD_INT = [period]
+   - Periods: 202301-202512
+
+3. FACT_MDM_ECM_CASE_V
+   - 24 partitions (Jan 2024 - Dec 2025)
+   - Filter: WHERE FISCAL_PERIOD_INT = [period]
+   - Periods: 202401-202512
+
+⚠️  MIGRATION NOTE: These partitioning strategies must be replicated in Snowflake
+    using clustering keys or separate table structures.
+
+
+VERIFICATION STATUS:
+================================================================================
+
+✓ All 165 DSV TableID references are documented in cube_source_bindings.txt
+✓ No calculated members, KPIs, or MDX scripts reference additional objects
+✓ All dimension and measure group bindings have been captured
+
+✗ 99 underlying database tables were missing from original documentation
+✗ Partitioning strategy for 3 tables was not previously documented
+✗ DSV-to-Database mapping layer was not captured
+
+
+RECOMMENDATIONS FOR SNOWFLAKE MIGRATION:
+================================================================================
+
+1. COMPLETE TABLE INVENTORY:
+   The migration must include ALL 185 unique database tables (not just the 
+   165 DSV object names). Use the complete list in this report.
+
+2. MAINTAIN DSV LAYER:
+   Consider recreating the DSV abstraction layer in Snowflake using:
+   - Views that maintain the original "nq_*" naming conventions
+   - Schemas to organize DIM_MDM_* and FACT_MDM_* separately
+   - This preserves the logical architecture and simplifies migration
+
+3. PARTITION STRATEGY:
+   For FACT_MDM_CALLS_V, FACT_MDM_I3_INTERACTION_QUERY_PIVOT_V, and 
+   FACT_MDM_ECM_CASE_V:
+   - Use Snowflake clustering keys on FISCAL_PERIOD_INT column
+   - Or maintain separate monthly tables if partitioning is critical
+   - Consider time-travel features for historical data access
+
+4. DATA SIZE ANALYSIS:
+   The 99 newly discovered tables need to be:
+   - Sized for storage planning
+   - Analyzed for dependencies
+   - Prioritized for migration phases
+   - Validated against P1_APM base table lists
+
+5. VIEW DEPENDENCIES:
+   Many tables are views (suffix "_V"). The migration must:
+   - Extract view definitions from SQL Server
+   - Translate T-SQL syntax to Snowflake SQL
+   - Validate view logic and performance
+
+
+NEXT STEPS:
+================================================================================
+
+[ ] Update cube_source_bindings.txt with complete DSV-to-Database mappings
+[ ] Verify all 99 new tables exist in SQL Server source system
+[ ] Extract DDL and view definitions for all 185 tables
+[ ] Cross-reference with P1_APM_NRDP base table lists for completeness
+[ ] Size analysis for the 99 newly discovered tables
+[ ] Dependency analysis to identify table join relationships
+[ ] Create comprehensive migration checklist with all 185 objects
+[ ] Update migration scope documents with new table count
+[ ] Design Snowflake schema to accommodate DSV abstraction layer
+
+
+TECHNICAL NOTES:
+================================================================================
+
+Data Source View Details:
+- DSV ID: "NRDP DSV"
+- All cube dimensions and measure groups reference this single DSV
+- DSV acts as semantic layer between cube and database
+
+XMLA Structure:
+- <TableID> tags reference DSV object names
+- msprop:DbTableName attributes reveal actual database tables
+- Some DSV objects have "friendly names" different from both TableID and DbTableName
+
+Case Sensitivity:
+- Most tables use uppercase naming
+- Two exceptions found: "Dim_MDM_CALL_SEGMENT_CODES_V" and "Dim_MDM_UUI_CONTEXT_CODES_V"
+- One table has lowercase 'v' suffix: "DIM_MDM_NBX_UNIQUE_v"
+
+
+CONCLUSION:
+================================================================================
+The original cube_source_bindings.txt documentation was correct but incomplete.
+It captured the cube's logical layer (DSV objects) but missed the physical layer
+(actual database tables). This verification has identified 99 additional database
+objects that are CRITICAL for a successful Snowflake migration.
+
+All 185 underlying database tables must be included in the migration scope.
+
