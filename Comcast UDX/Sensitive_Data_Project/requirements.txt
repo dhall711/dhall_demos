@@ -1,0 +1,45 @@
+# Core Streamlit and Data Processing
+streamlit>=1.28.0
+pandas>=1.5.0
+numpy>=1.21.0
+
+# Snowflake Connectivity
+snowflake-connector-python>=3.0.0
+snowflake-snowpark-python>=1.0.0
+
+# Data Validation and Processing
+pydantic>=1.10.0
+typing-extensions>=4.0.0
+
+# Utilities
+python-dateutil>=2.8.0
+pytz>=2022.1
+
+# Development and Testing (Optional)
+pytest>=7.0.0
+black>=22.0.0
+flake8>=5.0.0
+
+# Security and Encryption
+cryptography>=3.4.8
+
+# JSON handling for configuration
+orjson>=3.8.0
+
+# Regular expressions and pattern matching
+regex>=2022.10.0
+
+# For enhanced error handling and logging
+rich>=12.0.0
+
+# Optional: For advanced data analysis
+scipy>=1.9.0
+
+# For file operations and utilities
+pathlib2>=2.3.7
+
+# Configuration file handling
+toml>=0.10.0
+
+# Manager Dashboard Dependencies
+plotly>=5.15.0 

@@ -1,0 +1,224 @@
+﻿Based on your request, here is a detailed breakdown of the requirements for a solution that uses NLP models to detect sensitive data in Snowflake and recommend masking strategies.
+This use case can be broken down into three primary components, each with its own set of detailed requirements:
+1. Data Ingestion & Profiling: The process of securely and efficiently extracting the necessary metadata and sample data from Snowflake.
+2. NLP-based Classification Engine: The core logic that analyzes the data and makes recommendations.
+3. Snowflake Integration & Recommendation Layer: The component that translates the recommendations into actionable Snowflake commands and provides a user interface for governance.
+________________
+
+
+1. Data Ingestion & Profiling Requirements
+
+
+The system must be able to securely connect to a Snowflake account and retrieve the specific data points needed for analysis without moving large volumes of sensitive data.
+* Connection & Authentication:
+   * Support for secure Snowflake connection methods (e.g., OAuth, Key Pair Authentication, or username/password).
+   * The service account or role used must have the necessary SELECT privileges on the target databases and schemas, as well as USAGE on the databases and schemas.1 A least-privilege approach is recommended.
+
+   * Data Metadata Extraction:
+   * The system must be able to query Snowflake's Information Schema (SNOWFLAKE.ACCOUNT_USAGE.COLUMNS) to retrieve a full list of columns for a specified database or schema.
+   * For each column, the following metadata should be extracted:
+   * TABLE_SCHEMA
+   * TABLE_NAME
+   * COLUMN_NAME
+   * DATA_TYPE
+   * COLUMN_COMMENT (This is critical for providing context to the NLP model).
+   * Any associated tags (e.g., PII, FINANCIAL, GDPR_SENSITIVE).
+   * Sample Data Extraction:
+   * To accurately detect sensitive data, the system must extract a small, representative sample of values for each column.
+   * The system should execute a query like SELECT <column_name> FROM <table> LIMIT 100.
+   * For efficiency and to minimize data transfer, the sample size should be configurable. A small sample (e.g., 50-100 rows) is often sufficient for NLP models to infer data type patterns.
+   * Schema & Table Selection:
+   * Provide a mechanism for users to specify which databases, schemas, or even individual tables to scan.
+   * The system should support a "scheduled scan" feature that can automatically run on new or updated data sources.
+
+
+2. NLP-based Classification Engine Requirements
+
+
+This is the intellectual core of the solution. It must be a robust engine that can accurately identify different types of sensitive data. A hybrid approach combining multiple techniques is required for high accuracy.
+   * Core NLP Capabilities:
+   * Named Entity Recognition (NER): Use a pre-trained or fine-tuned NER model to recognize entities like PERSON names, ORGANIZATION names, and ADDRESSES within the sample data.
+   * Regular Expressions (Regex): Implement a comprehensive library of regex patterns to detect data with a specific, predictable structure, such as:
+   * Social Security Numbers (SSNs)
+   * Credit Card Numbers (CCNs)
+   * Email Addresses
+   * Phone Numbers
+   * Passport/ID numbers
+   * Dictionary/Keyword Matching: Use domain-specific dictionaries or word lists to identify sensitive keywords in COLUMN_NAME or COLUMN_COMMENT, such as ssn, email, first_name, dob (date of birth), pci, etc.
+   * Vector Embeddings & Similarity: For unstructured data, generate vector embeddings of column values and metadata to compare against known sensitive data patterns.
+   * Input Data for Analysis:
+   * The NLP model must be able to simultaneously process and weigh the following inputs for a given column:
+   * Column Name: The primary indicator (e.g., email_address).
+   * Sample Values: The actual content (e.g., john.doe@example.com).
+   * Metadata: The DATA_TYPE and COLUMN_COMMENT. For example, VARCHAR with a comment "Customer's email address" provides strong evidence.
+   * Output & Confidence Scoring:
+   * The engine must output a structured result for each scanned column.
+   * Classification: A clear, standardized classification tag (e.g., PII_EMAIL, PII_SSN, PII_PERSON_NAME, FINANCIAL_CC).
+   * Confidence Score: A numerical score (e.g., 0-1) indicating the model's confidence in its classification. This is critical for filtering and prioritizing recommendations.
+   * Evidence/Rationale: Provide a brief explanation of why the classification was made (e.g., "High confidence due to email in column name and regex match on sample values.").
+   * Customization & Model Training:
+   * Allow users to define and add custom data types and regex patterns for proprietary or industry-specific sensitive data (e.g., an internal employee ID format).
+   * The system should be able to learn from user-approved recommendations to improve its accuracy over time.
+
+
+3. Snowflake Integration & Recommendation Layer
+
+
+This component connects the NLP analysis to Snowflake's governance capabilities, making the process of applying policies seamless.
+   * Recommendation Logic:
+   * Define a mapping from the NLP classification to a specific Snowflake masking policy or tokenization strategy.
+   * Strategy Mapping Examples:
+   * PII_EMAIL → Recommend applying a policy that uses REGEXP_REPLACE to mask the local part of the email.2
+
+   * PII_SSN → Recommend a policy that shows only the last four digits using a SUBSTR function.
+   * FINANCIAL_CC → Recommend a more complex policy that uses an EXTERNAL FUNCTION for tokenization.
+      * User Interface & Workflow:
+      * Dashboard: A web-based dashboard for data governance teams to view and manage recommendations.
+      * Review & Approval: The dashboard should display the list of detected sensitive columns with the NLP classification, confidence score, and the recommended masking strategy.
+      * Bulk Actions: Allow users to approve, reject, or modify multiple recommendations at once.
+      * Policy Management: Provide a UI to define and manage the mapping between data classifications and masking policy templates.
+      * Automated Policy Generation & Application:
+      * When a user approves a recommendation, the system must be able to programmatically generate the correct Snowflake SQL commands.
+      * The system should generate a CREATE MASKING POLICY statement (if a new policy is needed) and an ALTER TABLE...ALTER COLUMN...SET MASKING POLICY statement.
+      * The generated SQL should be transparent to the user and can be either automatically executed by the system (with proper security controls) or provided to the user for manual execution.
+
+
+Cross-Cutting Requirements
+
+
+      * Security:
+      * All Snowflake credentials must be stored securely (e.g., in a secret manager).3
+
+      * The service should be designed with a minimal attack surface and adhere to secure coding practices.
+         * Performance & Scalability:
+         * The solution should be able to scan thousands of tables efficiently.
+         * The profiling process should be non-intrusive and have a minimal impact on Snowflake's performance.
+         * Monitoring & Auditing:
+         * All actions, including scans, recommendations, and policy applications, should be logged for auditing purposes.
+         * The system should track the history of applied masking policies for each column.
+
+
+Cursor Prompts for Streamlit App
+
+
+Here are a series of cursor prompts to help you build a Streamlit on Snowflake application for sensitive data detection and masking recommendations, based on the detailed requirements you provided.
+Each prompt focuses on a specific part of the application's development, allowing you to build it incrementally.
+________________
+
+
+Cursor Prompt 1: Initial Streamlit App Setup and Snowflake Connection
+
+Create a basic Streamlit on Snowflake application.
+1.  Set the page title to "Snowflake Sensitive Data Discovery & Masking".
+2.  Establish a connection to Snowflake using `st.connection('snowflake')`.
+3.  Add a simple `st.write("Connected to Snowflake!")` to confirm the connection.
+4.  Include necessary imports: `streamlit as st`, `pandas as pd`, `re`.
+5.  Use `st.cache_data` for functions that fetch data from Snowflake to improve performance.
+
+
+
+________________
+Cursor Prompt 2: Fetching Database, Schema, and Table Metadata
+
+Enhance the Streamlit app to allow users to select a database and schema.
+1.  Create a cached function `get_databases()` that queries `INFORMATION_SCHEMA.DATABASES` and returns a list of database names.
+2.  Create a cached function `get_schemas(database_name)` that queries `INFORMATION_SCHEMA.SCHEMATA` for the selected database and returns a list of schema names.
+3.  Create a cached function `get_tables(database_name, schema_name)` that queries `INFORMATION_SCHEMA.TABLES` for the selected database and schema, returning a list of table names.
+4.  In the Streamlit UI, add `st.selectbox` widgets for users to select a database, then a schema based on the selected database, and finally a multi-select for tables within the chosen schema.
+5.  Display the selected items using `st.write` for verification.
+
+
+
+________________
+Cursor Prompt 3: Fetching Column Metadata and Sample Data
+
+Now, implement the data profiling step to get column details and sample values.
+1.  Create a cached function `get_column_metadata(database, schema, table)` that queries `INFORMATION_SCHEMA.COLUMNS` for the specified table and returns a DataFrame with `COLUMN_NAME`, `DATA_TYPE`, and `COMMENT`.
+2.  Create a cached function `get_sample_data(database, schema, table, column_name, limit=100)` that executes a `SELECT` query to get sample values for a given column. Handle potential errors if the column doesn't exist or is inaccessible.
+3.  In the main app logic, iterate through the selected tables and their columns. Call these functions to collect metadata and sample data.
+4.  Store the collected information in a suitable data structure (e.g., a list of dictionaries, where each dictionary represents a column and contains its metadata and sample values).
+5.  Display a progress spinner (`st.spinner`) while data is being fetched.
+
+
+
+________________
+Cursor Prompt 4: Placeholder NLP-based Sensitive Data Detection Logic
+
+Develop a placeholder function for sensitive data detection. This function will simulate NLP model output using simple rules.
+1.  Define a Python function `detect_sensitive_data(column_name, data_type, column_comment, sample_values)` that returns a tuple: `(is_sensitive: bool, sensitive_type: str, confidence: float, rationale: str)`.
+2.  Inside this function, implement basic detection rules:
+    * **SSN:** If `column_name` contains "ssn" (case-insensitive) OR if `sample_values` contain a regex match for `^\d{3}-\d{2}-\d{4}$` or `^\d{9}$`. Set `sensitive_type` to "PII_SSN" and `confidence` based on the match (e.g., 0.9 for both, 0.7 for just name match).
+    * **Email:** If `column_name` contains "email" OR if `sample_values` contain a regex match for a common email pattern. Set `sensitive_type` to "PII_EMAIL".
+    * **Name:** If `column_name` contains "name" (e.g., "first_name", "last_name", "full_name"). Set `sensitive_type` to "PII_PERSON_NAME".
+    * **Credit Card:** If `column_name` contains "credit_card" or "cc" OR if `sample_values` contain a regex match for a 16-digit number (simple, not Luhn check). Set `sensitive_type` to "FINANCIAL_CC".
+3.  For other cases, return `(False, None, 0.0, "Not detected as sensitive by basic rules")`.
+4.  Integrate this function into your data processing loop from Prompt 3. Add the detection results to your column data structure.
+
+
+
+________________
+Cursor Prompt 5: Displaying Detected Sensitive Data in Streamlit UI
+
+Present the detected sensitive data in an organized and interactive way in the Streamlit UI.
+1.  Filter the collected column data to show only columns identified as sensitive.
+2.  Display these sensitive columns in a `st.dataframe`, including columns for `Table`, `Column Name`, `Data Type`, `Sensitive Type`, `Confidence`, and `Rationale`.
+3.  Add `st.expander` elements for each sensitive column to optionally display its `COLUMN_COMMENT` and `Sample Values` for detailed review.
+4.  Include a checkbox next to each sensitive column in the DataFrame or expander, allowing users to select which columns they want to apply masking policies to.
+
+
+
+________________
+Cursor Prompt 6: Masking Strategy Recommendation Logic
+
+Implement the logic to recommend specific Snowflake Dynamic Data Masking strategies based on the detected sensitive type.
+1.  Define a Python dictionary or function that maps `sensitive_type` (e.g., "PII_SSN", "PII_EMAIL") to a recommended masking policy SQL snippet.
+    * For "PII_SSN": `CASE WHEN CURRENT_ROLE() IN ('ANALYST_ROLE') THEN VAL ELSE '***-**-' || SUBSTR(VAL, 8, 4) END` (adjust role as needed).
+    * For "PII_EMAIL": `CASE WHEN CURRENT_ROLE() IN ('ADMIN_ROLE') THEN VAL ELSE REGEXP_REPLACE(VAL, '^([^@]+)@(.+)$', '****@\\2') END`.
+    * For "PII_PERSON_NAME": `CASE WHEN CURRENT_ROLE() IN ('HR_ROLE') THEN VAL ELSE '****' END`.
+    * For "FINANCIAL_CC": `CASE WHEN CURRENT_ROLE() IN ('FINANCE_ROLE') THEN VAL ELSE '************' || SUBSTR(VAL, 13, 4) END`.
+2.  Add a new field to your column data structure (e.g., `recommended_masking_sql`) and populate it using this mapping.
+3.  Display this recommended SQL snippet in the Streamlit UI alongside the sensitive column details, perhaps within the `st.expander`.
+
+
+
+________________
+Cursor Prompt 7: Generating Snowflake DDM Policy SQL
+
+Create the functionality to generate the full Snowflake DDM policy SQL statements for selected columns.
+1.  When the user selects columns for masking, generate two types of SQL statements:
+    * `CREATE OR REPLACE MASKING POLICY <policy_name> AS (val <data_type>) RETURNS <data_type> -> <recommended_masking_sql>;`
+        * Ensure `policy_name` is unique (e.g., `mask_<sensitive_type>_<column_name_hash>`).
+        * Use the actual `DATA_TYPE` from the column metadata.
+    * `ALTER TABLE <database>.<schema>.<table_name> MODIFY COLUMN <column_name> SET MASKING POLICY <policy_name>;`
+2.  Group the `CREATE OR REPLACE MASKING POLICY` statements by `sensitive_type` to avoid creating duplicate policies if multiple columns use the same masking logic.
+3.  Display the generated SQL in a `st.text_area` for review, with a clear label like "Generated Snowflake DDM Policies (Review Before Applying)".
+
+
+
+________________
+Cursor Prompt 8: UI for Reviewing and Applying Policies
+
+Add interactive elements to allow users to review and apply the generated DDM policies to Snowflake.
+1.  Below the `st.text_area` showing the generated SQL, add a `st.button("Apply Selected Policies to Snowflake")`.
+2.  When this button is clicked:
+    * Use `st.spinner` to indicate that policies are being applied.
+    * Execute each generated SQL statement using the Snowflake connection (`st.connection().cursor().execute(...)`).
+    * Implement basic error handling: if a SQL execution fails, catch the exception and display an `st.error` message with the error details. Otherwise, display an `st.success` message.
+    * Consider prompting the user with a confirmation dialog (using Streamlit components, not `alert()`) before applying, especially for production environments.
+3.  Add a feature to clear selections or reset the app state after policies are applied.
+
+
+
+________________
+Cursor Prompt 9: Refinement and Enhancements
+
+Improve the application's robustness, user experience, and add more advanced features.
+1.  **Error Handling:** Implement more comprehensive `try-except` blocks around all Snowflake queries and data processing steps. Display user-friendly error messages.
+2.  **Progress Indicators:** Use `st.progress` for longer operations (e.g., fetching sample data for many columns) to give visual feedback.
+3.  **Configurable Masking:** Allow users to customize the masking logic for each sensitive type (e.g., choose between full mask, partial mask, hashing) via UI inputs before generating SQL.
+4.  **Role-Based Masking:** Make the roles used in the `CASE WHEN CURRENT_ROLE() IN (...)` clauses configurable by the user.
+5.  **Tag-Based Masking (Advanced):** If Snowflake tags are used for classification, extend the `get_column_metadata` to fetch tags and incorporate them into the detection logic.
+6.  **Persistent Storage (Optional):** Consider how to store approved classifications or custom rules (e.g., in a Snowflake table) so they persist across app sessions. (This would require more complex prompts for Firestore integration if not using Snowflake for this).
+
+
+
