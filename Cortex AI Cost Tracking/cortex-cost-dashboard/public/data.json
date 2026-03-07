@@ -1,0 +1,23 @@
+{
+  "totals": {
+    "TOTAL_CREDITS": 0,
+    "UNIQUE_USERS": 0,
+    "TOTAL_QUERIES": 0,
+    "SERVICE_TYPES": 0,
+    "TOTAL_INPUT_TOKENS": 0,
+    "TOTAL_OUTPUT_TOKENS": 0,
+    "TOTAL_TOKENS": 0
+  },
+  "monthly": [],
+  "daily": [],
+  "weekly": [],
+  "yearly": [],
+  "byService": [],
+  "byComponent": [],
+  "byUser": [],
+  "byWarehouse": [],
+  "byObject": [],
+  "byAgent": [],
+  "detail": [],
+  "tokensByService": []
+}
