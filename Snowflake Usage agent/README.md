@@ -1,31 +1,42 @@
-# Snowflake Platform Health & Governance Semantic Model
+# Snowflake Platform Health, Governance & AI Cost Agent
 
-A comprehensive AI-powered analytics solution for Snowflake platform monitoring, cost optimization, and governance using Cortex Analyst and Cortex Search Service.
+A comprehensive AI-powered analytics solution for Snowflake platform monitoring, cost optimization, Cortex AI spending analysis, and governance using Cortex Analyst and Cortex Search Service.
 
 ## Overview
 
-This project provides a production-ready semantic model that transforms Snowflake's `ACCOUNT_USAGE` schema into an intelligent analytics platform. It combines structured data analysis through Cortex Analyst with semantic query search capabilities, enabling natural language questions about platform performance, costs, security, and governance.
+This project provides production-ready semantic models that transform Snowflake's `ACCOUNT_USAGE` schema into an intelligent analytics platform. It combines:
+
+- **Platform Health & Governance** - warehouse costs, query performance, user activity, security governance (12 core tables from ACCOUNT_USAGE)
+- **Cortex AI Cost & Usage** - comprehensive tracking of all Cortex AI service costs using 10 dedicated ACCOUNT_USAGE views with token-level granularity
+- **Semantic Search** - find specific queries by business context using Cortex Search Service
 
 ### Key Features
 
-- **🤖 AI-Powered Analytics**: Natural language queries using Cortex Analyst
-- **🔍 Semantic Search**: Find specific queries by business context using Cortex Search Service  
-- **💰 Cost Attribution**: Accurate per-query cost analysis using `QUERY_ATTRIBUTION_HISTORY`
-- **⚡ Performance Insights**: Query optimization recommendations and performance trending
-- **🛡️ Governance & Security**: User access patterns, role analysis, and compliance monitoring
-- **📊 Operational Intelligence**: Warehouse utilization, resource optimization, and capacity planning
+- **AI-Powered Analytics**: Natural language queries using Cortex Analyst
+- **Cortex AI Cost Tracking**: Credits and token usage across 10 Cortex services (AISQL, Analyst, Agent, Search, Document AI, REST API, Code CLI, Fine Tuning, Provisioned Throughput)
+- **Token Granularity**: Input, output, and total token tracking for LLM, Agent, Intelligence, REST API, and Code CLI services
+- **Semantic Search**: Find specific queries by business context using Cortex Search Service
+- **Cost Attribution**: Per-query compute costs via `QUERY_ATTRIBUTION_HISTORY` + Cortex AI costs via dedicated views
+- **Performance Insights**: Query optimization recommendations and performance trending
+- **Governance & Security**: User access patterns, role analysis, and compliance monitoring
+- **Backcharge Support**: Optional cost allocation via `USER_CUSTOM_BACKCHARGES_MAPPING`
 
 ## Architecture
 
 ```
-┌─────────────────────┐    ┌──────────────────────┐    ┌─────────────────────┐
-│  ACCOUNT_USAGE      │    │  PLATFORM_ANALYTICS │    │   AI SERVICES       │
-│                     │    │                      │    │                     │
-│  • QUERY_HISTORY    │───▶│  • Materialized      │───▶│  • Cortex Analyst   │
-│  • WAREHOUSE_*      │    │    Tables            │    │  • Cortex Search    │
-│  • USERS, ROLES     │    │  • Search Service    │    │  • Semantic Model   │
-│  • DATABASES, etc.  │    │  • Automated Refresh │    │                     │
-└─────────────────────┘    └──────────────────────┘    └─────────────────────┘
++-------------------------+    +---------------------------+    +---------------------+
+|  ACCOUNT_USAGE          |    |  DATABASES                |    |  AI SERVICES        |
+|                         |    |                           |    |                     |
+|  QUERY_HISTORY          |--->|  PLATFORM_ANALYTICS       |--->|  Cortex Analyst     |
+|  WAREHOUSE_*            |    |    Materialized Tables    |    |    Platform Health   |
+|  USERS, ROLES           |    |    Search Service         |    |    AI Cost Model    |
+|  DATABASES, etc.        |    |    CORTEX_AI_COST_VIEW    |    |  Cortex Search      |
+|                         |    |                           |    |  Cortex Agent       |
+|  10 CORTEX_* Views:     |--->|  CORTEX_AI_USAGE          |    |  Snowflake          |
+|    AISQL, Analyst,      |    |    CORTEX_AI_SUMMARY_COST |    |    Intelligence     |
+|    Agent, Search,       |    |    Summary Cost View      |    |                     |
+|    Fine Tuning, etc.    |    |    Refresh Procedure      |    |                     |
++-------------------------+    +---------------------------+    +---------------------+
 ```
 
 ## Prerequisites
@@ -37,280 +48,171 @@ This project provides a production-ready semantic model that transforms Snowflak
 
 ## Setup Guide
 
-### Step 1: Configure Your Environment
+### Step 1: Create Database Infrastructure
 
-Before proceeding, customize the following account-specific values throughout the SQL files:
+Execute `Database_Context_Setup.sql`:
+- Creates `PLATFORM_ANALYTICS` database (semantic models, materialized tables)
+- Creates `CORTEX_AI_USAGE` database (AI cost tracking)
+- Creates `CORTEX_COST` schema and semantic model stage
+- Grants `IMPORTED PRIVILEGES` on SNOWFLAKE database
 
-**Critical configurations to update:**
+### Step 2: Deploy Cortex AI Cost Tracking
 
-| Configuration | Default Value | Where to Change |
-|---------------|---------------|-----------------|
-| Database name | `PLATFORM_ANALYTICS` | All SQL files, line with `USE DATABASE` |
-| Schema name | `PUBLIC` | All SQL files, line with `USE SCHEMA` |
-| Warehouse name | `COMPUTE_WH` | `create_refresh_task.sql` and `create_search_service.sql` |
-| Schedule | `0 2 * * * UTC` | `create_refresh_task.sql` line 10 |
-| Refresh frequency | `1 HOUR` | `create_search_service.sql` line 52 |
+Execute `create_cortex_views.sql`:
+- Creates the `CORTEX_AI_SUMMARY_COST` table and `CORTEX_AI_SUMMARY_COST_VIEW`
+- Creates `USER_CUSTOM_BACKCHARGES_MAPPING` for cost allocation
+- Creates `REFRESH_CORTEX_COST_DATA()` stored procedure (10-source UNION ALL)
+- Runs initial data load from all 10 ACCOUNT_USAGE Cortex views
+- Creates `REFRESH_COST_DATA_TASK` (daily at 6 AM Pacific)
+- Creates `CORTEX_AI_COST_VIEW` in `PLATFORM_ANALYTICS.PUBLIC` for semantic model access
 
-### Step 2: Create Database Infrastructure
+**10 Source ACCOUNT_USAGE Views:**
 
-Execute the SQL in `Database Context Setup.sql` in your Snowflake environment:
-- Creates the `PLATFORM_ANALYTICS` database for analytics workloads
-- Creates the `SEMANTIC_MODELS` schema for model storage  
-- Creates a stage for YAML specification files with directory enabled
+| # | Source View | SERVICE_TYPE | Token Detail |
+|---|---|---|---|
+| 1 | CORTEX_AISQL_USAGE_HISTORY | CORTEX AISQL | Input/Output/Total |
+| 2 | CORTEX_ANALYST_USAGE_HISTORY | CORTEX ANALYST | None |
+| 3 | SNOWFLAKE_INTELLIGENCE_USAGE_HISTORY | CORTEX ANALYST | Input/Output/Total |
+| 4 | CORTEX_AGENT_USAGE_HISTORY | CORTEX AGENT | Input/Output/Total |
+| 5 | CORTEX_SEARCH_DAILY_USAGE_HISTORY | CORTEX SEARCH | Total only |
+| 6 | CORTEX_FINE_TUNING_USAGE_HISTORY | FINE TUNING | Total only |
+| 7 | CORTEX_DOCUMENT_PROCESSING_USAGE_HISTORY | DOCUMENT AI | None |
+| 8 | CORTEX_REST_API_USAGE_HISTORY | CORTEX REST API | Input/Output/Total |
+| 9 | CORTEX_CODE_CLI_USAGE_HISTORY | CORTEX CODE CLI | Input/Output/Total |
+| 10 | CORTEX_PROVISIONED_THROUGHPUT_USAGE_HISTORY | PROVISIONED THROUGHPUT | None |
 
 ### Step 3: Materialize Query History Data
 
-Run the SQL in `materialize_query_history.sql`:
-- Creates the `QUERY_HISTORY_MATERIALIZED` table with all necessary columns
-- Populates it with 60 days of historical query data from `ACCOUNT_USAGE.QUERY_HISTORY`
-- Adds search-optimized fields (`SEARCH_METADATA`, `QUERY_SUMMARY`, performance/cost categories)
-- Creates indexes for query performance
-- Sets up proper permissions
-
-**Note:** This step may take several minutes depending on your query volume.
+Run `materialize_query_history.sql`:
+- Creates `QUERY_HISTORY_MATERIALIZED` table (60-day rolling window)
+- Adds search-optimized fields (SEARCH_METADATA, QUERY_SUMMARY, categories)
+- Creates indexes for performance
 
 ### Step 4: Set Up Automated Data Refresh
 
-Execute the SQL in `create_refresh_task.sql`:
-- Creates a stored procedure `REFRESH_QUERY_HISTORY_PROC()` that handles incremental data loading
-- Creates a Snowflake task `REFRESH_QUERY_HISTORY_TASK` scheduled to run daily at 2 AM UTC
-- Includes manual execution commands for testing and troubleshooting
-- Sets up proper task permissions and monitoring queries
+Execute `create_refresh_task.sql`:
+- Creates `REFRESH_QUERY_HISTORY_PROC()` for incremental loading
+- Creates `REFRESH_QUERY_HISTORY_TASK` (daily at 2 AM UTC)
 
 ### Step 5: Create the Search Service
 
-Run the SQL in `create_search_service.sql`:
-- Creates the Cortex Search Service `QUERY_HISTORY_SEARCH_SERVICE` on the materialized table
-- Configures searchable attributes for filtering and context
-- Includes comprehensive test queries to verify functionality
-- Sets up 1-hour refresh interval for the search index
+Run `create_search_service.sql`:
+- Creates `QUERY_HISTORY_SEARCH_SERVICE` Cortex Search Service
+- 1-hour refresh interval
+- Wait 10-15 minutes after creation for initial indexing
 
-**Important:** Wait 10-15 minutes after creation for initial indexing to complete before testing.
+### Step 6: Deploy Semantic Models
 
-### Step 6: Deploy the Semantic Model
+Upload both YAML files to Snowflake:
 
-Upload `semantic_model.yaml` through the Snowflake UI:
-1. Navigate to **Projects** → **Cortex Analyst** in Snowsight
-2. Create a new semantic model or update an existing one
-3. Upload the YAML file or copy/paste its contents
-4. Validate the model configuration
-5. Publish for use with natural language queries
+1. **`Snowflake_usage_semantic_model.yaml`** - Platform Health & Governance (12 core tables)
+2. **`Cortex_AI_usage_semantic_model.yaml`** - Cortex AI Cost & Usage (single unified cost table)
 
-### Step 7: Create the Cortex Analyst
+Upload via Snowsight:
+1. Navigate to **Projects** > **Cortex Analyst**
+2. Create/update semantic models with each YAML file
+3. Validate and publish
 
-Set up the Cortex Analyst using your deployed semantic model:
-1. In Snowsight, navigate to **Projects** → **Cortex Analyst**
-2. Create a new analyst or configure an existing one
-3. Associate it with the semantic model you deployed in Step 6
-4. Test with sample natural language queries to verify functionality
-5. Note the analyst's name/identifier for use in the next step
+### Step 7: Create the Cortex Agent
 
-### Step 8: Create the Cortex Agent
+Build an integrated agent combining all capabilities:
+1. Navigate to **Projects** > **Cortex Agents** in Snowsight
+2. Create a new agent with these tools:
+   - **Cortex Analyst #1**: Platform Health semantic model (Step 6, file 1)
+   - **Cortex Analyst #2**: Cortex AI Cost semantic model (Step 6, file 2)
+   - **Cortex Search Service**: `QUERY_HISTORY_SEARCH_SERVICE` (Step 5)
+3. Configure agent instructions from `LLM_Instructions.md`
+4. Test with sample questions
 
-Build an integrated agent that combines both search and analyst capabilities:
-1. Navigate to **Projects** → **Cortex Agents** in Snowsight
-2. Create a new agent with the following tools:
-   - **Cortex Search Service**: `QUERY_HISTORY_SEARCH_SERVICE` (from Step 5)
-   - **Cortex Analyst**: The analyst created in Step 7
-3. Configure agent instructions for tool orchestration:
-   - **Description**: "This AI agent provides comprehensive Snowflake platform analytics by combining structured data analysis with intelligent query search capabilities"
-   - **Orchestration Instructions**: "For cost and performance questions, first determine if the user needs warehouse-level analysis, individual query costs, or query patterns. Start with broad analysis using the semantic model, then drill down with specific queries or search service for details"
-   - **Response Instructions**: "Provide data-driven insights with specific numbers, timeframes, and actionable recommendations. Always clarify data freshness and focus on business impact"
-4. Test the agent with multi-step questions that require both search and analysis
-5. Note the agent identifier for the final deployment step
+### Step 8: Deploy to Snowflake Intelligence
 
-### Step 9: Deploy to Snowflake Intelligence
-
-Make the agent accessible to end users through Snowflake Intelligence:
 1. Navigate to **Snowflake Intelligence** in Snowsight
-2. Add your Cortex Agent from Step 8 to the available agents
-3. Configure user access permissions and sharing settings
-4. Provide end users with guidance on the types of questions they can ask
-5. Monitor usage and refine agent instructions based on common user patterns
-
-**Final Result**: End users can now ask natural language questions about platform health, costs, and governance through a conversational interface that intelligently combines search and analytics capabilities.
-
+2. Add your Cortex Agent from Step 7
+3. Configure user access permissions
+4. End users can now ask questions about platform health AND Cortex AI costs
 
 ## Usage Examples
 
-### Natural Language Queries (Cortex Analyst)
-
-```sql
--- Cost analysis
-"Show me the top 10 most expensive queries by user role for the last 30 days"
-
--- Performance optimization  
-"Find queries that scan large amounts of data without using clustering"
-
--- Operational insights
-"What are the peak usage hours for our data warehouse"
-
--- Governance monitoring
+### Platform Health Queries
+```
+"Show me the top 10 most expensive queries by user"
+"Which warehouses are consuming the most credits?"
+"What are the peak usage hours for our warehouses?"
 "Show me users who haven't logged in for 90 days"
 ```
 
-### Semantic Search Queries (Search Service)
-
-```sql
--- Find queries by business context
-SELECT SNOWFLAKE.CORTEX.SEARCH_PREVIEW(
-    'PLATFORM_ANALYTICS.PUBLIC.QUERY_HISTORY_SEARCH_SERVICE',
-    '{"query": "ETL transformation pipeline data engineering", "limit": 5}'
-);
-
--- Find performance problems
-SELECT SNOWFLAKE.CORTEX.SEARCH_PREVIEW(
-    'PLATFORM_ANALYTICS.PUBLIC.QUERY_HISTORY_SEARCH_SERVICE',
-    '{"query": "memory spill disk storage optimization", "limit": 3}'
-);
+### Cortex AI Cost Queries
+```
+"What is my total Cortex AI spend by service?"
+"Show me daily AI cost trends for the last 30 days"
+"Which users are consuming the most AI credits?"
+"How many tokens are we using for LLM functions?"
+"Show me Cortex Agent usage and costs"
+"What are my Cortex Search costs?"
+"Compare this week's AI costs to last week"
+"Show me input vs output token breakdown by service"
 ```
 
-## Semantic Model Design
-
-### Design Philosophy
-
-The semantic model is built around **Platform Health & Governance** with three core principles:
-
-1. **Natural Language Accessibility**: Extensive synonym system allows business users to ask questions in their own terminology
-2. **Cost Attribution Accuracy**: Proper handling of different cost types (compute, serverless, storage) with clear guidance to prevent incorrect aggregations
-3. **Operational Intelligence**: Pre-built filters and metrics for common platform management scenarios
-
-### Coverage & Structure
-
-**12 Core Tables Covered:**
-- `QUERY_HISTORY` - Primary operational data with 10+ filters and 6+ metrics
-- `QUERY_ATTRIBUTION_HISTORY` - **Primary cost analysis table** (new addition)
-- `WAREHOUSE_METERING_HISTORY` - Compute cost tracking
-- `WAREHOUSE_LOAD_HISTORY` - Resource utilization
-- `USERS`, `ROLES` - Identity and access management
-- `DATABASES`, `SCHEMATA`, `TABLES`, `VIEWS` - Object governance
-- `LOGIN_HISTORY` - Security monitoring
-- `QUERY_INSIGHTS` - Performance optimization
-
-### Strengths
-
-✅ **Comprehensive Synonym Coverage**: 200+ dimensions with 3-5 synonyms each for natural language flexibility
-
-✅ **Cost Attribution Accuracy**: Dedicated `QUERY_ATTRIBUTION_HISTORY` integration prevents common cost calculation errors
-
-✅ **Governance Focus**: Built-in privacy protections, data freshness guidance, and compliance-ready metrics
-
-✅ **Operational Intelligence**: Pre-configured filters for common scenarios (expensive queries, optimization opportunities, security alerts)
-
-✅ **Relationship Modeling**: Carefully designed many-to-one relationships avoid cartesian products while enabling cross-table analysis
-
-✅ **Custom Instructions**: Detailed SQL generation guidance prevents common pitfalls (bytes conversion, defensive SQL, performance patterns)
-
-### Limitations & Considerations
-
-⚠️ **Data Latency**: ACCOUNT_USAGE has 45 minutes to 3 hours latency - not suitable for real-time monitoring
-
-⚠️ **Query Attribution Data**: `QUERY_ATTRIBUTION_HISTORY` only available from mid-August 2024 with 8-hour latency
-
-⚠️ **Individual User Privacy**: Model includes guidance to redirect questions about individual users to aggregated analysis
-
-⚠️ **Cost Complexity**: Multiple credit types (compute, serverless, acceleration) require careful interpretation
-
-⚠️ **Scale Considerations**: Materialized query history limited to 60 days to balance utility and storage costs
-
-### Advanced Features
-
-**Named Filters** (40+ across all tables):
-- `ExpensiveQueries`: Query costs > 0.1 credits
-- `OptimizationOpportunities`: Queries with actionable insights
-- `SecurityAnomalies`: Unusual access patterns
-- `PerformanceIssues`: Long-running or resource-intensive queries
-
-**Custom Metrics** (50+ across all tables):
-- Cost efficiency calculations (cost per GB, cost per minute)
-- Performance trending (cache hit rates, queue wait analysis)  
-- Governance scoring (optimization opportunity percentages)
-- Operational KPIs (user activity rates, resource utilization)
-
-## Maintenance
-
-### Automated Refresh
-
-The system includes automated daily refresh at 2 AM UTC:
-
-```sql
--- Check task status
-SHOW TASKS LIKE 'REFRESH_QUERY_HISTORY_TASK';
-
--- Manual execution
-CALL REFRESH_QUERY_HISTORY_PROC();
-
--- Refresh search service
-ALTER CORTEX SEARCH SERVICE QUERY_HISTORY_SEARCH_SERVICE REFRESH;
+### Semantic Search Queries
+```
+"Find queries related to ETL transformation pipeline"
+"Search for expensive queries that spilled to disk"
+"Find failed queries with error messages"
 ```
 
-### Data Retention
+## Data Refresh
 
-- **Query History**: Rolling 60-day window
-- **Other Tables**: Full historical data from ACCOUNT_USAGE
+### Automated
+- **Query History**: Daily at 2 AM UTC (60-day rolling window)
+- **Cortex AI Costs**: Daily at 6 AM Pacific (full refresh from 10 source views)
 - **Search Index**: Auto-refreshes every 1 hour
 
-### Monitoring
-
-Key metrics to monitor:
-
+### Manual
 ```sql
--- Data freshness
-SELECT MAX(START_TIME) FROM QUERY_HISTORY_MATERIALIZED;
+-- Refresh query history
+CALL PLATFORM_ANALYTICS.PUBLIC.REFRESH_QUERY_HISTORY_PROC();
 
--- Search service health  
-SHOW CORTEX SEARCH SERVICES LIKE 'QUERY_HISTORY_SEARCH_SERVICE';
+-- Refresh Cortex AI costs
+CALL CORTEX_AI_USAGE.CORTEX_COST.REFRESH_CORTEX_COST_DATA();
 
--- Task execution history
-SELECT * FROM TABLE(INFORMATION_SCHEMA.TASK_HISTORY(
-    TASK_NAME => 'REFRESH_QUERY_HISTORY_TASK'
-)) ORDER BY SCHEDULED_TIME DESC LIMIT 5;
+-- Refresh search index
+ALTER CORTEX SEARCH SERVICE PLATFORM_ANALYTICS.PUBLIC.QUERY_HISTORY_SEARCH_SERVICE REFRESH;
 ```
 
-## Troubleshooting
+### Verification
+```sql
+-- Cortex AI cost summary
+SELECT SERVICE_TYPE, COUNT(*) AS EVENTS,
+       ROUND(SUM(COALESCE(COMPONENT_CREDITS, 0)), 4) AS TOTAL_CREDITS,
+       SUM(TOTAL_TOKENS) AS TOTAL_TOKENS
+FROM PLATFORM_ANALYTICS.PUBLIC.CORTEX_AI_COST_VIEW
+GROUP BY 1 ORDER BY 3 DESC;
 
-### Common Issues
+-- Query history freshness
+SELECT MAX(START_TIME) FROM PLATFORM_ANALYTICS.PUBLIC.QUERY_HISTORY_MATERIALIZED;
 
-**Task Fails to Execute:**
-- Check warehouse permissions and availability
-- Verify `MATERIALIZED_AT` column exists and has correct data type
-- Review task execution history for specific error messages
+-- Search service status
+SHOW CORTEX SEARCH SERVICES LIKE 'QUERY_HISTORY_SEARCH_SERVICE';
+```
 
-**Search Service Empty Results:**
-- Wait 10-15 minutes after creation for initial indexing
-- Verify materialized table has data: `SELECT COUNT(*) FROM QUERY_HISTORY_MATERIALIZED`
-- Check search service status: `SHOW CORTEX SEARCH SERVICES`
+## Known Limitations
 
-**Cost Attribution Questions Incorrect:**
-- Verify queries use `QUERY_ATTRIBUTION_HISTORY.CREDITS_ATTRIBUTED_COMPUTE`
-- Avoid joining `WAREHOUSE_METERING_HISTORY` to `QUERY_HISTORY` on warehouse_name (causes cartesian products)
-- Use custom instructions in semantic model to guide proper cost analysis
+- ACCOUNT_USAGE has 45 minutes to 3 hours latency (not real-time)
+- QUERY_ATTRIBUTION_HISTORY available from mid-August 2024 with 8-hour latency
+- CORTEX REST API has tokens but NO credits column (COMPONENT_CREDITS is NULL)
+- Search, Fine Tuning, and Provisioned Throughput have no user attribution
+- Backcharge fields are NULL by default; populate `USER_CUSTOM_BACKCHARGES_MAPPING` for cost allocation
+- Materialized query history limited to 60 days
 
-### Performance Tuning
+## File Reference
 
-**Query Performance:**
-- Indexes created on key columns (START_TIME, USER_NAME, DATABASE_NAME, etc.)
-- Consider partitioning on START_TIME for very large data volumes
-- Monitor search service warehouse usage and adjust size if needed
-
-**Storage Optimization:**
-- Adjust retention period in refresh scripts if 60 days is too much/little
-- Consider compressing older data using clustering keys
-
-## Contributing
-
-When extending the semantic model:
-
-1. **Add Synonyms**: Include 3-5 relevant business terms for each new dimension
-2. **Create Filters**: Add named filters for common analysis patterns
-3. **Build Metrics**: Include both raw counts and calculated rates/percentages  
-4. **Test Relationships**: Ensure joins are many-to-one to avoid cartesian products
-5. **Update Instructions**: Add custom SQL guidance for complex calculations
-
-## License
-
-This project is provided as-is for educational and operational use. Adapt and modify according to your organization's needs and security policies.
-
----
-
-**Need Help?** This semantic model provides a comprehensive foundation for Snowflake platform analytics. For specific customizations or advanced use cases, consider your organization's data governance and security requirements when modifying the model structure or access patterns.
+| File | Purpose |
+|---|---|
+| `Database_Context_Setup.sql` | Creates databases, schemas, stage |
+| `create_cortex_views.sql` | Cortex AI cost tracking: table, view, stored proc, task, convenience view |
+| `materialize_query_history.sql` | Materializes 60 days of QUERY_HISTORY for search |
+| `create_refresh_task.sql` | Daily refresh task for materialized query history |
+| `create_search_service.sql` | Cortex Search Service on query history |
+| `Snowflake_usage_semantic_model.yaml` | Semantic model: Platform Health & Governance (12 tables) |
+| `Cortex_AI_usage_semantic_model.yaml` | Semantic model: Cortex AI Cost & Usage (1 unified table) |
+| `LLM_Instructions.md` | Agent/Analyst instructions, SQL guidance, response rules |

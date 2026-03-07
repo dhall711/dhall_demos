@@ -2,6 +2,12 @@
     "folders": [
         {
             "path": "."
+        },
+        {
+            "path": "../../../Cortex AI usage"
+        },
+        {
+            "path": "../Snowflake Usage agent"
         }
     ]
 }
