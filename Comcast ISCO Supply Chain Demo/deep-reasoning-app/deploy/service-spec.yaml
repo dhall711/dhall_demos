@@ -1,0 +1,15 @@
+spec:
+  containers:
+    - name: deep-reasoning
+      image: sfsenorthamerica-dhall-aws1.registry.snowflakecomputing.com/isco_analytics/prod/deep_reasoning_repo/deep-reasoning-app:latest
+      resources:
+        requests:
+          cpu: 0.5
+          memory: 512M
+        limits:
+          cpu: 1
+          memory: 1G
+  endpoints:
+    - name: dashboard
+      port: 8080
+      public: true
