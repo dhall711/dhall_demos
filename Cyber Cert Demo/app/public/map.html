@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Map</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>html,body,#map{margin:0;padding:0;height:100%;width:100%;font-family:system-ui,sans-serif;}</style>
+</head><body>
+<div id="map"></div>
+<script>
+var map = L.map('map').setView([30, 0], 2);
+L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  attribution: '© OpenStreetMap',
+  maxZoom: 18
+}).addTo(map);
+
+fetch('/api/data?q=geo')
+  .then(function(r){return r.json();})
+  .then(function(d){
+    var locs = d.locations || [];
+    locs.forEach(function(loc){
+      if(!loc.lat || !loc.lng) return;
+      var radius = Math.max(10, Math.min(30, Math.sqrt(loc.certs / 50000)));
+      var color = loc.compliancePct >= 80 ? '#059669' : loc.compliancePct >= 60 ? '#d97706' : '#dc2626';
+      L.circleMarker([loc.lat, loc.lng], {radius:radius, color:color, fillColor:color, fillOpacity:0.45, weight:2})
+        .addTo(map)
+        .bindPopup(
+          '<div style="min-width:180px;font-size:12px">' +
+          '<b style="font-size:14px">' + loc.name + '</b><br>' +
+          '<span style="color:#666">' + loc.city + ' (' + loc.region + ')</span>' +
+          '<hr style="margin:6px 0;border:none;border-top:1px solid #e2e8f0">' +
+          '<div style="display:grid;grid-template-columns:1fr 1fr;gap:2px">' +
+          '<span>Certificates:</span><b>' + (loc.certs/1000000).toFixed(2) + 'M</b>' +
+          '<span>Compliance:</span><b style="color:' + color + '">' + loc.compliancePct + '%</b>' +
+          '<span>Non-Compliant:</span><b style="color:#dc2626">' + (loc.nonCompliant/1000).toFixed(0) + 'K</b>' +
+          '</div></div>'
+        );
+    });
+  });
+</script>
+</body></html>

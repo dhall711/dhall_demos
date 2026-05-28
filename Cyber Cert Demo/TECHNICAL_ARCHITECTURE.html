@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Comcast GCS Certificate Compliance — Technical Architecture</title>
+<style>
+:root {
+  --blue: #0066cc;
+  --blue-light: #e8f4ff;
+  --green: #059669;
+  --green-light: #ecfdf5;
+  --orange: #d97706;
+  --orange-light: #fffbeb;
+  --red: #dc2626;
+  --red-light: #fef2f2;
+  --purple: #7c3aed;
+  --purple-light: #f5f3ff;
+  --gray-50: #f9fafb;
+  --gray-100: #f3f4f6;
+  --gray-200: #e5e7eb;
+  --gray-300: #d1d5db;
+  --gray-500: #6b7280;
+  --gray-700: #374151;
+  --gray-900: #111827;
+  --radius: 12px;
+  --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.08), 0 4px 6px rgba(0,0,0,0.04);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Inter', sans-serif; background: #f0f4f8; color: var(--gray-900); line-height: 1.6; }
+.container { max-width: 1200px; margin: 0 auto; padding: 40px 24px; }
+.hero { background: linear-gradient(135deg, #0a1628 0%, #1e3a5f 50%, #0066cc 100%); color: white; padding: 80px 40px; border-radius: var(--radius); margin-bottom: 40px; position: relative; overflow: hidden; }
+.hero::before { content: ''; position: absolute; top: -50%; right: -20%; width: 600px; height: 600px; background: radial-gradient(circle, rgba(255,255,255,0.05) 0%, transparent 70%); }
+.hero h1 { font-size: 36px; font-weight: 800; letter-spacing: -0.5px; margin-bottom: 12px; }
+.hero .subtitle { font-size: 16px; opacity: 0.85; max-width: 700px; line-height: 1.7; }
+.hero .badges { display: flex; gap: 10px; margin-top: 24px; flex-wrap: wrap; }
+.hero .badge { background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.2); padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 500; backdrop-filter: blur(4px); }
+.section { margin-bottom: 40px; }
+.section-title { font-size: 22px; font-weight: 700; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
+.section-title .icon { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 16px; }
+.card { background: white; border-radius: var(--radius); box-shadow: var(--shadow); border: 1px solid var(--gray-200); padding: 24px; margin-bottom: 16px; }
+.card-header { font-size: 15px; font-weight: 700; color: var(--gray-900); margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+@media (max-width: 768px) { .grid-2, .grid-3 { grid-template-columns: 1fr; } }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th { text-align: left; padding: 10px 14px; background: var(--gray-50); border-bottom: 2px solid var(--gray-200); color: var(--gray-500); font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; }
+td { padding: 10px 14px; border-bottom: 1px solid var(--gray-100); color: var(--gray-700); }
+tr:hover td { background: var(--blue-light); }
+code { background: var(--gray-100); padding: 2px 6px; border-radius: 4px; font-size: 12px; font-family: 'SF Mono', 'Fira Code', monospace; color: var(--blue); }
+pre { background: #1e293b; color: #e2e8f0; padding: 20px; border-radius: 8px; overflow-x: auto; font-size: 12px; line-height: 1.6; font-family: 'SF Mono', 'Fira Code', monospace; }
+.tech-stack { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 24px; }
+.tech-pill { background: white; border: 1px solid var(--gray-200); padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 500; box-shadow: var(--shadow); display: flex; align-items: center; gap: 6px; }
+.tech-pill .dot { width: 8px; height: 8px; border-radius: 4px; }
+.flow-diagram { background: #1a2332; border-radius: var(--radius); padding: 32px; margin: 24px 0; overflow-x: auto; }
+.flow-step { display: flex; align-items: center; gap: 16px; margin-bottom: 16px; flex-wrap: wrap; }
+.flow-box { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.15); border-radius: 8px; padding: 12px 18px; color: white; font-size: 12px; font-weight: 500; text-align: center; min-width: 120px; }
+.flow-box.highlight { background: rgba(0,102,204,0.3); border-color: rgba(0,102,204,0.6); }
+.flow-arrow { color: rgba(255,255,255,0.4); font-size: 18px; }
+.kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 24px; }
+.kpi-card { background: white; border-radius: 10px; padding: 16px 20px; border-left: 4px solid var(--blue); box-shadow: var(--shadow); }
+.kpi-card .label { font-size: 11px; color: var(--gray-500); font-weight: 500; text-transform: uppercase; }
+.kpi-card .value { font-size: 24px; font-weight: 700; color: var(--gray-900); margin: 4px 0; }
+.kpi-card .sub { font-size: 11px; color: var(--gray-500); }
+.kpi-card.green { border-left-color: var(--green); }
+.kpi-card.orange { border-left-color: var(--orange); }
+.kpi-card.purple { border-left-color: var(--purple); }
+.kpi-card.red { border-left-color: var(--red); }
+.tool-card { background: white; border: 1px solid var(--gray-200); border-radius: 10px; padding: 20px; }
+.tool-card .tool-name { font-size: 14px; font-weight: 700; color: var(--blue); margin-bottom: 4px; }
+.tool-card .tool-type { font-size: 11px; color: var(--gray-500); margin-bottom: 8px; }
+.tool-card .tool-desc { font-size: 12px; color: var(--gray-700); line-height: 1.6; }
+.tag { display: inline-block; padding: 3px 8px; border-radius: 4px; font-size: 10px; font-weight: 600; }
+.tag-blue { background: var(--blue-light); color: var(--blue); }
+.tag-green { background: var(--green-light); color: var(--green); }
+.tag-orange { background: var(--orange-light); color: var(--orange); }
+.tag-purple { background: var(--purple-light); color: var(--purple); }
+.tag-red { background: var(--red-light); color: var(--red); }
+.decision-table td:first-child { font-weight: 600; color: var(--gray-900); min-width: 200px; }
+.decision-table td:last-child { color: var(--gray-500); font-size: 12px; }
+.timeline { border-left: 3px solid var(--blue); padding-left: 24px; margin-top: 16px; }
+.timeline-item { margin-bottom: 20px; position: relative; }
+.timeline-item::before { content: ''; position: absolute; left: -30px; top: 6px; width: 12px; height: 12px; border-radius: 6px; background: var(--blue); border: 3px solid var(--blue-light); }
+.timeline-item .date { font-size: 11px; color: var(--gray-500); font-weight: 600; }
+.timeline-item .version { font-size: 13px; font-weight: 700; color: var(--gray-900); }
+.timeline-item .changes { font-size: 12px; color: var(--gray-700); }
+.toc { background: white; border-radius: var(--radius); padding: 24px 32px; margin-bottom: 40px; box-shadow: var(--shadow); border: 1px solid var(--gray-200); }
+.toc h3 { font-size: 14px; font-weight: 700; margin-bottom: 12px; color: var(--gray-900); }
+.toc ul { list-style: none; columns: 2; gap: 40px; }
+.toc li { margin-bottom: 6px; }
+.toc a { color: var(--blue); font-size: 13px; font-weight: 500; text-decoration: none; }
+.toc a:hover { text-decoration: underline; }
+.code-block { position: relative; }
+.code-label { position: absolute; top: 8px; right: 12px; font-size: 10px; color: rgba(255,255,255,0.4); text-transform: uppercase; letter-spacing: 1px; }
+.api-method { display: inline-block; padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; margin-right: 8px; }
+.api-get { background: var(--green-light); color: var(--green); }
+.api-post { background: var(--blue-light); color: var(--blue); }
+</style>
+</head>
+<body>
+<div class="container">
+
+<div class="hero">
+  <h1>Certificate Compliance Platform</h1>
+  <div class="subtitle">End-to-end Snowflake platform demonstration for Comcast GCS Cybersecurity — managing and analyzing 50M+ X.509 certificates across IoT, streaming, gateways, and partner networks with AI-powered compliance analytics.</div>
+  <div class="badges">
+    <span class="badge">🔐 50M+ Certificates</span>
+    <span class="badge">⚡ Sub-Second Queries</span>
+    <span class="badge">🤖 Cortex AI Agent</span>
+    <span class="badge">🐘 Snowflake Postgres</span>
+    <span class="badge">📊 11-Page React App</span>
+    <span class="badge">🚀 SPCS Deployed</span>
+  </div>
+</div>
+
+<nav class="toc">
+  <h3>Contents</h3>
+  <ul>
+    <li><a href="#tech-stack">Tech Stack</a></li>
+    <li><a href="#architecture">System Architecture</a></li>
+    <li><a href="#data-pipeline">Data Pipeline</a></li>
+    <li><a href="#frontend">Frontend Components</a></li>
+    <li><a href="#api-routes">API Routes</a></li>
+    <li><a href="#cortex-agent">Cortex Agent</a></li>
+    <li><a href="#snowflake-objects">Snowflake Objects</a></li>
+    <li><a href="#auth">Authentication</a></li>
+    <li><a href="#deployment">Deployment</a></li>
+    <li><a href="#decisions">Design Decisions</a></li>
+    <li><a href="#versions">Version History</a></li>
+  </ul>
+</nav>
+
+<!-- TECH STACK -->
+<section class="section" id="tech-stack">
+  <h2 class="section-title"><span class="icon" style="background:var(--blue-light)">🛠</span> Tech Stack</h2>
+  <div class="tech-stack">
+    <div class="tech-pill"><span class="dot" style="background:var(--blue)"></span> Next.js 14 (React)</div>
+    <div class="tech-pill"><span class="dot" style="background:#3178c6"></span> TypeScript 5.x</div>
+    <div class="tech-pill"><span class="dot" style="background:var(--purple)"></span> Lucide Icons</div>
+    <div class="tech-pill"><span class="dot" style="background:var(--gray-700)"></span> react-markdown</div>
+    <div class="tech-pill"><span class="dot" style="background:#29b5e8"></span> Snowflake Platform</div>
+    <div class="tech-pill"><span class="dot" style="background:#336791"></span> Snowflake Postgres</div>
+    <div class="tech-pill"><span class="dot" style="background:var(--green)"></span> Cortex AI</div>
+    <div class="tech-pill"><span class="dot" style="background:#2496ed"></span> Docker (SPCS)</div>
+  </div>
+</section>
+
+<!-- SYSTEM ARCHITECTURE -->
+<section class="section" id="architecture">
+  <h2 class="section-title"><span class="icon" style="background:var(--purple-light)">🏗</span> System Architecture</h2>
+
+  <div class="flow-diagram">
+    <div style="color: rgba(255,255,255,0.5); font-size: 11px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 20px;">Request Flow</div>
+    <div class="flow-step">
+      <div class="flow-box">Browser<br><span style="font-size:10px;opacity:0.6">*.snowflakecomputing.app</span></div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-box highlight">Next.js App<br><span style="font-size:10px;opacity:0.6">SPCS Container</span></div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-box">/api/data<br><span style="font-size:10px;opacity:0.6">SQL API</span></div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-box">Interactive WH<br><span style="font-size:10px;opacity:0.6">&lt;100ms KPIs</span></div>
+    </div>
+    <div class="flow-step" style="padding-left: 240px;">
+      <span class="flow-arrow">→</span>
+      <div class="flow-box">/api/chat<br><span style="font-size:10px;opacity:0.6">Cortex Agent API</span></div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-box highlight">Agent Orchestrator<br><span style="font-size:10px;opacity:0.6">4 tools, SSE stream</span></div>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-header">🖥 Client Layer</div>
+      <p style="font-size:13px;color:var(--gray-700)">11-page Next.js React SPA with shared ChatContext for persisted AI interactions. SVG geography map, markdown rendering, streaming responses.</p>
+      <div style="margin-top:12px;font-size:11px;color:var(--gray-500)">
+        <strong>Pages:</strong> Dashboard, Chat, Partners, Devices, Geography, Chains, Lifecycle, Forecast, Investigate, Developer API, Architecture
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header">⚙️ Server Layer (API Routes)</div>
+      <p style="font-size:13px;color:var(--gray-700)">Server-side Next.js routes running inside SPCS. Auth via platform-mounted OAuth token. Routes to either SQL API (Interactive or Standard WH) or Cortex Agent REST API.</p>
+      <div style="margin-top:12px;font-size:11px;color:var(--gray-500)">
+        <strong>Auth:</strong> <code>/snowflake/session/token</code> (SPCS-managed OAuth)
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- DATA PIPELINE -->
+<section class="section" id="data-pipeline">
+  <h2 class="section-title"><span class="icon" style="background:var(--green-light)">🔄</span> Data Pipeline</h2>
+
+  <div class="flow-diagram">
+    <div style="color: rgba(255,255,255,0.5); font-size: 11px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 20px;">Medallion Architecture</div>
+    <div class="flow-step">
+      <div class="flow-box" style="border-color: rgba(51,103,145,0.6);">Snowflake<br>Postgres<br><span style="font-size:10px;opacity:0.6">CERT_OLTP_DB</span></div>
+      <span class="flow-arrow">→ pg_lake →</span>
+      <div class="flow-box" style="border-color: rgba(0,102,204,0.4)">Catalog<br>Integration<br><span style="font-size:10px;opacity:0.6">~30s Iceberg</span></div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-box highlight">Interactive<br>Table<br><span style="font-size:10px;opacity:0.6">1-min lag</span></div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-box" style="border-color: rgba(5,150,105,0.5)">IWH<br><span style="font-size:10px;opacity:0.6">&lt;100ms</span></div>
+    </div>
+    <div class="flow-step">
+      <div class="flow-box" style="border-color: rgba(217,119,6,0.5)">IoT/CDC<br>Sources<br><span style="font-size:10px;opacity:0.6">Streaming</span></div>
+      <span class="flow-arrow">→ 5s lag →</span>
+      <div class="flow-box">RAW_EVENTS<br><span style="font-size:10px;opacity:0.6">Bronze</span></div>
+      <span class="flow-arrow">→ DT →</span>
+      <div class="flow-box">CLEANED<br><span style="font-size:10px;opacity:0.6">Silver</span></div>
+      <span class="flow-arrow">→ DT →</span>
+      <div class="flow-box">ENRICHED<br><span style="font-size:10px;opacity:0.6">Silver+</span></div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-box highlight">50M Certs<br><span style="font-size:10px;opacity:0.6">Gold View</span></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">Dynamic Tables (Auto-Refresh)</div>
+    <table>
+      <thead><tr><th>Table</th><th>Layer</th><th>Target Lag</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td><code>DT_CERTS_CLEANED</code></td><td><span class="tag tag-orange">Bronze→Silver</span></td><td>5 min</td><td>SCD Type 1 dedup, schema flattening</td></tr>
+        <tr><td><code>DT_CERTS_ENRICHED</code></td><td><span class="tag tag-blue">Silver</span></td><td>5 min</td><td>JOIN to PARTNERS, base compliance flags</td></tr>
+        <tr><td><code>DT_COMPLIANCE_DASHBOARD</code></td><td><span class="tag tag-green">Gold</span></td><td>5 min</td><td>Pre-aggregated metrics by region/partner/device</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- FRONTEND -->
+<section class="section" id="frontend">
+  <h2 class="section-title"><span class="icon" style="background:var(--orange-light)">🎨</span> Frontend Components</h2>
+
+  <div class="card">
+    <div class="card-header">Component Hierarchy</div>
+    <pre style="background:#1e293b;font-size:12px;"><span style="color:#93c5fd">layout.tsx</span>
+├── <span style="color:#fbbf24">Sidebar</span>               <span style="color:#6b7280"># Left nav with icons</span>
+├── <span style="color:#fbbf24">ClientProviders</span>       <span style="color:#6b7280"># ChatContext (persists AI state)</span>
+│
+├── <span style="color:#93c5fd">page.tsx</span> (Dashboard)  <span style="color:#6b7280"># KPI cards + region/device tables</span>
+│   └── <span style="color:#34d399">DrilldownPanel</span>    <span style="color:#6b7280"># AI response + drill-down pills</span>
+│
+├── <span style="color:#93c5fd">chat/page.tsx</span>         <span style="color:#6b7280"># Full agent conversation</span>
+├── <span style="color:#93c5fd">partners/page.tsx</span>     <span style="color:#6b7280"># Partner table + AI investigation</span>
+├── <span style="color:#93c5fd">devices/page.tsx</span>      <span style="color:#6b7280"># Device cards + proportional bars</span>
+├── <span style="color:#93c5fd">geography/page.tsx</span>    <span style="color:#6b7280"># SVG world map + DC markers</span>
+├── <span style="color:#93c5fd">chains/page.tsx</span>       <span style="color:#6b7280"># Trust chain explorer (6-table JOIN)</span>
+├── <span style="color:#93c5fd">lifecycle/page.tsx</span>    <span style="color:#6b7280"># State machine transitions</span>
+├── <span style="color:#93c5fd">forecast/page.tsx</span>     <span style="color:#6b7280"># ML forecast (14-day by region)</span>
+├── <span style="color:#93c5fd">investigate/page.tsx</span>  <span style="color:#6b7280"># Deep reasoning metric cards</span>
+├── <span style="color:#93c5fd">api-access/page.tsx</span>   <span style="color:#6b7280"># Developer API (cURL, Python, MCP)</span>
+└── <span style="color:#93c5fd">architecture/page.tsx</span> <span style="color:#6b7280"># Interactive architecture diagram</span></pre>
+  </div>
+
+  <div class="card">
+    <div class="card-header">Key Component: DrilldownPanel</div>
+    <p style="font-size:13px;color:var(--gray-700);margin-bottom:12px">Reusable AI investigation component used across Dashboard, Partners, Devices, Chains, Lifecycle, and Forecast pages.</p>
+    <div class="grid-2">
+      <div>
+        <p style="font-size:12px;color:var(--gray-700);line-height:1.8">
+          <strong>Behavior:</strong><br>
+          1. Mounts → checks seed cache for instant response<br>
+          2. If cached → renders immediately (green ⚡ badge)<br>
+          3. If not cached → POSTs to <code>/api/chat</code> with streaming<br>
+          4. Background-prefetches drill-down responses<br>
+          5. Drill-down pills → instant if prefetched, else live API
+        </p>
+      </div>
+      <div>
+        <pre style="font-size:11px;">interface DrilldownProps {
+  pageId: string;
+  question: string;
+  title: string;
+  onClose: () => void;
+  drilldowns?: {
+    label: string;
+    question: string;
+  }[];
+  cacheKey?: string;
+}</pre>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- API ROUTES -->
+<section class="section" id="api-routes">
+  <h2 class="section-title"><span class="icon" style="background:var(--blue-light)">🔌</span> API Routes</h2>
+
+  <div class="card">
+    <div class="card-header"><span class="api-method api-get">GET</span> /api/data</div>
+    <p style="font-size:13px;color:var(--gray-700);margin-bottom:12px">Dashboard data endpoint with intelligent warehouse routing.</p>
+    <table>
+      <thead><tr><th>Parameter</th><th>Warehouse</th><th>Response Time</th><th>Data</th></tr></thead>
+      <tbody>
+        <tr><td><code>?q=kpis</code></td><td><span class="tag tag-green">CERT_COMPLIANCE_IWH</span></td><td>&lt;100ms</td><td>KPIs + region + device breakdown</td></tr>
+        <tr><td><code>?q=partners</code></td><td><span class="tag tag-blue">COMCAST_DEMO_WH</span></td><td>~2s</td><td>Partner table with compliance rates</td></tr>
+        <tr><td><code>?q=geo</code></td><td><span class="tag tag-blue">COMCAST_DEMO_WH</span></td><td>~2s</td><td>Data center locations + metrics</td></tr>
+        <tr><td><code>?q=chains</code></td><td><span class="tag tag-blue">COMCAST_DEMO_WH</span></td><td>~3s</td><td>Certificate chain resolution</td></tr>
+        <tr><td><code>?q=forecast</code></td><td><span class="tag tag-blue">COMCAST_DEMO_WH</span></td><td>~1s</td><td>ML forecast predictions</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <div class="card-header"><span class="api-method api-post">POST</span> /api/chat</div>
+    <p style="font-size:13px;color:var(--gray-700);margin-bottom:12px">Cortex Agent endpoint for natural language Q&A over certificates and compliance policies.</p>
+    <div class="grid-2">
+      <div>
+        <div style="font-size:11px;color:var(--gray-500);margin-bottom:4px;font-weight:600">REQUEST</div>
+        <pre style="font-size:11px;">{
+  "messages": [
+    { "role": "user",
+      "content": "Which partners below 60%?" }
+  ],
+  "stream": true
+}</pre>
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--gray-500);margin-bottom:4px;font-weight:600">RESPONSE (SSE)</div>
+        <pre style="font-size:11px;">data: {"delta": "Based on the..."}
+data: {"delta": "data, 5 partners..."}
+data: {"delta": "[done]"}
+
+// or JSON (stream: false):
+{ "text": "...", "sql": "..." }</pre>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CORTEX AGENT -->
+<section class="section" id="cortex-agent">
+  <h2 class="section-title"><span class="icon" style="background:var(--green-light)">🤖</span> Cortex Agent</h2>
+
+  <div class="kpi-grid">
+    <div class="kpi-card"><div class="label">Agent Name</div><div class="value" style="font-size:14px">CERT_COMPLIANCE_AGENT</div><div class="sub">COMCAST_CYBER_DEMO.CERT_SECURITY</div></div>
+    <div class="kpi-card green"><div class="label">Tools</div><div class="value">4</div><div class="sub">3 Analyst + 1 Search</div></div>
+    <div class="kpi-card orange"><div class="label">Semantic Views</div><div class="value">3</div><div class="sub">Dashboard, Analytics, Policy</div></div>
+    <div class="kpi-card purple"><div class="label">Model</div><div class="value" style="font-size:14px">auto</div><div class="sub">Orchestration routing</div></div>
+  </div>
+
+  <div class="grid-2">
+    <div class="tool-card">
+      <div class="tool-name">cert_dashboard</div>
+      <div class="tool-type"><span class="tag tag-blue">Cortex Analyst</span> via CERT_COMPLIANCE_IWH</div>
+      <div class="tool-desc">Pre-aggregated Interactive Table metrics (21K rows). Sub-second KPI queries for summaries by region, device, partner.</div>
+    </div>
+    <div class="tool-card">
+      <div class="tool-name">cert_analytics</div>
+      <div class="tool-type"><span class="tag tag-blue">Cortex Analyst</span> via COMCAST_DEMO_WH</div>
+      <div class="tool-desc">Full 50M certificate inventory with 18 dimensions and 11 metrics. Detailed drill-downs, cert lookups, expiry analysis.</div>
+    </div>
+    <div class="tool-card">
+      <div class="tool-name">policy_rules</div>
+      <div class="tool-type"><span class="tag tag-blue">Cortex Analyst</span> via COMCAST_DEMO_WH</div>
+      <div class="tool-desc">10 compliance policy rules — min key sizes, allowed algorithms, severity levels, max validity periods.</div>
+    </div>
+    <div class="tool-card">
+      <div class="tool-name">compliance_docs_search</div>
+      <div class="tool-type"><span class="tag tag-purple">Cortex Search</span> RAG</div>
+      <div class="tool-desc">Vector search over 10 compliance policy documents. Answers "how to remediate" and "what policy says" questions.</div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:16px">
+    <div class="card-header">Tool Routing Logic</div>
+    <table>
+      <thead><tr><th>Question Type</th><th>Tool Selected</th><th>Response Time</th></tr></thead>
+      <tbody>
+        <tr><td>Summary KPIs, totals by region/device/partner</td><td><code>cert_dashboard</code></td><td>&lt;1s</td></tr>
+        <tr><td>Detailed drill-downs, cert lookups, expiry analysis</td><td><code>cert_analytics</code></td><td>2-5s</td></tr>
+        <tr><td>Compliance rules, severity, allowed algorithms</td><td><code>policy_rules</code></td><td>&lt;1s</td></tr>
+        <tr><td>Policy documents, remediation procedures</td><td><code>compliance_docs_search</code></td><td>&lt;2s</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- SNOWFLAKE OBJECTS -->
+<section class="section" id="snowflake-objects">
+  <h2 class="section-title"><span class="icon" style="background:var(--blue-light)">❄️</span> Snowflake Objects</h2>
+
+  <div class="card">
+    <div class="card-header">Core Tables</div>
+    <table>
+      <thead><tr><th>Table</th><th>Rows</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td><code>CERTIFICATES</code></td><td><strong>50,000,000</strong></td><td>Core certificate fact table (X.509 attributes)</td></tr>
+        <tr><td><code>PARTNERS</code></td><td>50</td><td>Partner dimension (DigiCert, Akamai, Arris, etc.)</td></tr>
+        <tr><td><code>DATA_CENTERS</code></td><td>15</td><td>DC dimension with lat/lng coordinates</td></tr>
+        <tr><td><code>COMPLIANCE_DOCUMENTS</code></td><td>10</td><td>Policy documents for Cortex Search RAG</td></tr>
+        <tr><td><code>COMPLIANCE_RULES</code></td><td>10</td><td>Policy rules (min key size, allowed algorithms)</td></tr>
+        <tr><td><code>RAW_CERTIFICATE_EVENTS</code></td><td>8,000</td><td>Simulated streaming ingest events</td></tr>
+        <tr><td><code>CERT_COMPLIANCE_INTERACTIVE</code></td><td>21,000</td><td>Pre-aggregated for Interactive Warehouse</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-header">Warehouses</div>
+      <table>
+        <thead><tr><th>Warehouse</th><th>Type</th><th>Size</th></tr></thead>
+        <tbody>
+          <tr><td><code>COMCAST_DEMO_WH</code></td><td><span class="tag tag-blue">Standard</span></td><td>LARGE</td></tr>
+          <tr><td><code>CERT_COMPLIANCE_IWH</code></td><td><span class="tag tag-green">Interactive</span></td><td>XSMALL</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="card">
+      <div class="card-header">Infrastructure</div>
+      <table>
+        <thead><tr><th>Object</th><th>Type</th></tr></thead>
+        <tbody>
+          <tr><td><code>COMCAST_CERT_APP_POOL</code></td><td>Compute Pool (CPU_X64_XS)</td></tr>
+          <tr><td><code>CERT_CHAT_SERVICE</code></td><td>SPCS Service</td></tr>
+          <tr><td><code>CERT_OLTP_DB</code></td><td>Postgres (STANDARD_M)</td></tr>
+          <tr><td><code>CERT_POSTGRES_CATALOG</code></td><td>Catalog Integration</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- AUTH -->
+<section class="section" id="auth">
+  <h2 class="section-title"><span class="icon" style="background:var(--red-light)">🔒</span> Authentication</h2>
+  <div class="card">
+    <div class="card-header">SPCS OAuth (Zero-Config)</div>
+    <p style="font-size:13px;color:var(--gray-700);margin-bottom:16px">The application runs inside SPCS and uses the platform-mounted OAuth token — no secrets management required.</p>
+    <pre><span style="color:#6b7280">// Token auto-mounted by SPCS runtime</span>
+<span style="color:#93c5fd">const</span> token = fs.readFileSync(<span style="color:#fbbf24">'/snowflake/session/token'</span>, <span style="color:#fbbf24">'utf-8'</span>).trim();
+
+<span style="color:#6b7280">// Host injected as env var by SPCS</span>
+<span style="color:#93c5fd">const</span> host = process.env.SNOWFLAKE_HOST;
+
+<span style="color:#6b7280">// All API calls use OAuth bearer</span>
+headers: {
+  <span style="color:#fbbf24">'Authorization'</span>: <span style="color:#fbbf24">`Bearer ${token}`</span>,
+  <span style="color:#fbbf24">'X-Snowflake-Authorization-Token-Type'</span>: <span style="color:#fbbf24">'OAUTH'</span>
+}</pre>
+  </div>
+</section>
+
+<!-- DEPLOYMENT -->
+<section class="section" id="deployment">
+  <h2 class="section-title"><span class="icon" style="background:var(--purple-light)">🚀</span> Deployment</h2>
+  <div class="card">
+    <div class="card-header">Build & Deploy Pipeline</div>
+    <pre><span style="color:#6b7280"># 1. Build for linux/amd64 (SPCS requirement)</span>
+docker build --platform linux/amd64 -t sfsenorthamerica-dhall-aws1.registry.snowflakecomputing.com\
+  /comcast_cyber_demo/cert_security/app_repo/cert-chat:v12 .
+
+<span style="color:#6b7280"># 2. Login to Snowflake container registry</span>
+snow spcs image-registry login
+
+<span style="color:#6b7280"># 3. Push image</span>
+docker push sfsenorthamerica-dhall-aws1.registry.snowflakecomputing.com\
+  /comcast_cyber_demo/cert_security/app_repo/cert-chat:v12
+
+<span style="color:#6b7280"># 4. Deploy service (SQL)</span>
+ALTER SERVICE COMCAST_CYBER_DEMO.CERT_SECURITY.CERT_CHAT_SERVICE
+  FROM SPECIFICATION $$ ... $$;</pre>
+    <p style="font-size:12px;color:var(--gray-500);margin-top:12px"><strong>Critical:</strong> <code>ENV HOSTNAME=0.0.0.0</code> in Dockerfile — Next.js standalone binds to localhost by default, unreachable inside SPCS.</p>
+  </div>
+</section>
+
+<!-- DESIGN DECISIONS -->
+<section class="section" id="decisions">
+  <h2 class="section-title"><span class="icon" style="background:var(--orange-light)">💡</span> Design Decisions</h2>
+  <div class="card">
+    <table class="decision-table">
+      <thead><tr><th>Decision</th><th>Rationale</th></tr></thead>
+      <tbody>
+        <tr><td>Next.js standalone (not Streamlit)</td><td>Full control over UI, multi-page SPA, supports SPCS deployment with custom routing</td></tr>
+        <tr><td>Inline SVG map (not Leaflet)</td><td>SPCS CSP blocks external tile servers and CDN scripts</td></tr>
+        <tr><td>Interactive Table + IWH for dashboard</td><td>Sub-second KPIs on pre-aggregated 50M rows without full table scan</td></tr>
+        <tr><td>3 Semantic Views (not 1)</td><td>Intelligent routing: fast IWH aggregates, full detail via standard WH, policy separate</td></tr>
+        <tr><td>pg_lake Shared Iceberg</td><td>Zero-infra CDC from Postgres (~30s lag, no Openflow, no S3 bucket needed)</td></tr>
+        <tr><td>Seed cache + prefetch</td><td>Instant first-click responses in demo, background-prefetch drill-downs</td></tr>
+        <tr><td>ChatContext provider</td><td>Persists all AI interactions across page navigation (no state loss)</td></tr>
+        <tr><td>Light mode theme</td><td>Better visibility for remote demo presentations</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- VERSION HISTORY -->
+<section class="section" id="versions">
+  <h2 class="section-title"><span class="icon" style="background:var(--green-light)">📋</span> Version History</h2>
+  <div class="card">
+    <div class="timeline">
+      <div class="timeline-item"><div class="date">May 27, 2026</div><div class="version">v12 — Pre-cached AI Responses</div><div class="changes">Static seed cache for instant first-click, background prefetch for drill-downs, green ⚡ badge indicator</div></div>
+      <div class="timeline-item"><div class="date">May 27, 2026</div><div class="version">v11 — Persistent AI State</div><div class="changes">ChatContext expanded to persist drilldown state on all pages (dashboard, chains, lifecycle, partners, devices, forecast, investigate)</div></div>
+      <div class="timeline-item"><div class="date">May 27, 2026</div><div class="version">v10 — Chat Persistence</div><div class="changes">Added ChatContext provider to persist chat conversation across navigation</div></div>
+      <div class="timeline-item"><div class="date">May 22, 2026</div><div class="version">v9 — Forecast & Fixes</div><div class="changes">Fixed forecast date rendering, investigate streaming, architecture links</div></div>
+      <div class="timeline-item"><div class="date">May 22, 2026</div><div class="version">v4 — Advanced Features</div><div class="changes">Chain Explorer, Lifecycle tracking, ML Forecast, Developer API, Postgres mirroring, Interactive Tables</div></div>
+      <div class="timeline-item"><div class="date">May 21, 2026</div><div class="version">v1 — Initial Launch</div><div class="changes">Dashboard, Chat, Partners, Devices, Geography, Investigate, Architecture — 50M synthetic certificates</div></div>
+    </div>
+  </div>
+</section>
+
+<footer style="text-align:center;padding:40px;color:var(--gray-500);font-size:12px">
+  Comcast GCS Certificate Compliance Demo • Snowflake SE Demo Environment (DHALL_AWS1) • Built with Cortex Code
+</footer>
+
+</div>
+</body>
+</html>

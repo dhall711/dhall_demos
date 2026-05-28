@@ -1,0 +1,16 @@
+spec:
+  containers:
+    - name: web
+      image: /comcast_cyber_demo/cert_security/app_repo/cert-chat:v10
+      env:
+        SNOWFLAKE_ACCOUNT: SFSENORTHAMERICA-DHALL_AWS1
+        AGENT_FQN: COMCAST_CYBER_DEMO.CERT_SECURITY.CERT_COMPLIANCE_AGENT
+      readinessProbe:
+        port: 3000
+        path: /
+  endpoints:
+    - name: web
+      port: 3000
+      public: true
+  networkPolicyConfig:
+    allowInternetEgress: true
