@@ -1,0 +1,95 @@
+import { NextRequest, NextResponse } from 'next/server';
+import * as fs from 'node:fs';
+
+export const dynamic = 'force-dynamic';
+
+const AGENT_FQN = process.env.AGENT_FQN || 'COMCAST_CYBER_DEMO.CERT_SECURITY.CERT_COMPLIANCE_AGENT';
+
+function getOAuthToken(): string {
+  try {
+    return fs.readFileSync('/snowflake/session/token', 'utf-8').trim();
+  } catch {
+    return process.env.SNOWFLAKE_TOKEN || '';
+  }
+}
+
+function getSnowflakeHost(): string {
+  // SPCS injects SNOWFLAKE_HOST; fallback to constructing from account
+  if (process.env.SNOWFLAKE_HOST) return process.env.SNOWFLAKE_HOST;
+  const acct = (process.env.SNOWFLAKE_ACCOUNT || 'SFSENORTHAMERICA-DHALL_AWS1').toLowerCase().replace(/_/g, '-');
+  return `${acct}.snowflakecomputing.com`;
+}
+
+export async function POST(req: NextRequest) {
+  const body = await req.json();
+  const messages = (body.messages || []).map((m: any) => ({
+    role: m.role,
+    content: [{ type: 'text', text: m.content }]
+  }));
+
+  const token = getOAuthToken();
+  const host = getSnowflakeHost();
+  const [db, schema, name] = AGENT_FQN.split('.');
+  const url = `https://${host}/api/v2/databases/${db}/schemas/${schema}/agents/${name}:run`;
+
+  console.log(`[chat] POST to ${url} | token length: ${token.length}`);
+
+  try {
+    const resp = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'X-Snowflake-Authorization-Token-Type': 'OAUTH'
+      },
+      body: JSON.stringify({ messages, stream: false })
+    });
+
+    const text = await resp.text();
+    console.log(`[chat] Response status: ${resp.status} | body length: ${text.length}`);
+
+    if (!resp.ok) {
+      return NextResponse.json({ error: `Agent API ${resp.status}: ${text.substring(0, 800)}` }, { status: 500 });
+    }
+
+    let parsed: any;
+    try { parsed = JSON.parse(text); } catch { parsed = { raw: text }; }
+
+    const result = extractResponse(parsed);
+    return NextResponse.json(result);
+  } catch (e: any) {
+    console.error(`[chat] Fetch error: ${e.message}`);
+    return NextResponse.json({ error: `Fetch failed: ${e.message}` }, { status: 500 });
+  }
+}
+
+function extractResponse(payload: any): any {
+  let textParts: string[] = [];
+  let sql: string | undefined;
+  let sources: any[] = [];
+  let data: any[] = [];
+
+  const walk = (obj: any) => {
+    if (!obj) return;
+    if (Array.isArray(obj)) { obj.forEach(walk); return; }
+    if (typeof obj !== 'object') return;
+    if (obj.type === 'text' && obj.text) textParts.push(obj.text);
+    if (obj.type === 'tool_results' && obj.tool_results) walk(obj.tool_results);
+    if (obj.statement) sql = obj.statement;
+    if (obj.sql) sql = obj.sql;
+    if (obj.searchResults) sources.push(...obj.searchResults.map((s: any) => ({ title: s.title || s.doc_id, doc_id: s.doc_id })));
+    if (obj.results && Array.isArray(obj.results) && obj.results[0]?.content) {
+      sources.push(...obj.results.map((r: any) => ({ title: r.title || r.doc_id, doc_id: r.doc_id })));
+    }
+    Object.values(obj).forEach(walk);
+  };
+  walk(payload);
+
+  return {
+    text: textParts.join('\n').trim() || 'Response received but no text content.',
+    sql,
+    sources: sources.length ? sources : undefined,
+    data: data.length ? data : undefined
+  };
+}
