@@ -1,0 +1,30 @@
+definition_version: "2"
+
+entities:
+  crm_dashboard:
+    type: snowflake-app
+    identifier:
+      name: CRM_DASHBOARD
+      database: FIVETRAN_CRM_CUSTOMER360
+      schema: ANALYTICS
+    artifacts:
+      - src: ./*
+        dest: ./
+        ignore:
+          - node_modules
+          - .env*
+          - __pycache__
+          - "*.pyc"
+          - .next
+          - .git
+          - snowflake.log
+          - output
+          - dist
+
+    query_warehouse: DEFAULT_WH
+    build_compute_pool:
+      name: CPU_X64_XS
+    service_compute_pool:
+      name: CPU_X64_XS
+    build_eai:
+      name: ALLOW_ALL_ACCESS_INTEGRATION

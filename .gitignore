@@ -14,3 +14,7 @@ build/
 venv/
 env/
 
+# Node / Next.js (Snowflake App Runtime projects)
+node_modules/
+.next/
+

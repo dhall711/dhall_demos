@@ -1,0 +1,154 @@
+version: 2
+
+sources:
+  - name: bronze
+    database: FIVETRAN_CRM_CUSTOMER360
+    schema: BRONZE
+    tables:
+      - name: RAW_SF_ACCOUNTS
+      - name: RAW_SF_CONTACTS
+      - name: RAW_SF_OPPORTUNITIES
+      - name: RAW_SF_CASES
+      - name: RAW_ELQ_CAMPAIGNS
+      - name: RAW_ELQ_CAMPAIGN_MEMBERS
+      - name: RAW_ELQ_EMAIL_EVENTS
+      - name: RAW_FIN_TRANSACTIONS
+      - name: RAW_FIN_ADVISOR_NOTES
+
+models:
+  - name: stg_accounts_clean
+    columns:
+      - name: account_id
+        tests:
+          - unique
+          - not_null
+      - name: industry_segment
+        tests:
+          - accepted_values:
+              values: ['Wealth Management', 'Commercial Banking', 'Insurance', 'Retail Banking']
+      - name: account_tier
+        tests:
+          - accepted_values:
+              values: ['Platinum', 'Gold', 'Silver', 'Bronze']
+      - name: tenure_bucket
+        tests:
+          - accepted_values:
+              values: ['New', 'Established', 'Long-Term']
+      - name: revenue_tier
+        tests:
+          - accepted_values:
+              values: ['Enterprise', 'Mid-Market', 'SMB']
+
+  - name: stg_contacts_clean
+    columns:
+      - name: contact_id
+        tests:
+          - unique
+          - not_null
+      - name: account_id
+        tests:
+          - not_null
+          - relationships:
+              to: ref('stg_accounts_clean')
+              field: account_id
+      - name: engagement_level
+        tests:
+          - accepted_values:
+              values: ['High', 'Medium', 'Low', 'Dormant']
+
+  - name: stg_opportunities_clean
+    columns:
+      - name: opportunity_id
+        tests:
+          - unique
+          - not_null
+      - name: account_id
+        tests:
+          - not_null
+          - relationships:
+              to: ref('stg_accounts_clean')
+              field: account_id
+      - name: stage
+        tests:
+          - accepted_values:
+              values: ['Prospecting', 'Qualification', 'Proposal', 'Negotiation', 'Closed Won', 'Closed Lost']
+      - name: win_probability_bucket
+        tests:
+          - accepted_values:
+              values: ['High', 'Medium', 'Low']
+
+  - name: stg_cases_clean
+    columns:
+      - name: case_id
+        tests:
+          - unique
+          - not_null
+      - name: account_id
+        tests:
+          - not_null
+          - relationships:
+              to: ref('stg_accounts_clean')
+              field: account_id
+      - name: sla_status
+        tests:
+          - accepted_values:
+              values: ['Within SLA', 'At Risk', 'Breached']
+
+  - name: stg_campaigns_clean
+    columns:
+      - name: campaign_id
+        tests:
+          - unique
+          - not_null
+      - name: campaign_effectiveness
+        tests:
+          - accepted_values:
+              values: ['High', 'Medium', 'Low']
+
+  - name: stg_campaign_members_clean
+    columns:
+      - name: member_id
+        tests:
+          - unique
+          - not_null
+      - name: engagement_depth
+        tests:
+          - accepted_values:
+              values: ['Deep', 'Moderate', 'Shallow', 'None']
+
+  - name: stg_email_events_clean
+    columns:
+      - name: event_id
+        tests:
+          - unique
+          - not_null
+      - name: engagement_action
+        tests:
+          - accepted_values:
+              values: ['Positive', 'Neutral', 'Negative']
+
+  - name: stg_transactions_clean
+    columns:
+      - name: transaction_id
+        tests:
+          - unique
+          - not_null
+      - name: transaction_category
+        tests:
+          - accepted_values:
+              values: ['Revenue', 'Cost', 'Neutral']
+
+  - name: stg_advisor_notes_clean
+    columns:
+      - name: note_id
+        tests:
+          - unique
+          - not_null
+      - name: note_depth
+        tests:
+          - accepted_values:
+              values: ['Detailed', 'Standard', 'Brief']
+      - name: sentiment
+        tests:
+          - accepted_values:
+              values: ['Positive', 'Neutral', 'Negative', 'Concerned']

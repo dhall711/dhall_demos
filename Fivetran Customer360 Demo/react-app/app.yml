@@ -1,0 +1,11 @@
+profile:
+  label: "CRM Customer 360 Dashboard"
+  description: "Unified CRM analytics dashboard — customer segments, pipeline health, and engagement metrics powered by Fivetran + Snowflake."
+  icon: public/icon.svg
+
+install:
+  commands:
+    - ["npm", "ci", "--include=dev"]
+
+run:
+  command: ["node", ".next/standalone/server.js"]

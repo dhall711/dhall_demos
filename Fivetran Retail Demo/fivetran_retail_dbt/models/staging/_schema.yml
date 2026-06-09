@@ -1,0 +1,76 @@
+version: 2
+
+models:
+  - name: stg_customers_clean
+    description: Cleaned and enriched customer profiles with tenure calculations
+    columns:
+      - name: customer_id
+        tests: [unique, not_null]
+      - name: customer_segment
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['New', 'Active', 'VIP', 'At-Risk', 'Churned']
+      - name: tenure_bucket
+        tests:
+          - accepted_values:
+              values: ['New', 'Established', 'Loyal']
+
+  - name: stg_products_clean
+    description: Cleaned product catalog with margin calculations and price tiers
+    columns:
+      - name: product_id
+        tests: [unique, not_null]
+      - name: category
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['Electronics', 'Apparel', 'Home & Garden', 'Sports', 'Beauty']
+      - name: price_tier
+        tests:
+          - accepted_values:
+              values: ['Premium', 'Mid-Range', 'Budget']
+
+  - name: stg_orders_clean
+    description: Cleaned orders with status enrichment, season, and revenue calculations
+    columns:
+      - name: order_id
+        tests: [unique, not_null]
+      - name: customer_id
+        tests: [not_null]
+      - name: product_id
+        tests: [not_null]
+      - name: status_group
+        tests:
+          - accepted_values:
+              values: ['Fulfilled', 'In Progress', 'Cancelled', 'Returned', 'Unknown']
+      - name: season
+        tests:
+          - accepted_values:
+              values: ['Spring', 'Summer', 'Autumn', 'Winter']
+
+  - name: stg_inventory_clean
+    description: Cleaned inventory snapshots with stock health classification
+    columns:
+      - name: inventory_id
+        tests: [unique, not_null]
+      - name: stock_status
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['Out of Stock', 'Low Stock', 'Overstock', 'Healthy']
+
+  - name: stg_reviews_clean
+    description: Cleaned product reviews with sentiment classification
+    columns:
+      - name: review_id
+        tests: [unique, not_null]
+      - name: sentiment
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['Positive', 'Neutral', 'Negative']
+      - name: review_depth
+        tests:
+          - accepted_values:
+              values: ['Detailed', 'Standard', 'Brief']

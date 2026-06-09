@@ -1,0 +1,17 @@
+version: 2
+
+sources:
+  - name: bronze
+    database: FIVETRAN_RETAIL_DEMO
+    schema: BRONZE
+    tables:
+      - name: RAW_CUSTOMERS
+        description: Raw customer profiles from Shopify via Fivetran
+      - name: RAW_PRODUCTS
+        description: Raw product catalog from Shopify via Fivetran
+      - name: RAW_ORDERS
+        description: Raw e-commerce orders from Stripe via Fivetran
+      - name: RAW_INVENTORY
+        description: Raw inventory snapshots from warehouse management system via Fivetran
+      - name: RAW_REVIEWS
+        description: Raw product reviews from Zendesk via Fivetran

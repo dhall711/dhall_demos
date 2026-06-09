@@ -1,0 +1,443 @@
+name: retail_analytics
+description: E-commerce retail analytics covering sales performance, customer segments, product metrics, and inventory health
+tables:
+  - name: DT_DAILY_SALES
+    description: Daily sales metrics aggregated by category, region, and warehouse
+    base_table:
+      database: FIVETRAN_RETAIL_DEMO
+      schema: GOLD
+      table: DT_DAILY_SALES
+    dimensions:
+      - name: order_date
+        synonyms:
+          - date
+          - day
+          - sales date
+        description: The date when orders were placed
+        expr: order_date
+        data_type: DATE
+      - name: category
+        synonyms:
+          - product category
+          - department
+        description: Product category (Electronics, Apparel, Home & Garden, Sports, Beauty)
+        expr: category
+        data_type: VARCHAR
+      - name: subcategory
+        synonyms:
+          - product type
+          - sub category
+        description: Product subcategory within the main category
+        expr: subcategory
+        data_type: VARCHAR
+      - name: shipping_zone
+        synonyms:
+          - region
+          - zone
+          - geographic region
+        description: Shipping region (Northeast, Southeast, Midwest, West)
+        expr: shipping_zone
+        data_type: VARCHAR
+      - name: warehouse
+        synonyms:
+          - fulfillment center
+          - DC
+          - distribution center
+        description: Fulfillment warehouse location
+        expr: warehouse
+        data_type: VARCHAR
+      - name: season
+        synonyms:
+          - time of year
+        description: Season of the order (Spring, Summer, Autumn, Winter)
+        expr: season
+        data_type: VARCHAR
+      - name: day_of_week
+        synonyms:
+          - weekday
+        description: Day of the week name
+        expr: day_of_week
+        data_type: VARCHAR
+      - name: is_weekend
+        description: Whether the order was placed on a weekend
+        expr: is_weekend
+        data_type: BOOLEAN
+    time_dimensions:
+      - name: order_date_time
+        synonyms:
+          - date
+        description: Order date for time-based analysis
+        expr: order_date
+        data_type: DATE
+    measures:
+      - name: order_count
+        synonyms:
+          - number of orders
+          - orders
+          - total orders
+        description: Count of distinct orders
+        expr: order_count
+        data_type: NUMBER
+        default_aggregation: sum
+      - name: unique_customers
+        synonyms:
+          - customers
+          - buyers
+        description: Count of unique customers who placed orders
+        expr: unique_customers
+        data_type: NUMBER
+        default_aggregation: sum
+      - name: gross_revenue
+        synonyms:
+          - revenue
+          - sales
+          - total sales
+          - income
+        description: Total gross revenue from orders
+        expr: gross_revenue
+        data_type: NUMBER
+        default_aggregation: sum
+      - name: net_revenue
+        synonyms:
+          - net sales
+          - net income
+        description: Net revenue after estimated costs
+        expr: net_revenue
+        data_type: NUMBER
+        default_aggregation: sum
+      - name: avg_order_value
+        synonyms:
+          - AOV
+          - average order
+          - average basket
+        description: Average order value
+        expr: avg_order_value
+        data_type: NUMBER
+        default_aggregation: avg
+      - name: total_units_sold
+        synonyms:
+          - units
+          - quantity sold
+          - items sold
+        description: Total number of units sold
+        expr: total_units_sold
+        data_type: NUMBER
+        default_aggregation: sum
+      - name: return_rate_pct
+        synonyms:
+          - return rate
+          - returns percentage
+        description: Percentage of orders that were returned
+        expr: return_rate_pct
+        data_type: NUMBER
+        default_aggregation: avg
+
+  - name: DT_CUSTOMER_SEGMENTS
+    description: Customer segmentation metrics with order and revenue analysis
+    base_table:
+      database: FIVETRAN_RETAIL_DEMO
+      schema: GOLD
+      table: DT_CUSTOMER_SEGMENTS
+    dimensions:
+      - name: customer_segment
+        synonyms:
+          - segment
+          - customer type
+          - customer group
+        description: Customer lifecycle segment (New, Active, VIP, At-Risk, Churned)
+        expr: customer_segment
+        data_type: VARCHAR
+      - name: tenure_bucket
+        synonyms:
+          - customer tenure
+          - loyalty tier
+        description: Customer tenure classification (New, Established, Loyal)
+        expr: tenure_bucket
+        data_type: VARCHAR
+      - name: preferred_category
+        synonyms:
+          - favorite category
+          - top category
+        description: Customer preferred product category
+        expr: preferred_category
+        data_type: VARCHAR
+      - name: marketing_channel
+        synonyms:
+          - acquisition channel
+          - channel
+          - source
+        description: Marketing channel that acquired the customer
+        expr: marketing_channel
+        data_type: VARCHAR
+    measures:
+      - name: customer_count
+        synonyms:
+          - number of customers
+          - customers
+          - headcount
+        description: Count of customers in segment
+        expr: customer_count
+        data_type: NUMBER
+        default_aggregation: sum
+      - name: avg_lifetime_value
+        synonyms:
+          - LTV
+          - CLV
+          - average lifetime value
+        description: Average customer lifetime value
+        expr: avg_lifetime_value
+        data_type: NUMBER
+        default_aggregation: avg
+      - name: total_revenue
+        synonyms:
+          - revenue
+          - segment revenue
+        description: Total revenue from customer segment
+        expr: total_revenue
+        data_type: NUMBER
+        default_aggregation: sum
+      - name: avg_orders_per_customer
+        synonyms:
+          - order frequency
+          - purchase frequency
+        description: Average number of orders per customer
+        expr: avg_orders_per_customer
+        data_type: NUMBER
+        default_aggregation: avg
+
+  - name: DT_PRODUCT_PERFORMANCE
+    description: Product-level performance metrics including sales, reviews, and ratings
+    base_table:
+      database: FIVETRAN_RETAIL_DEMO
+      schema: GOLD
+      table: DT_PRODUCT_PERFORMANCE
+    dimensions:
+      - name: product_name
+        synonyms:
+          - product
+          - item
+          - item name
+        description: Name of the product
+        expr: product_name
+        data_type: VARCHAR
+      - name: category
+        synonyms:
+          - product category
+          - department
+        description: Product category
+        expr: category
+        data_type: VARCHAR
+      - name: subcategory
+        synonyms:
+          - product type
+        description: Product subcategory
+        expr: subcategory
+        data_type: VARCHAR
+      - name: brand
+        synonyms:
+          - manufacturer
+          - vendor
+        description: Product brand or manufacturer
+        expr: brand
+        data_type: VARCHAR
+      - name: price_tier
+        synonyms:
+          - pricing tier
+          - price range
+        description: Price tier classification (Premium, Mid-Range, Budget)
+        expr: price_tier
+        data_type: VARCHAR
+    measures:
+      - name: total_orders
+        synonyms:
+          - orders
+          - number of orders
+        description: Total number of orders for the product
+        expr: total_orders
+        data_type: NUMBER
+        default_aggregation: sum
+      - name: total_units_sold
+        synonyms:
+          - units sold
+          - quantity
+        description: Total units sold
+        expr: total_units_sold
+        data_type: NUMBER
+        default_aggregation: sum
+      - name: total_revenue
+        synonyms:
+          - revenue
+          - sales
+        description: Total revenue from product sales
+        expr: total_revenue
+        data_type: NUMBER
+        default_aggregation: sum
+      - name: avg_rating
+        synonyms:
+          - rating
+          - customer rating
+          - stars
+        description: Average customer rating (1-5)
+        expr: avg_rating
+        data_type: NUMBER
+        default_aggregation: avg
+      - name: review_count
+        synonyms:
+          - reviews
+          - number of reviews
+        description: Total number of customer reviews
+        expr: review_count
+        data_type: NUMBER
+        default_aggregation: sum
+      - name: margin_pct
+        synonyms:
+          - margin
+          - profit margin
+          - gross margin
+        description: Product gross margin percentage
+        expr: margin_pct
+        data_type: NUMBER
+        default_aggregation: avg
+
+  - name: DT_INVENTORY_HEALTH
+    description: Inventory health metrics by warehouse, category, and stock status
+    base_table:
+      database: FIVETRAN_RETAIL_DEMO
+      schema: GOLD
+      table: DT_INVENTORY_HEALTH
+    dimensions:
+      - name: snapshot_date
+        synonyms:
+          - date
+          - inventory date
+        description: Date of the inventory snapshot
+        expr: snapshot_date
+        data_type: DATE
+      - name: category
+        synonyms:
+          - product category
+        description: Product category
+        expr: category
+        data_type: VARCHAR
+      - name: warehouse
+        synonyms:
+          - DC
+          - distribution center
+          - fulfillment center
+        description: Warehouse location
+        expr: warehouse
+        data_type: VARCHAR
+      - name: stock_status
+        synonyms:
+          - inventory status
+          - stock level
+        description: Stock health classification (Out of Stock, Low Stock, Healthy, Overstock)
+        expr: stock_status
+        data_type: VARCHAR
+      - name: brand
+        synonyms:
+          - manufacturer
+        description: Product brand
+        expr: brand
+        data_type: VARCHAR
+    time_dimensions:
+      - name: snapshot_date_time
+        synonyms:
+          - date
+        description: Snapshot date for time-based analysis
+        expr: snapshot_date
+        data_type: DATE
+    measures:
+      - name: total_units_on_hand
+        synonyms:
+          - stock on hand
+          - inventory
+          - units available
+        description: Total units currently in stock
+        expr: total_units_on_hand
+        data_type: NUMBER
+        default_aggregation: sum
+      - name: total_available_units
+        synonyms:
+          - available stock
+          - sellable units
+        description: Units available for sale (on hand minus reserved)
+        expr: total_available_units
+        data_type: NUMBER
+        default_aggregation: sum
+      - name: stockout_risk_count
+        synonyms:
+          - at risk items
+          - stockout risk
+        description: Number of products at risk of stockout
+        expr: stockout_risk_count
+        data_type: NUMBER
+        default_aggregation: sum
+      - name: inventory_value
+        synonyms:
+          - stock value
+          - inventory cost
+        description: Total inventory value at cost
+        expr: inventory_value
+        data_type: NUMBER
+        default_aggregation: sum
+      - name: avg_capacity_utilization_pct
+        synonyms:
+          - capacity usage
+          - utilization
+        description: Average warehouse capacity utilization percentage
+        expr: avg_capacity_utilization_pct
+        data_type: NUMBER
+        default_aggregation: avg
+
+verified_queries:
+  - name: "revenue_by_category"
+    question: "What is the total revenue by product category?"
+    use_as_onboarding_question: true
+    sql: |
+      SELECT category, SUM(gross_revenue) AS total_revenue
+      FROM __DT_DAILY_SALES
+      GROUP BY category
+      ORDER BY total_revenue DESC
+  - name: "top_products_by_revenue"
+    question: "What are our top 10 best selling products?"
+    use_as_onboarding_question: true
+    sql: |
+      SELECT product_name, brand, category, SUM(total_revenue) AS revenue, SUM(total_units_sold) AS units_sold
+      FROM __DT_PRODUCT_PERFORMANCE
+      GROUP BY product_name, brand, category
+      ORDER BY revenue DESC
+      LIMIT 10
+  - name: "customer_segments_overview"
+    question: "How do our customer segments compare in terms of revenue and order frequency?"
+    use_as_onboarding_question: true
+    sql: |
+      SELECT customer_segment, SUM(customer_count) AS customers, SUM(total_revenue) AS revenue, ROUND(AVG(avg_orders_per_customer), 1) AS avg_orders
+      FROM __DT_CUSTOMER_SEGMENTS
+      GROUP BY customer_segment
+      ORDER BY revenue DESC
+  - name: "stockout_risk_products"
+    question: "Which products are at risk of stockout?"
+    use_as_onboarding_question: true
+    sql: |
+      SELECT category, warehouse, stock_status, SUM(stockout_risk_count) AS at_risk_items, SUM(total_units_on_hand) AS units_on_hand
+      FROM __DT_INVENTORY_HEALTH
+      WHERE stockout_risk_count > 0
+      GROUP BY category, warehouse, stock_status
+      ORDER BY at_risk_items DESC
+  - name: "monthly_sales_trend"
+    question: "Show me the monthly sales trend"
+    sql: |
+      SELECT DATE_TRUNC('month', order_date) AS month, SUM(gross_revenue) AS revenue, SUM(order_count) AS orders
+      FROM __DT_DAILY_SALES
+      GROUP BY month
+      ORDER BY month
+  - name: "best_rated_products"
+    question: "What are our highest rated products?"
+    sql: |
+      SELECT product_name, brand, category, AVG(avg_rating) AS rating, SUM(review_count) AS reviews, SUM(total_revenue) AS revenue
+      FROM __DT_PRODUCT_PERFORMANCE
+      WHERE review_count > 0
+      GROUP BY product_name, brand, category
+      ORDER BY rating DESC, reviews DESC
+      LIMIT 10

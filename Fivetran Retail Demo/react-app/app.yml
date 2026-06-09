@@ -1,0 +1,11 @@
+profile:
+  label: "Retail Analytics Dashboard"
+  description: "Retail analytics powered by Fivetran + Snowflake — revenue trends, inventory KPIs, customer cohorts, and a live Cortex Agent."
+  icon: public/icon.svg
+
+install:
+  commands:
+    - ["npm", "ci", "--include=dev"]
+
+run:
+  command: ["node", ".next/standalone/server.js"]

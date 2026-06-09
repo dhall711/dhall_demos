@@ -1,0 +1,14 @@
+fivetran_crm_transforms:
+  target: dev
+  outputs:
+    dev:
+      type: snowflake
+      account: SFSENORTHAMERICA-DHALL_AWS1
+      user: DHALL
+      role: SYSADMIN
+      warehouse: DEFAULT_WH
+      database: FIVETRAN_CRM_CUSTOMER360
+      schema: SILVER_DBT
+      threads: 4
+      authenticator: snowflake_jwt
+      private_key_path: /Users/dhall/.snowflake/keys/dhall_demo_rsa_key.p8

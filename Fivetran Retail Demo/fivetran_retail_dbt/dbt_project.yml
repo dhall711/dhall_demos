@@ -1,0 +1,13 @@
+name: fivetran_retail_transforms
+version: '1.0.0'
+profile: fivetran_retail_transforms
+
+model-paths: ["models"]
+target-path: "target"
+clean-targets: ["target", "dbt_packages"]
+
+models:
+  fivetran_retail_transforms:
+    staging:
+      +materialized: table
+      +schema: SILVER_DBT
