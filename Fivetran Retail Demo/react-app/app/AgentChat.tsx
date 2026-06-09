@@ -11,11 +11,44 @@ const SAMPLE_QUESTIONS = [
   "What is our highest rated product?",
 ]
 
+interface AgentTable {
+  columns: string[]
+  rows: any[][]
+  title?: string
+}
+
 interface Message {
   role: "user" | "assistant"
   content: string
   tool?: string
   sql?: string
+  table?: AgentTable
+}
+
+function StructuredTable({ table }: { table: AgentTable }) {
+  return (
+    <div className="my-3 overflow-x-auto">
+      {table.title && <div className="text-xs font-medium text-gray-500 mb-1">{table.title}</div>}
+      <table className="w-full text-sm border-collapse">
+        <thead>
+          <tr className="bg-gray-100">
+            {table.columns.map((c, j) => (
+              <th key={j} className="px-3 py-2 text-left font-medium text-gray-700 border-b whitespace-nowrap">{c}</th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {table.rows.map((row, ri) => (
+            <tr key={ri} className="border-b border-gray-100 hover:bg-gray-50">
+              {row.map((cell, ci) => (
+                <td key={ci} className="px-3 py-2 text-gray-600 whitespace-nowrap">{cell == null ? "" : String(cell)}</td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  )
 }
 
 function formatMessage(text: string): ReactNode[] {
@@ -93,7 +126,7 @@ export default function AgentChat() {
       if (data.error) {
         setMessages((prev) => [...prev, { role: "assistant", content: `Error: ${data.error}`, tool: "Error" }])
       } else {
-        setMessages((prev) => [...prev, { role: "assistant", content: data.text, tool: data.tool, sql: data.sql }])
+        setMessages((prev) => [...prev, { role: "assistant", content: data.text, tool: data.tool, sql: data.sql, table: data.table }])
       }
     } catch (e) {
       setMessages((prev) => [...prev, { role: "assistant", content: `Request failed: ${String(e)}`, tool: "Error" }])
@@ -142,6 +175,7 @@ export default function AgentChat() {
               <div className="text-sm leading-relaxed">
                 {msg.role === "assistant" ? formatMessage(msg.content) : msg.content}
               </div>
+              {msg.table && <StructuredTable table={msg.table} />}
               {msg.sql && (
                 <pre className="mt-2 p-2 bg-gray-900 text-green-400 rounded text-xs overflow-x-auto">{msg.sql}</pre>
               )}

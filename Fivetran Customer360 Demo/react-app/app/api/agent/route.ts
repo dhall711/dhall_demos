@@ -11,37 +11,43 @@ function accountBaseUrl(): string {
   throw new Error("No SNOWFLAKE_HOST / SNOWFLAKE_ACCOUNT_URL available to reach the Agent API")
 }
 
-function parseAgentStream(body: string): { text: string; sql: string } {
+interface AgentTable {
+  columns: string[]
+  rows: any[][]
+  title?: string
+}
+
+/** Convert a Snowflake SQL-API ResultSet into {columns, rows} for the UI. */
+function resultSetToTable(rs: any, title?: string): AgentTable | null {
+  const rowType = rs?.resultSetMetaData?.rowType
+  const data = rs?.data
+  if (!Array.isArray(rowType) || !Array.isArray(data)) return null
+  return { columns: rowType.map((c: any) => c.name), rows: data, title }
+}
+
+/**
+ * Parse a non-streaming Cortex Agent response (the `response` object).
+ * content[] holds typed items: text, thinking, tool_use, tool_result, table, chart.
+ */
+function parseAgentResponse(resp: any): { text: string; sql: string; table: AgentTable | null } {
   let text = ""
   let sql = ""
-  for (const rawLine of body.split("\n")) {
-    const line = rawLine.trim()
-    if (!line.startsWith("data:")) continue
-    const payload = line.slice(5).trim()
-    if (!payload || payload === "[DONE]") continue
-    let evt: any
-    try {
-      evt = JSON.parse(payload)
-    } catch {
-      continue
-    }
-    const blocks = evt?.delta?.content ?? evt?.content ?? []
-    if (Array.isArray(blocks)) {
-      for (const b of blocks) {
-        if (b?.type === "text" && typeof b.text === "string") text += b.text
-        if (b?.type === "tool_results") {
-          const items = b?.tool_results?.content ?? []
-          for (const it of items) {
-            const j = it?.json
-            if (j?.sql && !sql) sql = j.sql
-            if (j?.text && typeof j.text === "string") text += j.text
-          }
-        }
+  let table: AgentTable | null = null
+
+  for (const item of resp?.content ?? []) {
+    if (item?.type === "text" && typeof item.text === "string") {
+      text += item.text
+    } else if (item?.type === "table" && item.table) {
+      if (!table) table = resultSetToTable(item.table.result_set, item.table.title)
+    } else if (item?.type === "tool_result") {
+      for (const c of item.tool_result?.content ?? []) {
+        const j = c?.json
+        if (!j) continue
+        if (j.sql && !sql) sql = j.sql
       }
     }
-    if (typeof evt?.text === "string") text += evt.text
   }
-  return { text: text.trim(), sql }
+  return { text: text.trim(), sql, table }
 }
 
 export async function POST(request: Request) {
@@ -65,10 +71,11 @@ export async function POST(request: Request) {
       headers: {
         Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",
-        Accept: "text/event-stream",
+        Accept: "application/json",
         "X-Snowflake-Authorization-Token-Type": "OAUTH",
       },
       body: JSON.stringify({
+        stream: false,
         messages: [{ role: "user", content: [{ type: "text", text: question }] }],
       }),
     })
@@ -82,11 +89,12 @@ export async function POST(request: Request) {
       )
     }
 
-    const body = await resp.text()
-    const { text, sql } = parseAgentStream(body)
+    const data = await resp.json()
+    const { text, sql, table } = parseAgentResponse(data)
     return Response.json({
-      text: text || "The agent returned no text response.",
+      text: text || "The agent completed but returned no text answer.",
       sql,
+      table,
       tool: "CUSTOMER360_AGENT (Cortex Agent)",
     })
   } catch (e) {
