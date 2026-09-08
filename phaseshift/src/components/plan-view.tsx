@@ -289,8 +289,8 @@ function RouteArc({ input }: { input: PlanInput }) {
   return (
     <svg viewBox="0 0 100 40" className="mt-5 h-24 w-full overflow-visible text-primary">
       <path d={d} fill="none" stroke="currentColor" strokeWidth="0.7" strokeDasharray="1.5 1" />
-      {projected.map((point) => (
-        <g key={`${point.iata}-${point.x}`}>
+      {projected.map((point, index) => (
+        <g key={`${point.iata}-${index}`}>
           <circle cx={point.x} cy={point.y} r="1.2" fill="currentColor" />
           <text x={point.x} y={point.y - 2} textAnchor="middle" fontSize="3.2" fill="currentColor">
             {point.iata}

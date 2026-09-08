@@ -7,11 +7,13 @@ import { ArrowRight, Sun } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { generatePlan } from "@/lib/circadian/engine";
 import { exampleTrips } from "@/lib/demo";
-import { listPlans, newPlanId, savePlan, subscribeToPlans } from "@/lib/storage";
+import { listPlans, newPlanId, savePlan, subscribeToPlans, type StoredPlan } from "@/lib/storage";
+
+const EMPTY_PLANS: StoredPlan[] = [];
 
 export function HomeActions() {
   const router = useRouter();
-  const saved = useSyncExternalStore(subscribeToPlans, listPlans, () => []);
+  const saved = useSyncExternalStore(subscribeToPlans, listPlans, () => EMPTY_PLANS);
 
   function openExample(id: string) {
     const example = exampleTrips().find((trip) => trip.id === id);

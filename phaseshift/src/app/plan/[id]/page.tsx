@@ -5,14 +5,16 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { PlanView } from "@/components/plan-view";
 import { SiteHeader } from "@/components/site-header";
-import { getPlanSnapshot, subscribeToPlans } from "@/lib/storage";
+import { getPlanSnapshot, subscribeToPlans, type StoredPlan } from "@/lib/storage";
+
+const NO_PLAN: StoredPlan | null = null;
 
 export default function PlanDetailPage() {
   const params = useParams<{ id: string }>();
   const stored = useSyncExternalStore(
     subscribeToPlans,
     () => getPlanSnapshot(params.id),
-    () => null,
+    () => NO_PLAN,
   );
 
   return (
