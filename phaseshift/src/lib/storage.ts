@@ -71,7 +71,7 @@ export function planTitle(input: PlanInput): string {
   const dest = last?.destinationIata ?? first.destinationIata;
   const day = DateTime.fromISO(first.departLocal).toFormat("LLL d");
   if (input.flights.length > 1) {
-    return `${first.originIata} ⇄ ${dest} · ${day}`;
+    return `${first.originIata} ⇄ ${first.destinationIata} · ${day}`;
   }
   return `${first.originIata} → ${dest} · ${day}`;
 }
