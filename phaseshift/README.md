@@ -1,8 +1,8 @@
 # PhaseShift
 
-A circadian jet lag planner in the same product shape as [Timeshifter](https://www.timeshifter.com/jet-lag-app): you enter sleep timing, chronotype, and an itinerary, and you get an hour-by-hour plan for **light, darkness, sleep, melatonin, and caffeine**.
+A circadian jet lag planner in the same product shape as an iPhone travel-sleep app: you pick From / To, flight times, and usual sleep, then follow a day-by-day checklist for **sleep, light, caffeine, and optional melatonin**.
 
-PhaseShift is not affiliated with Timeshifter. Timing is based on published human phase response curves (St Hilaire et al. 2012; Eastman & Burgess 2009), not a reverse-engineered commercial algorithm.
+PhaseShift is not affiliated with Jet Lag Bye or Timeshifter. Timing is based on published human phase response curves (St Hilaire et al. 2012; Eastman & Burgess 2009), not a reverse-engineered commercial algorithm.
 
 ## Run locally
 
@@ -13,16 +13,15 @@ npm test
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000).
+Open [http://localhost:3000](http://localhost:3000). The UI is iPhone-width.
 
 ## What it does
 
-- Estimates core body temperature minimum from usual bedtime, wake time, and chronotype
-- Measures the timezone jump at each landing (including DST) and picks eastbound advance vs westbound delay
-- Shifts the clock in daily steps, placing seek-light / avoid-light windows around that day’s CBTmin
-- Optionally times a 0.5 mg melatonin microdose for eastbound trips and caffeine cutoffs before sleep
-- Pre-travel adjustment, stopovers, round trips, and short-trip mode (stay closer to home time on brief stays)
-- 3-hour “what now” view plus a full timeline, with a preview scrubber so you can walk the plan
+- Home composer: airport From / To, one-way or round trip, usual bedtime and wake, melatonin and caffeine toggles
+- Personalized plan: target sleep and wake, seek / avoid bright light, caffeine cutoff, optional 0.5 mg melatonin
+- Built to follow: circular checkboxes, day chips (D-n / Travel / D+n), saved history, optional reminders, light or dark mode
+- Reset Sleep: recover a drifted schedule without a flight
+- Short-trip mode in the advanced itinerary: stay closer to home time on brief stays
 
 Plans are stored in the browser (`localStorage`). There is also `POST /api/plan` if you want the same engine over HTTP.
 
