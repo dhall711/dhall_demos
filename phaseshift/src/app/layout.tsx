@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono, Instrument_Serif } from "next/font/google";
+import { Geist, Geist_Mono } from "next/font/google";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { ThemeScript } from "@/components/theme-toggle";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -13,25 +14,18 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-const instrument = Instrument_Serif({
-  variable: "--font-instrument",
-  subsets: ["latin"],
-  weight: "400",
-});
-
 export const metadata: Metadata = {
-  title: "PhaseShift — Circadian jet lag planner",
-  description:
-    "Personalized jet lag plans with timed light, sleep, melatonin, and caffeine based on circadian science.",
+  title: "PhaseShift — Travel sleep plan",
+  description: "Personalized jet lag plans with timed sleep, light, caffeine, and optional melatonin.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html
-      lang="en"
-      className={`dark ${geistSans.variable} ${geistMono.variable} ${instrument.variable} h-full antialiased`}
-    >
-      <body className="flex min-h-full flex-col bg-background text-foreground">
+    <html lang="en" className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}>
+      <head>
+        <ThemeScript />
+      </head>
+      <body className="flex min-h-full flex-col bg-zinc-100 text-foreground dark:bg-zinc-950">
         <TooltipProvider>{children}</TooltipProvider>
       </body>
     </html>

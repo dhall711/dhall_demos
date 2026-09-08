@@ -1,16 +1,52 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { DateTime } from "luxon";
-import { EVENT_PRIORITY, bodyClockMinutes, eventsOverlapping, minutesToLabel } from "@/lib/circadian/engine";
-import type { GeneratedPlan, PlanEvent, PlanInput } from "@/lib/circadian/types";
-import { EVENT_META } from "@/components/event-meta";
-import { Button } from "@/components/ui/button";
-import { Slider } from "@/components/ui/slider";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  BedDouble,
+  Check,
+  Coffee,
+  Lightbulb,
+  Moon,
+  Plane,
+  Sparkles,
+  Sun,
+  Sunrise,
+  X,
+} from "lucide-react";
+import { RemindersToggle, ThemeToggle } from "@/components/theme-toggle";
+import { buildPlanDays, shiftHoursLabel, type TimelineKind } from "@/lib/circadian/timeline";
+import type { GeneratedPlan, PlanInput } from "@/lib/circadian/types";
 import { getAirport } from "@/lib/airports";
+import { EMPTY_IDS, getCheckedIds, setCheckedIds, subscribeProgress } from "@/lib/prefs";
 import { cn } from "@/lib/utils";
+
+const KIND_ICON: Record<TimelineKind, typeof Sun> = {
+  wake: Sunrise,
+  bedtime: BedDouble,
+  "seek-light": Sun,
+  "avoid-light": Moon,
+  sleep: BedDouble,
+  nap: Moon,
+  caffeine: Coffee,
+  melatonin: Sparkles,
+  flight: Plane,
+  aligned: Check,
+};
+
+const KIND_DOT: Record<TimelineKind, string> = {
+  wake: "bg-orange-400",
+  bedtime: "bg-blue-500",
+  "seek-light": "bg-orange-400",
+  "avoid-light": "bg-violet-500",
+  sleep: "bg-blue-500",
+  nap: "bg-teal-500",
+  caffeine: "bg-amber-700",
+  melatonin: "bg-violet-500",
+  flight: "bg-sky-500",
+  aligned: "bg-emerald-500",
+};
 
 type Props = {
   title: string;
@@ -20,283 +56,177 @@ type Props = {
 };
 
 export function PlanView({ title, input, plan, planId }: Props) {
-  const range = useMemo(() => {
-    const stamps = plan.events.flatMap((event) => [
-      DateTime.fromISO(event.startUtc, { zone: "utc" }),
-      DateTime.fromISO(event.endUtc, { zone: "utc" }),
-    ]);
-    const start = stamps.reduce((min, dt) => (dt < min ? dt : min));
-    const end = stamps.reduce((max, dt) => (dt > max ? dt : max));
-    return { start, end, hours: Math.max(1, end.diff(start, "hours").hours) };
-  }, [plan.events]);
-
-  const firstDepart = DateTime.fromISO(plan.segments[0]?.departUtc ?? range.start.toISO()!, { zone: "utc" });
-  const defaultHours = Math.max(0, firstDepart.diff(range.start, "hours").hours - 2);
-  const [cursorHours, setCursorHours] = useState(defaultHours);
-  const [live, setLive] = useState(false);
-
-  useEffect(() => {
-    if (!live) return;
-    const tick = () => {
-      const now = DateTime.utc();
-      if (now < range.start || now > range.end) return;
-      setCursorHours(now.diff(range.start, "hours").hours);
-    };
-    tick();
-    const id = window.setInterval(tick, 30_000);
-    return () => window.clearInterval(id);
-  }, [live, range.start, range.end]);
-
-  const cursor = range.start.plus({ hours: cursorHours });
-  const windowEnd = cursor.plus({ hours: 3 });
-  const active = eventsOverlapping(plan.events, cursor, windowEnd).sort(
-    (a, b) => EVENT_PRIORITY[b.kind] - EVENT_PRIORITY[a.kind],
+  const days = useMemo(() => buildPlanDays(input, plan), [input, plan]);
+  const [dayIndex, setDayIndex] = useState(() => {
+    const travel = days.findIndex((day) => day.chip === "Travel");
+    return travel >= 0 ? Math.max(0, travel - 1) : 0;
+  });
+  const checked = useSyncExternalStore(
+    subscribeProgress,
+    () => getCheckedIds(planId),
+    () => EMPTY_IDS,
   );
-  const primary = active.find((event) => event.kind !== "flight") ?? active[0];
-  const bodyMinutes = bodyClockMinutes(plan.homeTimezone, plan.anchors, cursor);
-  const localPlace = primary?.timezone ?? plan.homeTimezone;
-  const local = cursor.setZone(localPlace);
-  const grouped = groupEvents(plan.events);
+  const day = days[dayIndex] ?? days[0];
+  const allIds = days.flatMap((entry) => entry.items.filter((item) => item.checkable).map((item) => item.id));
+  const done = allIds.filter((id) => checked.includes(id)).length;
+  const percent = allIds.length ? Math.round((done / allIds.length) * 100) : 0;
+  const origin = getAirport(input.flights[0]?.originIata);
+  const dest = getAirport(input.flights[0]?.destinationIata);
+  const outbound = input.flights[0];
+  const returning = input.flights[1];
+
+  function toggle(id: string) {
+    const next = checked.includes(id) ? checked.filter((item) => item !== id) : [...checked, id];
+    setCheckedIds(planId, next);
+  }
+
+  const dayDone = day?.items.filter((item) => item.checkable && checked.includes(item.id)).length ?? 0;
+  const dayTotal = day?.items.filter((item) => item.checkable).length ?? 0;
 
   return (
-    <div className="mx-auto w-full max-w-3xl px-4 py-6">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <p className="text-xs uppercase tracking-[0.2em] text-primary">{plan.directionLabel}</p>
-          <h1 className="font-heading mt-1 text-3xl">{title}</h1>
-          <p className="mt-2 max-w-xl text-sm text-muted-foreground">{plan.summary}</p>
+    <div className="mx-auto min-h-full max-w-md bg-background pb-10">
+      <header className="sticky top-0 z-20 flex items-center justify-between bg-background/90 px-4 py-3 backdrop-blur">
+        <RemindersToggle />
+        <div className="text-center">
+          <div className="text-sm font-semibold">Jet lag plan</div>
+          <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[11px] text-primary">{percent}%</span>
         </div>
-        <Button asChild variant="outline">
-          <Link href={`/plan/new?edit=${planId}`}>Edit itinerary</Link>
-        </Button>
-      </div>
-
-      <RouteArc input={input} />
-
-      <section className="mt-6 rounded-3xl border border-white/10 bg-white/5 p-5">
-        <div className="flex flex-wrap items-end justify-between gap-4">
-          <div>
-            <div className="text-xs uppercase tracking-wide text-muted-foreground">Local time</div>
-            <div className="font-heading text-4xl tabular-nums">{local.toFormat("h:mm a")}</div>
-            <div className="text-sm text-muted-foreground">
-              {local.toFormat("ccc, LLL d")} · {primary?.place ?? plan.homeCity}
-            </div>
-          </div>
-          <div className="text-right">
-            <div className="text-xs uppercase tracking-wide text-muted-foreground">Body clock</div>
-            <div className="font-heading text-4xl tabular-nums text-primary">{minutesToLabel(bodyMinutes)}</div>
-            <div className="text-sm text-muted-foreground">
-              {plan.preShiftDays ? `${plan.preShiftDays}d pre-shift · ` : ""}
-              ~{plan.daysToAdapt}d to adapt
-            </div>
-          </div>
+        <div className="flex items-center gap-2">
+          <ThemeToggle />
+          <Link href="/" className="flex size-9 items-center justify-center rounded-full bg-muted">
+            <X className="size-4" />
+          </Link>
         </div>
-        <div className="mt-5">
-          <div className="mb-2 flex items-center justify-between text-xs text-muted-foreground">
-            <span>{range.start.setZone(localPlace).toFormat("LLL d, h:mm a")}</span>
-            <button
-              type="button"
-              className={cn("rounded-full px-2 py-0.5", live ? "bg-primary text-primary-foreground" : "bg-white/10")}
-              onClick={() => setLive((value) => !value)}
-            >
-              {live ? "Live" : "Preview"}
-            </button>
-            <span>{range.end.setZone(localPlace).toFormat("LLL d, h:mm a")}</span>
+      </header>
+
+      <div className="space-y-4 px-4">
+        <section className="rounded-3xl bg-muted p-4">
+          <div className="flex items-center justify-between gap-2 text-sm font-medium">
+            <span>{origin?.city}</span>
+            <Plane className="size-4 text-primary" />
+            <span>{dest?.city}</span>
           </div>
-          <Slider
-            min={0}
-            max={Number(range.hours.toFixed(2))}
-            step={0.25}
-            value={[cursorHours]}
-            onValueChange={(value) => {
-              setLive(false);
-              setCursorHours(value[0] ?? 0);
-            }}
-          />
-        </div>
-      </section>
-
-      <Tabs defaultValue="now" className="mt-6">
-        <TabsList className="w-full">
-          <TabsTrigger value="now">Next 3 hours</TabsTrigger>
-          <TabsTrigger value="full">Full plan</TabsTrigger>
-        </TabsList>
-        <TabsContent value="now" className="mt-4 space-y-3">
-          {primary ? <EventCard event={primary} large cursor={cursor} /> : (
-            <p className="rounded-2xl border border-white/10 p-6 text-sm text-muted-foreground">
-              No actions in this window. Sleep and light cues sit elsewhere on the timeline — scrub to explore.
-            </p>
-          )}
-          {active
-            .filter((event) => event.id !== primary?.id)
-            .map((event) => (
-              <EventCard key={event.id} event={event} cursor={cursor} />
-            ))}
-        </TabsContent>
-        <TabsContent value="full" className="mt-4 space-y-8">
-          {grouped.map((group) => (
-            <div key={group.label}>
-              <h2 className="mb-3 text-sm font-medium text-muted-foreground">{group.label}</h2>
-              <div className="overflow-hidden rounded-2xl border border-white/10">
-                <DayBar events={group.events} />
-                <div className="divide-y divide-white/5">
-                  {group.events.map((event) => (
-                    <EventRow key={event.id} event={event} />
-                  ))}
-                </div>
-              </div>
-            </div>
-          ))}
-        </TabsContent>
-      </Tabs>
-
-      <p className="mt-10 text-xs leading-5 text-muted-foreground">
-        Educational timing based on published human phase response curves to light and melatonin (St Hilaire et
-        al. 2012; Eastman & Burgess 2009). Not medical advice. Intended for healthy adults 18+.
-      </p>
-    </div>
-  );
-}
-
-function EventCard({
-  event,
-  large,
-  cursor,
-}: {
-  event: PlanEvent;
-  large?: boolean;
-  cursor: DateTime;
-}) {
-  const meta = EVENT_META[event.kind];
-  const Icon = meta.Icon;
-  const start = DateTime.fromISO(event.startUtc).setZone(event.timezone);
-  const end = DateTime.fromISO(event.endUtc).setZone(event.timezone);
-  const until = end.diff(cursor, "minutes").minutes;
-  return (
-    <article
-      className={cn(
-        "rounded-2xl border p-4",
-        meta.className,
-        large && "p-6",
-      )}
-    >
-      <div className="flex items-start gap-3">
-        <span className="mt-0.5 rounded-full bg-black/20 p-2">
-          <Icon className={large ? "size-6" : "size-4"} />
-        </span>
-        <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-baseline justify-between gap-2">
-            <h3 className={cn("font-medium", large && "font-heading text-2xl")}>{event.title}</h3>
-            <span className="text-xs tabular-nums opacity-80">
-              {start.toFormat("h:mm a")} – {end.toFormat("h:mm a")}
+          <div className="mt-2 flex flex-wrap gap-2 text-xs">
+            <span className="rounded-full bg-sky-100 px-2 py-0.5 text-sky-800 dark:bg-sky-900 dark:text-sky-100">
+              {shiftHoursLabel(plan)}
+            </span>
+            <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-100">
+              {returning ? "Round trip" : "One way"}
             </span>
           </div>
-          <p className="text-xs opacity-80">
-            {event.place}
-            {until > 0 ? ` · ${Math.round(until)} min left in this 3-hour view` : ""}
-            {event.inFlight ? " · in flight" : ""}
-          </p>
-          <p className={cn("mt-2 text-sm leading-6 opacity-90", large && "text-base")}>{event.detail}</p>
-        </div>
-      </div>
-    </article>
-  );
-}
+          <div className="mt-3 space-y-1 rounded-2xl bg-background px-3 py-2 text-xs">
+            <p>Depart {DateTime.fromISO(outbound.departLocal).toFormat("ccc, LLL d 'at' h:mm a")}</p>
+            <p>Arrive {DateTime.fromISO(outbound.arriveLocal).toFormat("ccc, LLL d 'at' h:mm a")}</p>
+            {returning ? (
+              <>
+                <p>Return {DateTime.fromISO(returning.departLocal).toFormat("ccc, LLL d 'at' h:mm a")}</p>
+                <p>Home {DateTime.fromISO(returning.arriveLocal).toFormat("ccc, LLL d 'at' h:mm a")}</p>
+              </>
+            ) : null}
+          </div>
+          <p className="mt-3 text-sm text-muted-foreground">{plan.summary}</p>
+        </section>
 
-function EventRow({ event }: { event: PlanEvent }) {
-  const meta = EVENT_META[event.kind];
-  const Icon = meta.Icon;
-  const start = DateTime.fromISO(event.startUtc).setZone(event.timezone);
-  const end = DateTime.fromISO(event.endUtc).setZone(event.timezone);
-  return (
-    <div className="flex items-start gap-3 px-3 py-3">
-      <span className={cn("mt-1 size-2.5 shrink-0 rounded-full", meta.bar)} />
-      <Icon className="mt-0.5 size-4 shrink-0 opacity-70" />
-      <div className="min-w-0 flex-1">
-        <div className="flex justify-between gap-3 text-sm">
-          <span className="font-medium">{event.title}</span>
-          <span className="shrink-0 tabular-nums text-muted-foreground">
-            {start.toFormat("h:mm a")}–{end.toFormat("h:mm a")}
-          </span>
-        </div>
         <p className="text-xs text-muted-foreground">
-          {event.place} · {event.detail}
+          General safety · Educational guidance, not medical advice. Ask a clinician before using melatonin.
         </p>
+
+        <div className="flex gap-2 overflow-x-auto pb-1">
+          {days.map((entry, index) => (
+            <button
+              key={entry.key}
+              type="button"
+              onClick={() => setDayIndex(index)}
+              className={cn(
+                "min-w-16 shrink-0 rounded-2xl px-3 py-2 text-center text-xs",
+                index === dayIndex ? "bg-primary text-primary-foreground" : "bg-muted",
+              )}
+            >
+              <div className="font-semibold">{entry.chip}</div>
+              <div className="opacity-80">{DateTime.fromISO(entry.key).toFormat("LLL d")}</div>
+            </button>
+          ))}
+        </div>
+
+        {day ? (
+          <section>
+            <div className="mb-3 flex items-end justify-between">
+              <div>
+                <h2 className="text-xl font-semibold">{day.title}</h2>
+                <p className="text-sm text-muted-foreground">{day.dateLabel}</p>
+              </div>
+              <span className="text-xs text-muted-foreground">
+                {dayDone}/{dayTotal}
+              </span>
+            </div>
+            <ol className="relative space-y-0">
+              {day.items.map((item, index) => {
+                const Icon = KIND_ICON[item.kind];
+                const complete = checked.includes(item.id);
+                return (
+                  <li key={item.id} className="relative flex gap-3 pb-5">
+                    <div className="flex w-14 shrink-0 flex-col items-end pt-1">
+                      <span className="text-xs font-medium tabular-nums">{item.timeLabel}</span>
+                      <span className="text-[10px] text-muted-foreground">Local</span>
+                    </div>
+                    <div className="relative flex flex-col items-center">
+                      <span className={cn("mt-1 size-2.5 rounded-full", KIND_DOT[item.kind])} />
+                      {index < day.items.length - 1 ? (
+                        <span className="absolute top-4 bottom-0 w-px bg-border" />
+                      ) : null}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => toggle(item.id)}
+                      className="flex min-w-0 flex-1 items-start gap-3 rounded-2xl bg-muted px-3 py-3 text-left"
+                    >
+                      <Icon className="mt-0.5 size-4 shrink-0 text-primary" />
+                      <span className="min-w-0 flex-1">
+                        <span className={cn("block text-sm font-medium", complete && "text-muted-foreground line-through")}>
+                          {item.title}
+                        </span>
+                        {item.untilLabel ? (
+                          <span className="block text-xs text-muted-foreground">{item.untilLabel}</span>
+                        ) : null}
+                        {item.destTimeLabel ? (
+                          <span className="mt-1 flex gap-2 text-[11px]">
+                            <span className="rounded-md bg-background px-1.5 py-0.5">{item.timeLabel}</span>
+                            <span className="rounded-md bg-sky-100 px-1.5 py-0.5 text-sky-800 dark:bg-sky-900 dark:text-sky-100">
+                              Dest {item.destTimeLabel}
+                            </span>
+                          </span>
+                        ) : null}
+                        <span className="mt-1 block text-xs leading-5 text-muted-foreground">{item.detail}</span>
+                      </span>
+                      <span
+                        className={cn(
+                          "mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full border",
+                          complete ? "border-orange-400 bg-orange-400 text-white" : "border-muted-foreground/40",
+                        )}
+                      >
+                        {complete ? <Check className="size-3.5" /> : null}
+                      </span>
+                    </button>
+                  </li>
+                );
+              })}
+            </ol>
+            <div className="rounded-2xl bg-muted p-4">
+              <div className="mb-2 flex items-center gap-2 text-sm font-medium">
+                <Lightbulb className="size-4 text-primary" />
+                Tips for today
+              </div>
+              <ul className="space-y-1 text-sm text-muted-foreground">
+                {day.tips.map((tip) => (
+                  <li key={tip}>• {tip}</li>
+                ))}
+              </ul>
+            </div>
+          </section>
+        ) : null}
+
+        <p className="text-center text-xs text-muted-foreground">{title}</p>
       </div>
     </div>
-  );
-}
-
-function DayBar({ events }: { events: PlanEvent[] }) {
-  const start = DateTime.fromISO(events[0].startUtc).startOf("day");
-  const end = start.plus({ days: 1 });
-  const span = end.toMillis() - start.toMillis();
-  return (
-    <div className="relative h-8 bg-black/30">
-      {events.map((event) => {
-        const a = DateTime.fromISO(event.startUtc);
-        const b = DateTime.fromISO(event.endUtc);
-        const left = ((a.toMillis() - start.toMillis()) / span) * 100;
-        const width = ((b.toMillis() - a.toMillis()) / span) * 100;
-        return (
-          <div
-            key={event.id}
-            title={event.title}
-            className={cn("absolute top-1 h-6 rounded-sm opacity-80", EVENT_META[event.kind].bar)}
-            style={{ left: `${left}%`, width: `${Math.max(width, 0.8)}%` }}
-          />
-        );
-      })}
-    </div>
-  );
-}
-
-function groupEvents(events: PlanEvent[]): { label: string; events: PlanEvent[] }[] {
-  const map = new Map<string, PlanEvent[]>();
-  for (const event of events) {
-    const label = DateTime.fromISO(event.startUtc).setZone(event.timezone).toFormat("cccc, LLL d");
-    const list = map.get(label) ?? [];
-    list.push(event);
-    map.set(label, list);
-  }
-  return [...map.entries()].map(([label, grouped]) => ({ label, events: grouped }));
-}
-
-function RouteArc({ input }: { input: PlanInput }) {
-  const points = input.flights.flatMap((flight, index) => {
-    const origin = getAirport(flight.originIata);
-    const dest = getAirport(flight.destinationIata);
-    if (!origin || !dest) return [];
-    const rows = index === 0 ? [origin, dest] : [dest];
-    return rows;
-  });
-  if (points.length < 2) return null;
-  const lons = points.map((point) => point.lon);
-  const lats = points.map((point) => point.lat);
-  const minLon = Math.min(...lons) - 10;
-  const maxLon = Math.max(...lons) + 10;
-  const minLat = Math.min(...lats) - 8;
-  const maxLat = Math.max(...lats) + 8;
-  const project = (lon: number, lat: number) => {
-    const x = ((lon - minLon) / (maxLon - minLon)) * 100;
-    const y = (1 - (lat - minLat) / (maxLat - minLat)) * 36;
-    return { x, y };
-  };
-  const projected = points.map((point) => ({ ...point, ...project(point.lon, point.lat) }));
-  const d = projected
-    .map((point, index) => `${index === 0 ? "M" : "L"} ${point.x} ${point.y}`)
-    .join(" ");
-  return (
-    <svg viewBox="0 0 100 40" className="mt-5 h-24 w-full overflow-visible text-primary">
-      <path d={d} fill="none" stroke="currentColor" strokeWidth="0.7" strokeDasharray="1.5 1" />
-      {projected.map((point, index) => (
-        <g key={`${point.iata}-${index}`}>
-          <circle cx={point.x} cy={point.y} r="1.2" fill="currentColor" />
-          <text x={point.x} y={point.y - 2} textAnchor="middle" fontSize="3.2" fill="currentColor">
-            {point.iata}
-          </text>
-        </g>
-      ))}
-    </svg>
   );
 }

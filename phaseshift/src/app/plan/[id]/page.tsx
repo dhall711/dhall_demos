@@ -4,7 +4,6 @@ import { useSyncExternalStore } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { PlanView } from "@/components/plan-view";
-import { SiteHeader } from "@/components/site-header";
 import { getPlanSnapshot, subscribeToPlans, type StoredPlan } from "@/lib/storage";
 
 const NO_PLAN: StoredPlan | null = null;
@@ -18,11 +17,10 @@ export default function PlanDetailPage() {
   );
 
   return (
-    <div className="min-h-full">
-      <SiteHeader />
+    <div className="mx-auto min-h-full max-w-md bg-background">
       {stored === null ? (
         <div className="px-4 py-16 text-center">
-          <h1 className="font-heading text-3xl">Plan not found</h1>
+          <h1 className="text-3xl font-semibold">Plan not found</h1>
           <p className="mt-2 text-sm text-muted-foreground">This browser has no saved plan with that id.</p>
           <Link href="/plan/new" className="mt-6 inline-block text-primary">
             Create a new plan

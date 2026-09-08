@@ -10,7 +10,7 @@ export type StoredPlan = {
 };
 
 const KEY = "phaseshift.plans.v1";
-const EMPTY_PLANS: StoredPlan[] = [];
+export const EMPTY_PLANS: StoredPlan[] = [];
 const listeners = new Set<() => void>();
 
 let cachedRaw: string | null | undefined;

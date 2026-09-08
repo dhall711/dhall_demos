@@ -14,7 +14,7 @@ function WizardBody() {
 
 export default function NewPlanPage() {
   return (
-    <div className="min-h-full">
+    <div className="mx-auto min-h-full max-w-md bg-background">
       <SiteHeader />
       <Suspense fallback={<div className="px-4 py-10 text-sm text-muted-foreground">Loading planner…</div>}>
         <WizardBody />
